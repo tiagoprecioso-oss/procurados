@@ -1,0 +1,8 @@
+/* Fontes do jogo (licença SIL OFL 1.1, arquivos OFL-*.txt nesta pasta).
+   Pirata One: títulos, com cara de cartaz pirata. IM Fell English: texto, com cara de livro antigo. */
+@font-face { font-family: 'Pirata One'; src: url('PirataOne-Regular.ttf') format('truetype'); font-display: swap; }
+@font-face { font-family: 'IM Fell English'; src: url('IMFellEnglish-Regular.ttf') format('truetype'); font-style: normal; font-display: swap; }
+@font-face { font-family: 'IM Fell English'; src: url('IMFellEnglish-Italic.ttf') format('truetype'); font-style: italic; font-display: swap; }
+:root { --fonte-titulo: 'Pirata One', Georgia, serif; --fonte-texto: 'IM Fell English', Georgia, 'Times New Roman', serif; }
+/* números legíveis (a IM Fell usa algarismos antigos, em que 0 parece o): contagens, atalhos e valores */
+.numeros, .slot b, .slot kbd, #oficina .ingr, #ficha .receita small, #ficha .efeito, .flutua { font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, serif; }

@@ -1,0 +1,143 @@
+{
+  "_nota": "Modelos baixados do Poly Pizza em 17/11/2026. CC-BY 3.0 exige crédito ao autor (tela de créditos do menu e REFERENCIAS.md). CC0 é domínio público.",
+  "capivara": {
+    "titulo": "Capybara",
+    "autor": "Poly by Google",
+    "licenca": "CC-BY 3.0",
+    "pagina": "https://poly.pizza/m/66d-mKAgF17",
+    "glb": "https://static.poly.pizza/16badcb5-6b34-43f3-af1f-06c4fe23efba.glb"
+  },
+  "cateto": {
+    "titulo": "Collared peccary",
+    "autor": "Poly by Google",
+    "licenca": "CC-BY 3.0",
+    "pagina": "https://poly.pizza/m/3eoOcw_d00X",
+    "glb": "https://static.poly.pizza/63773da4-4131-4536-9bc9-d903433af33f.glb"
+  },
+  "tatu": {
+    "titulo": "Armadillo",
+    "autor": "Poly by Google",
+    "licenca": "CC-BY 3.0",
+    "pagina": "https://poly.pizza/m/dZ3EWgIsSJQ",
+    "glb": "https://static.poly.pizza/e7d49de5-67ed-407e-b2b1-6479f9d049dc.glb"
+  },
+  "jacare": {
+    "titulo": "Black caiman",
+    "autor": "Poly by Google",
+    "licenca": "CC-BY 3.0",
+    "pagina": "https://poly.pizza/m/5etIv4omd7Z",
+    "glb": "https://static.poly.pizza/69c45761-2507-4e06-b8cf-f5bfb3438cd1.glb"
+  },
+  "jararaca": {
+    "titulo": "Bushmaster snake",
+    "autor": "Poly by Google",
+    "licenca": "CC-BY 3.0",
+    "pagina": "https://poly.pizza/m/f1DELjNQxqz",
+    "glb": "https://static.poly.pizza/b71517ac-9c28-4ca5-888f-5ae7e7e5f81f.glb"
+  },
+  "caranguejo": {
+    "titulo": "Crab",
+    "autor": "Poly by Google",
+    "licenca": "CC-BY 3.0",
+    "pagina": "https://poly.pizza/m/2DgM36qZW2u",
+    "glb": "https://static.poly.pizza/1acf95b5-2e6b-4c9d-bd37-8384b88bdbea.glb"
+  },
+  "quati": {
+    "titulo": "Coati",
+    "autor": "Poly by Google",
+    "licenca": "CC-BY 3.0",
+    "pagina": "https://poly.pizza/m/5f5lhqxsPLP",
+    "glb": "https://static.poly.pizza/ec30c3ca-4c46-4ee0-b236-42ef45fbeb5d.glb"
+  },
+  "armaduraCouro": {
+    "titulo": "Armor Leather",
+    "autor": "Quaternius",
+    "licenca": "CC0",
+    "pagina": "https://poly.pizza/m/na9KfWiKN8",
+    "glb": "https://static.poly.pizza/79e120cf-db14-4d0b-b5ff-1fea0e9483a1.glb"
+  },
+  "chapeuBambu": {
+    "titulo": "bamboo hat",
+    "autor": "Republic Clone",
+    "licenca": "CC-BY 3.0",
+    "pagina": "https://poly.pizza/m/9xm5jS34YV8",
+    "glb": "https://static.poly.pizza/c0bc7e3b-ed27-4cf3-b6d0-12fd66c4c6e0.glb"
+  },
+  "colar": {
+    "titulo": "Necklace",
+    "autor": "Quaternius",
+    "licenca": "CC0",
+    "pagina": "https://poly.pizza/m/Jvhs8DCNDZ",
+    "glb": "https://static.poly.pizza/2afce515-0123-40df-9740-23e5b97725e4.glb"
+  },
+  "clava": {
+    "titulo": "Club",
+    "autor": "Poly by Google",
+    "licenca": "CC-BY 3.0",
+    "pagina": "https://poly.pizza/m/bnNROJXnfsP",
+    "glb": "https://static.poly.pizza/79126a77-6469-4bfb-a402-51244ba9106d.glb"
+  },
+  "pote": {
+    "titulo": "Jar",
+    "autor": "Poly by Google",
+    "licenca": "CC-BY 3.0",
+    "pagina": "https://poly.pizza/m/0mqjLo6Zuu1",
+    "glb": "https://static.poly.pizza/00591681-5c0e-4f4d-9d63-192e37b67ffc.glb"
+  },
+  "carne": {
+    "titulo": "Raw Steak",
+    "autor": "S. Paul Michael",
+    "licenca": "CC-BY 3.0",
+    "pagina": "https://poly.pizza/m/ewc8PTlad7b",
+    "glb": "https://static.poly.pizza/b4fa9b30-f096-4ed7-8d76-9da16d32f713.glb"
+  },
+  "denteTubarao": {
+    "titulo": "Shark tooth",
+    "autor": "Poly by Google",
+    "licenca": "CC-BY 3.0",
+    "pagina": "https://poly.pizza/m/6lZSwZSWTPw",
+    "glb": "https://static.poly.pizza/b9aaaa05-95e4-4c56-a270-b73788f49058.glb"
+  },
+  "folha": {
+    "titulo": "Leaf",
+    "autor": "Poly by Google",
+    "licenca": "CC-BY 3.0",
+    "pagina": "https://poly.pizza/m/4_FetA14dDV",
+    "glb": "https://static.poly.pizza/4ca95c7b-643e-4c21-b29d-6cd49bc08f83.glb"
+  },
+  "planta": {
+    "titulo": "Small Plant",
+    "autor": "Quaternius",
+    "licenca": "CC0",
+    "pagina": "https://poly.pizza/m/MZdeiQApSb",
+    "glb": "https://static.poly.pizza/ab53ddde-9e04-42ec-ae37-08ec9425af9f.glb"
+  },
+  "tocha": {
+    "titulo": "Wooden Torch",
+    "autor": "Quaternius",
+    "licenca": "CC0",
+    "pagina": "https://poly.pizza/m/pNsfJzhXiD",
+    "glb": "https://static.poly.pizza/e5d33174-f51a-4981-9cfc-67e70486cba2.glb"
+  },
+  "arco": {
+    "titulo": "Wooden Bow",
+    "autor": "Quaternius",
+    "licenca": "CC0",
+    "pagina": "https://poly.pizza/m/QnpqjLSKFU",
+    "glb": "https://static.poly.pizza/e1abc1c7-47db-48c3-9c65-0879273e8bc8.glb"
+  },
+  "armadilhaFerro": {
+    "titulo": "Bear Trap",
+    "autor": "Quaternius",
+    "licenca": "CC0",
+    "pagina": "https://poly.pizza/m/UTau9hyAnm",
+    "glb": "https://static.poly.pizza/7d15d1a5-156a-4468-97e1-19373ae5dd5c.glb"
+  },
+  "fojo": {
+    "titulo": "Hazard Spike Trap",
+    "autor": "Quaternius",
+    "licenca": "CC0",
+    "pagina": "https://poly.pizza/m/7eNPB3UYWV",
+    "glb": "https://static.poly.pizza/fecd97e6-b894-4609-b6a6-be6552014a48.glb"
+  }
+}

@@ -1,0 +1,671 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Procurados · mar</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#2b1d0e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Procurados">
+<link rel="apple-touch-icon" href="icones/icone-180.png">
+<link rel="icon" href="icones/icone-192.png">
+<link rel="stylesheet" href="fontes/fontes.css">
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #bfe3f2; font-family: var(--fonte-texto); color: #2b1d0e; }
+  #tela { position: fixed; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; }
+  #tela:active { cursor: grabbing; }
+  .painel { position: fixed; background: rgba(244, 232, 205, .9); border: 2px solid #5e3a1e; border-radius: 6px; padding: 10px 14px; box-shadow: 0 2px 10px rgba(0,0,0,.25); pointer-events: none; }
+  /* nome do lugar: sem caixa, faixa escura que some para a direita */
+  #lugar { top: 10px; left: 10px; padding: 6px 40px 8px 14px; background: linear-gradient(to right, rgba(15,10,5,.5), rgba(15,10,5,0)) !important; border: none !important; box-shadow: none !important;
+    color: #fff3d6; text-shadow: 0 1px 3px #000, 0 0 8px rgba(0,0,0,.6); border-radius: 30px 0 0 30px; }
+  #lugar small { letter-spacing: .14em; font-size: 10px; opacity: .75; }
+  #lugar h1 { margin: 0; font: 34px var(--fonte-titulo); font-weight: normal; letter-spacing: .03em; }
+  #lugar p { margin: 0; font-size: 14px; font-style: italic; }
+  /* vela, nós e bússola */
+  #leme { bottom: 16px; left: 16px; display: flex; align-items: center; gap: 12px; padding: 8px 16px 8px 10px; background: rgba(15,10,5,.45) !important; border: none !important; border-radius: 40px;
+    box-shadow: none !important; color: #fff3d6; text-shadow: 0 1px 2px #000; font-size: 15px; }
+  #leme b { font-size: 22px; color: #ffd76a; }
+  #velas { display: inline-flex; gap: 4px; align-items: flex-end; }
+  #velas span { display: inline-block; width: 22px; height: 26px; clip-path: polygon(10% 0, 100% 85%, 10% 100%); background: rgba(243,230,200,.25); border: none; transition: background .3s; }
+  #velas span.on { background: #f3e6c8; }
+  #velas span:nth-child(n+2) { display: none; }   /* a jangada tem uma vela só */
+  #bussola { width: 46px; height: 46px; filter: drop-shadow(0 1px 2px rgba(0,0,0,.6)); }
+  #agulha { transform-origin: 23px 23px; transition: transform .2s; }
+  /* ajuda: faixa translúcida que some sozinha (F1 traz de volta) */
+  #ajuda { bottom: 16px; right: 16px; font-size: 13px; line-height: 1.6; background: rgba(15,10,5,.45) !important; border: none !important; box-shadow: none !important; color: #f3e6c8;
+    text-shadow: 0 1px 2px #000; transition: opacity .8s; border-radius: 8px; }
+  #ajuda b { color: #ffd76a; }
+  #ajuda.some { opacity: 0; }
+  /* minimapa: carta náutica em pergaminho queimado */
+  #mapa { top: 10px; right: 10px; transform: rotate(1.5deg); }
+  #mapa canvas { display: block; border-radius: 2px; filter: sepia(.35) saturate(.85); }
+  #aviso { top: 120px; left: 50%; transform: translateX(-50%); font-size: 17px; opacity: 0; transition: opacity .3s; background: rgba(15,10,5,.55) !important; border: none !important;
+    color: #fff3d6; text-shadow: 0 1px 2px #000; border-radius: 20px; padding: 7px 18px; }
+  #rotulos { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
+  .rot { position: absolute; left: 0; top: 0; white-space: nowrap; font-size: 15px; padding: 1px 10px; border-radius: 12px; background: rgba(15,10,5,.42); color: #fff3d6;
+    text-shadow: 0 1px 2px #000; will-change: transform; }
+  .rot.navio { background: rgba(43,29,14,.7); color: #ffd76a; font-size: 13px; }
+  .rot.armada { background: rgba(24,52,110,.75); color: #fff; }
+  #dica { bottom: 84px; left: 50%; transform: translateX(-50%); font-size: 17px; display: none; background: rgba(15,10,5,.55) !important; border: none !important; color: #fff3d6;
+    text-shadow: 0 1px 2px #000; border-radius: 20px; padding: 6px 18px; box-shadow: none !important; }
+  #dica b { color: #ffd76a; }
+  .nomeOutro { position: fixed; left: 0; top: 0; pointer-events: none; white-space: nowrap; font-size: 14px; padding: 0 8px; border-radius: 10px;
+    background: rgba(15,10,5,.5); color: #ffd76a; text-shadow: 0 1px 2px #000; will-change: transform; }
+  #online { position: fixed; top: 60px; right: 16px; font-size: 13px; padding: 2px 10px; border-radius: 10px; background: rgba(15,10,5,.45); color: #f3e6c8; text-shadow: 0 1px 2px #000; pointer-events: none; display: none; }
+  #veu { position: fixed; inset: 0; z-index: 9; background: #e3f2f6; opacity: 0; pointer-events: none; }
+  #carregando { position: fixed; inset: 0; display: grid; place-items: center; background: #ead9b4; font: 42px var(--fonte-titulo); color: #2b1d0e; }
+  .pergaminho { box-sizing: border-box; background: none !important; border-style: solid !important; border-width: 22px !important; border-color: transparent !important; border-radius: 0 !important;
+    border-image: var(--pergaminho) 64 fill / 22px stretch !important; box-shadow: none !important; filter: drop-shadow(0 6px 12px rgba(0,0,0,.45)); padding: 0 !important; }
+</style>
+<script type="importmap">{ "imports": { "three": "./lib/three.module.min.js" } }</script>
+</head>
+<body>
+<canvas id="tela"></canvas>
+<div id="rotulos"></div>
+<div id="lugar" class="painel"><small>PROCURADOS · MAR</small><h1 id="lugarNome">Niterói</h1><p id="lugarDesc"></p></div>
+<div id="mapa" class="painel pergaminho"><canvas id="mini"></canvas></div>
+<div id="leme" class="painel"><span id="velas" title="vela"><span></span><span></span><span></span></span><span><b id="nos" class="numeros">0</b> nós</span>
+  <svg id="bussola" viewBox="0 0 46 46" aria-label="rumo"><circle cx="23" cy="23" r="20" fill="rgba(243,230,200,.85)" stroke="#2b1d0e" stroke-width="2"/><circle cx="23" cy="23" r="15" fill="none" stroke="rgba(43,29,14,.3)"/>
+    <text x="23" y="10" text-anchor="middle" font-size="8" fill="#a8221a" font-weight="bold">N</text>
+    <g id="agulha"><path d="M23 8 L27 23 L23 38 L19 23 Z" fill="#2b1d0e"/><path d="M23 8 L27 23 L19 23 Z" fill="#c0281c"/></g><circle cx="23" cy="23" r="2.5" fill="#d8b24a" stroke="#2b1d0e"/></svg>
+  <b id="rumo" class="numeros" style="font-size:15px;min-width:22px">O</b></div>
+<div id="ajuda" class="painel"><b>W / S</b> içar e baixar a vela · <b>A / D</b> leme · <b>E</b> perto da sua praia: desembarcar<br><b>arrastar</b> gira a câmera · <b>rolagem</b> zoom · <b>duplo clique</b> câmera atrás · <b>F1</b> esconde esta ajuda</div>
+<div id="dica" class="painel"></div>
+<div id="veu"></div>
+<div id="online"></div>
+<div id="aviso" class="painel"></div>
+<div id="carregando">Içando a vela…</div>
+<script src="js/pergaminho.js"></script>
+
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from './lib/loaders/GLTFLoader.js';
+import { salvo } from './js/boneco.js';
+import { criarFabrica, QUADRO, DIRECOES, OFF as OFF_ISO } from './js/fabrica.js';
+import { temRede, enviar, lista, quantos, limpar } from './js/rede.js';
+import { criarControles, telaCheia } from './js/toque.js';
+import { sincronizarSempre } from './js/nuvem.js';
+import { criarVeu, hora, escuro, textoHora } from './js/noite.js';
+import { criarAvisos } from './js/avisos.js';
+const avisos = criarAvisos();
+sincronizarSempre();
+
+// =====================================================================
+// 1. MAPA: a Baía de Guanabara desenhada por polígonos
+// Coordenadas no papel: (x = leste, n = norte), em metros de jogo. No 3D, z = -n.
+// A baía real tem ~28 km; aqui 1 km vira ~80 m, e a barra foi alargada para jogar bem.
+// =====================================================================
+const P = (pts) => pts.map(([x, n]) => [x, -n]);
+
+// Contorno da ÁGUA (oceano + barra + baía). Tudo fora dele é continente.
+const AGUA = P([
+  [-2600, -3000], [2600, -3000], [2600, -1000],
+  [900, -1010], [500, -1040], [250, -1000],          // praias oceânicas de Niterói
+  [130, -940], [120, -850],                           // ponta de Santa Cruz (lado leste da barra)
+  [220, -780], [330, -760], [300, -690],              // enseada de Jurujuba
+  [260, -640], [330, -560], [300, -480],              // Icaraí e Boa Viagem
+  [260, -400], [290, -300], [240, -220],              // centro de Niterói e Ponta da Areia
+  [330, -150], [420, -50], [520, 100], [640, 250], [760, 420],   // São Gonçalo
+  [900, 600], [950, 800], [850, 1000],                // manguezal de Guapimirim
+  [600, 1150], [300, 1220], [0, 1250], [-300, 1200],  // fundo da baía (Magé)
+  [-600, 1100], [-800, 950], [-900, 750], [-880, 550], [-800, 400],
+  [-720, 250], [-600, 120], [-480, 0], [-400, -120],  // porto do Rio
+  [-330, -250], [-300, -350], [-330, -450], [-300, -560],        // centro, Glória, Flamengo
+  [-330, -650], [-400, -700], [-360, -760],           // enseada de Botafogo
+  [-200, -800], [-110, -860], [-100, -940],           // Urca e Pão de Açúcar (lado oeste da barra)
+  [-200, -1000], [-450, -1050], [-800, -1030], [-2600, -1060],   // Copacabana e além
+]);
+const ILHAS = [
+  P([[-640, 330], [-560, 470], [-420, 540], [-280, 500], [-230, 400], [-300, 300], [-430, 270], [-540, 250]]), // Governador
+  P([[380, 720], [430, 790], [480, 800], [470, 730], [420, 690]]),                 // Paquetá
+  P([[-250, -230], [-215, -200], [-190, -235], [-225, -265]]),                     // Ilha das Cobras
+  P([[-240, -430], [-215, -400], [-195, -430], [-220, -455]]),                     // Villegagnon
+  P([[215, -500], [235, -480], [255, -500], [235, -520]]),                         // Boa Viagem
+  P([[110, -200], [150, -140], [180, -200], [145, -260]]),                         // Mocanguê
+  P([[-540, -1340], [-500, -1310], [-460, -1345], [-490, -1385], [-530, -1375]]),  // Cagarras
+  P([[-130, -1470], [-95, -1450], [-65, -1485], [-100, -1510]]),                   // Ilha Rasa
+  P([[670, -1170], [705, -1150], [735, -1185], [700, -1212]]),                     // Ilha do Pai
+];
+// Morros: [x, n, altura, raio, quanto da orla fica plano]
+const PICOS = [
+  [-150, -870, 95, 42, 20],     // Pão de Açúcar
+  [-520, -620, 120, 110, 70],   // Corcovado
+  [-850, -380, 150, 260, 90],   // Maciço da Tijuca
+  [-1200, -800, 90, 300, 90],
+  [520, -720, 60, 130, 60], [700, -420, 55, 180, 80], [900, -900, 70, 220, 60],   // morros de Niterói
+  [0, 1560, 240, 330, 120], [-560, 1500, 210, 330, 120], [620, 1520, 220, 330, 120],   // Serra dos Órgãos
+  [1200, 1300, 160, 350, 120], [-1200, 1200, 150, 350, 120],
+  [-430, 400, 22, 120, 40],     // Ilha do Governador
+  [-500, -1350, 34, 38, 12], [-100, -1480, 22, 35, 12], [700, -1180, 26, 35, 12],  // ilhas do mar aberto
+];
+// Lugares com nome: [nome, x, n, raio em que o nome aparece no painel, descrição]
+const LUGARES = [
+  ['Niterói', 330, -350, 200, 'seu porto de origem'],
+  ['Rio de Janeiro', -430, -280, 230, 'a cidade rival, do outro lado da baía'],
+  ['Fortaleza de Santa Cruz', 170, -890, 150, 'forte da Armada: guarda a barra'],
+  ['Pão de Açúcar', -150, -870, 120, 'o marco da entrada da baía'],
+  ['Ilha do Governador', -430, 400, 260, 'a maior ilha da baía'],
+  ['Paquetá', 430, 745, 170, 'ilhota sossegada, boa para se esconder'],
+  ['Manguezal de Guapimirim', 800, 760, 260, 'raízes, lama e pouca visão'],
+  ['Icaraí', 300, -600, 110, 'praia de Niterói'],
+  ['Jurujuba', 280, -740, 90, 'enseada de pescadores'],
+  ['Botafogo', -370, -700, 110, 'enseada abrigada'],
+  ['São Gonçalo', 560, 120, 200, 'margem leste da baía'],
+  ['Magé', 0, 1290, 260, 'fundo da baía, aos pés da serra'],
+  ['Ilhas Cagarras', -500, -1350, 200, 'rochedos no mar aberto'],
+  ['Ilha Rasa', -100, -1480, 170, 'a última terra antes do alto-mar'],
+];
+
+// ---------- geometria 2D
+function distSeg(px, pz, a, b) {
+  const vx = b[0] - a[0], vz = b[1] - a[1];
+  let t = ((px - a[0]) * vx + (pz - a[1]) * vz) / (vx * vx + vz * vz);
+  t = Math.max(0, Math.min(1, t));
+  return Math.hypot(px - a[0] - vx * t, pz - a[1] - vz * t);
+}
+// distância com sinal até a borda do polígono: + dentro, - fora
+function assinada(poly, px, pz) {
+  let dentro = false, d = Infinity;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const a = poly[i], b = poly[j];
+    if ((a[1] > pz) !== (b[1] > pz) && px < (b[0] - a[0]) * (pz - a[1]) / (b[1] - a[1]) + a[0]) dentro = !dentro;
+    d = Math.min(d, distSeg(px, pz, a, b));
+  }
+  return dentro ? d : -d;
+}
+// "s": metros até a linha da costa. Positivo em terra, negativo na água.
+function costa(px, pz) {
+  let s = -assinada(AGUA, px, pz);
+  for (const ilha of ILHAS) s = Math.max(s, assinada(ilha, px, pz));
+  return s;
+}
+const sm = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+function alturaDe(x, z, s) {
+  if (s <= 0) return Math.max(s * 0.18, -9);
+  let h = Math.min(s * 0.12, 5);
+  const ondulado = 7 + 5 * Math.sin(x * 0.013 + 1) * Math.cos(z * 0.017) + 4 * Math.sin(x * 0.031 + z * 0.027);
+  h += ondulado * sm(8, 90, s);
+  for (const [px, pn, ph, pr, borda] of PICOS) {
+    const dx = x - px, dz = z + pn;
+    h += ph * Math.exp(-(dx * dx + dz * dz) / (pr * pr)) * sm(3, borda, s);
+  }
+  return h;
+}
+
+// ---------- grade do mundo (calculada uma vez ao abrir)
+const X0 = -1700, Z0 = -1800, LARG = 3400, COMP = 3700, NX = 212, NZ = 231;
+const CX = LARG / NX, CZ = COMP / NZ;
+const S = new Float32Array((NX + 1) * (NZ + 1)), A = new Float32Array((NX + 1) * (NZ + 1));
+for (let j = 0; j <= NZ; j++) for (let i = 0; i <= NX; i++) {
+  const x = X0 + i * CX, z = Z0 + j * CZ, s = costa(x, z);
+  S[j * (NX + 1) + i] = s; A[j * (NX + 1) + i] = alturaDe(x, z, s);
+}
+function amostra(grade, x, z) {
+  const fx = Math.max(0, Math.min(NX - 1e-4, (x - X0) / CX)), fz = Math.max(0, Math.min(NZ - 1e-4, (z - Z0) / CZ));
+  const i = Math.floor(fx), j = Math.floor(fz), a = fx - i, b = fz - j, k = j * (NX + 1) + i;
+  return (grade[k] * (1 - a) + grade[k + 1] * a) * (1 - b) + (grade[k + NX + 1] * (1 - a) + grade[k + NX + 2] * a) * b;
+}
+let semente = 20261116;
+const rnd = () => { semente |= 0; semente = semente + 0x6D2B79F5 | 0; let t = Math.imul(semente ^ semente >>> 15, 1 | semente); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+
+// =====================================================================
+// 2. CENA
+// =====================================================================
+const tela = document.getElementById('tela');
+const renderer = new THREE.WebGLRenderer({ canvas: tela, antialias: true, preserveDrawingBuffer: /[?&]gravar/.test(location.search), powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+const cena = new THREE.Scene();
+const CEU = new THREE.Color('#bfe3f2');
+cena.background = CEU;
+cena.fog = new THREE.Fog(CEU, 500, 3000);
+const camera = new THREE.PerspectiveCamera(50, 1, 1, 7000);
+const SOL = new THREE.Vector3(0.45, 0.8, 0.35).normalize();
+const sol = new THREE.DirectionalLight('#fff4dd', 2.6); sol.position.copy(SOL).multiplyScalar(100); cena.add(sol);
+const ceu = new THREE.HemisphereLight('#dff3ff', '#8a7f5a', 1.5); cena.add(ceu);
+// noite e dia (js/noite.js): o mesmo relógio da terra; à noite só a lanterna do barco ilumina em volta
+const veu = criarVeu(1); tela.after(veu.elemento);
+const elHoraMar = document.createElement('div'); elHoraMar.style.cssText = 'position:fixed;left:24px;bottom:112px;z-index:4;font:13px Georgia,serif;color:#fff3d6;text-shadow:0 1px 3px #000;pointer-events:none'; document.body.appendChild(elHoraMar);
+const v3noite = new THREE.Vector3();
+
+// ---------- terreno low-poly: uma cor por triângulo
+{
+  const pos = [], cor = [], c = new THREE.Color();
+  const AREIA = new THREE.Color('#ead9a4'), RELVA = new THREE.Color('#a9bf6a'), MATA = new THREE.Color('#4f9a4a'), MATA2 = new THREE.Color('#3c8244'),
+        ROCHA = new THREE.Color('#8f887c'), MANGUE = new THREE.Color('#5f7a3c'), LAMA = new THREE.Color('#9a8c66');
+  const tri = (p, q, r) => {
+    const h = (p[1] + q[1] + r[1]) / 3, incl = (Math.max(p[1], q[1], r[1]) - Math.min(p[1], q[1], r[1])) / CX;
+    const x = (p[0] + q[0] + r[0]) / 3, z = (p[2] + q[2] + r[2]) / 3, mangue = x > 560 && z < -350;
+    if (incl > 0.95 || h > 150) c.copy(ROCHA);
+    else if (h < 1.3) c.copy(mangue ? LAMA : AREIA);
+    else if (h < 3.2) c.copy(mangue ? MANGUE : RELVA);
+    else c.copy(mangue ? MANGUE : (rnd() < 0.5 ? MATA : MATA2));
+    c.offsetHSL(0, 0, (rnd() - 0.5) * 0.05);
+    for (const v of [p, q, r]) { pos.push(v[0], v[1], v[2]); cor.push(c.r, c.g, c.b); }
+  };
+  for (let j = 0; j < NZ; j++) for (let i = 0; i < NX; i++) {
+    const k = j * (NX + 1) + i, x = X0 + i * CX, z = Z0 + j * CZ;
+    const a = [x, A[k], z], b = [x + CX, A[k + 1], z], d = [x, A[k + NX + 1], z + CZ], e = [x + CX, A[k + NX + 2], z + CZ];
+    if (Math.max(a[1], b[1], d[1], e[1]) < -2.5) continue;   // fundo do mar: a água cobre
+    tri(a, d, b); tri(b, d, e);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('color', new THREE.Float32BufferAttribute(cor, 3));
+  cena.add(new THREE.Mesh(g, new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true })));
+}
+
+// ---------- mar: ondas facetadas, cor pela profundidade, espuma na orla
+const ampDe = (z) => 0.35 + 1.6 * sm(850, 1100, z);                      // baía calma, mar aberto bravo
+// a mesma fórmula está no shader do mar, logo abaixo: mudou aqui, mude lá
+const formaOnda = (x, z, t) => Math.sin(x * 0.05 + t * 1.1) * 0.5 + Math.sin(z * 0.08 + t * 0.9 + 1.3) * 0.3 + Math.sin((x + z) * 0.03 + t * 0.6) * 0.5
+  + Math.sin(x * 0.21 + z * 0.13 + t * 1.7) * 0.2 + Math.sin(z * 0.27 - x * 0.11 + t * 1.3) * 0.16;
+const alturaOnda = (x, z, t) => formaOnda(x, z, t) * ampDe(z) * (1 - sm(-30, -2, amostra(S, x, z)));
+const texProf = (() => {
+  const d = new Uint8Array((NX + 1) * (NZ + 1) * 4);
+  for (let k = 0; k < S.length; k++) { d[k * 4] = Math.max(0, Math.min(255, (S[k] + 64) / 128 * 255)); d[k * 4 + 3] = 255; }
+  const t = new THREE.DataTexture(d, NX + 1, NZ + 1, THREE.RGBAFormat);
+  t.magFilter = t.minFilter = THREE.LinearFilter; t.needsUpdate = true; return t;
+})();
+const matMar = new THREE.ShaderMaterial({
+  uniforms: {
+    uT: { value: 0 }, uCentro: { value: new THREE.Vector3() }, uProf: { value: texProf },
+    uMapa: { value: new THREE.Vector4(X0, Z0, LARG, COMP) }, uTex: { value: new THREE.Vector2(NX + 1, NZ + 1) },
+    uFundo: { value: new THREE.Color('#1c7fa6') }, uRaso: { value: new THREE.Color('#4fd0cf') }, uEspuma: { value: new THREE.Color('#f4fbff') },
+    uNevoa: { value: CEU }, uSol: { value: SOL },
+  },
+  vertexShader: /* glsl */`
+    uniform float uT; uniform vec3 uCentro; uniform sampler2D uProf; uniform vec4 uMapa; uniform vec2 uTex;
+    varying vec3 vW; varying float vS;
+    void main() {
+      vec4 w = modelMatrix * vec4(position, 1.0);
+      vec2 uv = (w.xz - uMapa.xy) / uMapa.zw; uv = uv * (uTex - 1.0) / uTex + 0.5 / uTex;
+      float s = texture2D(uProf, uv).r * 128.0 - 64.0;
+      float amp = 0.35 + 1.6 * smoothstep(850.0, 1100.0, w.z);
+      float perto = 1.0 - smoothstep(260.0, 520.0, distance(w.xz, uCentro.xz));
+      float fundo = 1.0 - smoothstep(-30.0, -2.0, s);
+      float onda = sin(w.x * 0.05 + uT * 1.1) * 0.5 + sin(w.z * 0.08 + uT * 0.9 + 1.3) * 0.3 + sin((w.x + w.z) * 0.03 + uT * 0.6) * 0.5
+        + sin(w.x * 0.21 + w.z * 0.13 + uT * 1.7) * 0.2 + sin(w.z * 0.27 - w.x * 0.11 + uT * 1.3) * 0.16;
+      w.y += onda * amp * perto * fundo;
+      vW = w.xyz; vS = s;
+      gl_Position = projectionMatrix * viewMatrix * w;
+    }`,
+  fragmentShader: /* glsl */`
+    uniform float uT; uniform vec3 uFundo, uRaso, uEspuma, uNevoa, uSol;
+    varying vec3 vW; varying float vS;
+    void main() {
+      vec3 n = normalize(cross(dFdx(vW), dFdy(vW))); if (n.y < 0.0) n = -n;
+      n = normalize(vec3(n.x * 5.0, n.y, n.z * 5.0));   // exagera a inclinação: as facetas das ondas aparecem mais
+      vec3 cor = mix(uFundo, uRaso, smoothstep(-45.0, -3.0, vS));
+      cor *= 0.74 + 0.38 * max(dot(n, uSol), 0.0);
+      vec3 olho = normalize(cameraPosition - vW);
+      cor += 0.3 * pow(max(dot(reflect(-uSol, n), olho), 0.0), 40.0);
+      float orla = smoothstep(-7.0, -1.0, vS + sin(uT * 1.5 + vW.x * 0.08 + vW.z * 0.06) * 1.5);
+      cor = mix(cor, uEspuma, orla * 0.7);
+      cor = mix(cor, uNevoa, smoothstep(500.0, 3000.0, distance(cameraPosition, vW)));
+      gl_FragColor = vec4(cor, 1.0);
+      #include <colorspace_fragment>
+    }`,
+});
+const PASSO_MAR = 7;
+const mar = (() => {
+  // malha fina perto do navio e cada vez mais larga para longe
+  const n = 160, R = 7000, f = (u) => R * (0.08 * u + 0.92 * u * u * u), pos = [], idx = [];
+  for (let j = 0; j <= n; j++) for (let i = 0; i <= n; i++) pos.push(f(i / n * 2 - 1), 0, f(j / n * 2 - 1));
+  for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) { const k = j * (n + 1) + i; idx.push(k, k + n + 1, k + 1, k + 1, k + n + 1, k + n + 2); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx);
+  const m = new THREE.Mesh(g, matMar); m.frustumCulled = false; cena.add(m); return m;
+})();
+
+// ---------- mata, casas, forte, cais
+const CIDADES = [[370, -350, 120, 80], [-450, -280, 170, 130], [560, 130, 80, 22], [435, 748, 40, 9], [0, 1310, 70, 16], [-380, 420, 60, 12]]; // x, n, raio, casas
+const ident = new THREE.Object3D(), corTmp = new THREE.Color();
+{
+  const copas = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(3.4, 0), new THREE.MeshLambertMaterial({ flatShading: true }), 2600);
+  let k = 0;
+  for (let t = 0; t < 40000 && k < 2600; t++) {
+    const x = X0 + rnd() * LARG, z = Z0 + rnd() * COMP, s = amostra(S, x, z), h = amostra(A, x, z), mangue = x > 560 && z < -350;
+    if (s < (mangue ? 3 : 14) || h > 130 || (!mangue && rnd() < 0.45)) continue;
+    if (CIDADES.some(([cx, cn, r]) => Math.hypot(x - cx, z + cn) < r * 0.8)) continue;
+    const e = 0.8 + rnd() * 1.1;
+    ident.position.set(x, h + 2.2 * e, z); ident.scale.set(e, e * (1 + rnd() * 0.5), e); ident.rotation.set(0, rnd() * 6.3, 0); ident.updateMatrix();
+    copas.setMatrixAt(k, ident.matrix);
+    copas.setColorAt(k, corTmp.set(mangue ? '#4d6b34' : '#2f7a3c').offsetHSL((rnd() - 0.5) * 0.04, 0, (rnd() - 0.5) * 0.08)); k++;
+  }
+  copas.count = k; cena.add(copas);
+
+  const total = CIDADES.reduce((a, c) => a + c[3], 0);
+  const paredes = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshLambertMaterial({ flatShading: true }), total);
+  const telhados = new THREE.InstancedMesh(new THREE.ConeGeometry(0.74, 0.55, 4).rotateY(Math.PI / 4), new THREE.MeshLambertMaterial({ flatShading: true }), total);
+  const CORES = ['#f3ead8', '#f7f2e8', '#e9d49a', '#e4b9a0', '#c9dcd6'];
+  k = 0;
+  for (const [cx, cn, r, qtd] of CIDADES) for (let c = 0, t = 0; c < qtd && t < qtd * 40; t++) {
+    const ang = rnd() * 6.283, d = Math.sqrt(rnd()) * r, x = cx + Math.cos(ang) * d, z = -cn + Math.sin(ang) * d;
+    const s = amostra(S, x, z), h = amostra(A, x, z);
+    if (s < 7 || h > 26) continue;
+    const l = 6 + rnd() * 5, p = 5 + rnd() * 3, alt = 4 + rnd() * 4, giro = Math.floor(rnd() * 4) * Math.PI / 2 + (rnd() - 0.5) * 0.3;
+    ident.rotation.set(0, giro, 0);
+    ident.position.set(x, h + alt / 2 - 0.6, z); ident.scale.set(l, alt, p); ident.updateMatrix(); paredes.setMatrixAt(k, ident.matrix);
+    paredes.setColorAt(k, corTmp.set(CORES[Math.floor(rnd() * CORES.length)]));
+    ident.position.set(x, h + alt - 0.6 + 1.1, z); ident.scale.set(l, 4, p); ident.updateMatrix(); telhados.setMatrixAt(k, ident.matrix);
+    telhados.setColorAt(k, corTmp.set('#b5532f').offsetHSL(0, 0, (rnd() - 0.5) * 0.1)); k++; c++;
+  }
+  paredes.count = telhados.count = k; cena.add(paredes, telhados);
+}
+const lambert = (cor) => new THREE.MeshLambertMaterial({ color: cor, flatShading: true });
+{ // Fortaleza de Santa Cruz
+  const fx = 172, fz = 892, base = amostra(A, fx, fz), forte = new THREE.Group(), pedra = lambert('#c2bcab');
+  const muro = new THREE.Mesh(new THREE.BoxGeometry(48, 14, 48), pedra); muro.position.y = 5; forte.add(muro);
+  const patio = new THREE.Mesh(new THREE.BoxGeometry(38, 1, 38), lambert('#8f887c')); patio.position.y = 12.2; forte.add(patio);
+  for (const [a, b] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+    const torre = new THREE.Mesh(new THREE.CylinderGeometry(6, 7, 20, 8), pedra); torre.position.set(a * 24, 8, b * 24); forte.add(torre);
+  }
+  const mastro = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 22, 6), lambert('#5e3a1e')); mastro.position.y = 23; forte.add(mastro);
+  const bandeira = new THREE.Mesh(new THREE.BoxGeometry(9, 5.5, 0.2), lambert('#1f4fa3')); bandeira.position.set(4.6, 31, 0); forte.add(bandeira);
+  forte.position.set(fx, base, fz); forte.rotation.y = 0.5; cena.add(forte);
+}
+// Cais de Niterói: anda da terra para o oeste até achar água funda
+const CAIS_Z = 350; let caisFim = 320;
+while (amostra(S, caisFim, CAIS_Z) > -16 && caisFim > 0) caisFim -= 2;
+{
+  let ini = caisFim; while (amostra(S, ini, CAIS_Z) < 6) ini += 2;
+  const madeira = lambert('#8a5a2b'), comp = ini - caisFim;
+  const tabuas = new THREE.Mesh(new THREE.BoxGeometry(comp, 0.5, 6), madeira); tabuas.position.set((ini + caisFim) / 2, 1.6, CAIS_Z); cena.add(tabuas);
+  for (let x = caisFim + 1; x < ini; x += 7) for (const lado of [-2.7, 2.7]) {
+    const estaca = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 7, 6), lambert('#5e3a1e')); estaca.position.set(x, -1.2, CAIS_Z + lado); cena.add(estaca);
+  }
+}
+
+// =====================================================================
+// 3. NAVIOS
+// =====================================================================
+// ---------- sua praia (onde o náufrago montou a jangada): costa de Icaraí, em Niterói
+const PRAIA = { z: 600, xTerra: 320, xAgua: 320 };
+while (amostra(S, PRAIA.xAgua, PRAIA.z) > -5 && PRAIA.xAgua > 0) PRAIA.xAgua -= 2;      // anda para o oeste até a água ter fundo
+while (amostra(S, PRAIA.xTerra, PRAIA.z) < 3 && PRAIA.xTerra < 600) PRAIA.xTerra += 2;  // e para o leste até a areia
+const PROG = salvo.progresso() || {};
+const ini = PROG.local === 'mar' && PROG.mar ? PROG.mar : { x: PRAIA.xAgua - 8, z: PRAIA.z, rumo: Math.PI };
+const estado = { x: ini.x, z: ini.z, rumo: ini.rumo, vel: 0, velas: 0, leme: 0 };
+const VEL_MAX = 6, MAX_VELAS = 1, CALADO = -1.5;   // jangada: lenta, uma vela só, passa no raso
+let navio = null;
+const npcs = [
+  { nome: 'Patrulha da Armada', classe: 'armada', cor: '#1f4fa3', vel: 6.5, rota: [[10, -800], [70, -960], [0, -1120], [-60, -960]] },
+  { nome: 'Mercador da travessia', classe: 'navio', cor: '#d9a441', vel: 5.5, rota: [[-250, -330], [170, -390]] },
+  { nome: 'Pirata · recompensa 12.000', classe: 'navio', cor: null, vel: 7.5, rota: [[300, 620], [580, 650], [560, 900], [300, 880]] },
+];
+// Posiciona um navio sobre as ondas: sobe, desce e inclina conforme a água embaixo dele
+function pousar(obj, x, z, rumo, t, adernar = 0) {
+  const fx = Math.cos(rumo), fz = -Math.sin(rumo), dx = Math.sin(rumo), dz = Math.cos(rumo);
+  const proa = alturaOnda(x + fx * 5, z + fz * 5, t), popa = alturaOnda(x - fx * 5, z - fz * 5, t);
+  const bor = alturaOnda(x + dx * 2, z + dz * 2, t), bom = alturaOnda(x - dx * 2, z - dz * 2, t);
+  obj.position.set(x, (proa + popa + bor + bom) / 4, z);
+  obj.rotation.set(-Math.atan2(bor - bom, 4) + adernar, rumo, Math.atan2(proa - popa, 10));
+}
+new GLTFLoader().load('./modelos/chalupa.json', (gltf) => {
+  const modelo = gltf.scene;
+  modelo.position.y = -0.35;   // a linha d'água do Blender fica em z = 0,35
+  modelo.traverse((o) => { if (o.isMesh) o.material.side = THREE.DoubleSide; });
+  for (const n of npcs) {
+    n.obj = new THREE.Group(); n.obj.rotation.order = 'YZX';
+    const copia = modelo.clone(true);
+    if (n.cor) copia.traverse((o) => { if (o.isMesh && o.material.name === 'bandeira') { o.material = o.material.clone(); o.material.color.set(n.cor); } });
+    n.obj.add(copia); cena.add(n.obj);
+    n.i = 1; n.x = n.rota[0][0]; n.z = -n.rota[0][1]; n.rumo = Math.atan2(n.rota[1][1] - n.rota[0][1], n.rota[1][0] - n.rota[0][0]);
+    n.rot = rotulo(n.nome, n.classe);
+  }
+  document.getElementById('carregando').remove();
+}, undefined, (erro) => { document.getElementById('carregando').textContent = 'Não consegui carregar o navio (modelos/chalupa.glb). Abra pelo servidor local, não com dois cliques.'; console.error(erro); });
+
+// =====================================================================
+// 4. CONTROLES, CÂMERA E PAINÉIS
+// =====================================================================
+const teclas = new Set();
+addEventListener('keydown', (e) => {
+  const k = e.key.toLowerCase();
+  if (!e.repeat && (k === 'w' || k === 'arrowup')) estado.velas = Math.min(MAX_VELAS, estado.velas + 1);
+  if (!e.repeat && (k === 's' || k === 'arrowdown')) estado.velas = Math.max(0, estado.velas - 1);
+  teclas.add(k);
+  if (k.startsWith('arrow')) e.preventDefault();
+});
+addEventListener('keyup', (e) => teclas.delete(e.key.toLowerCase()));
+addEventListener('blur', () => teclas.clear());
+const cam = { giro: 0, alt: 0.3, dist: 16, segue: estado.rumo };
+// a jangada: troncos amarrados, mastro e vela de folha de palmeira (a Kenney não tem jangada)
+navio = (() => {
+  const g = new THREE.Group(); g.rotation.order = 'YZX';
+  const tora = new THREE.CylinderGeometry(0.17, 0.19, 3.0, 7).rotateZ(Math.PI / 2);
+  for (let k = 0; k < 5; k++) { const m = new THREE.Mesh(tora, lambert(k % 2 ? '#8a6a44' : '#7a5a36')); m.position.set((k % 2) * 0.12, 0.05, (k - 2) * 0.36); g.add(m); }
+  for (const dx of [-1, 1]) { const m = new THREE.Mesh(tora, lambert('#6e4a2c')); m.scale.set(0.42, 0.45, 0.45); m.rotation.y = Math.PI / 2; m.position.set(dx * 1.1, 0.24, 0); g.add(m); }
+  const mastro = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 2.2, 5).translate(0, 1.1, 0), lambert('#6e4a2c')); mastro.position.set(-0.3, 0.2, 0); g.add(mastro);
+  const forma = new THREE.Shape(); forma.moveTo(0, 0); forma.lineTo(0, 1.7); forma.lineTo(1.1, 0.15); forma.closePath();
+  const vela = new THREE.Mesh(new THREE.ShapeGeometry(forma), new THREE.MeshLambertMaterial({ color: '#7fa64a', side: THREE.DoubleSide, flatShading: true }));
+  vela.position.set(-0.25, 0.45, 0); vela.rotation.y = Math.PI / 2; g.add(vela);
+  g.panos = [vela]; cena.add(g); return g;
+})();
+// o náufrago em cima da jangada: a mesma folha 2D da terra, escolhendo a direção pelo ângulo da câmera
+const BONECO = { pronto: false };
+criarFabrica().then((fab) => {
+  const f = fab.assar(salvo.jogador()?.aparencia?.personagem || {});
+  const tex = new THREE.CanvasTexture(f.canvas); tex.colorSpace = THREE.SRGBColorSpace; tex.repeat.set(1 / f.colunas, 1 / f.linhas);
+  const malha = new THREE.Mesh(new THREE.PlaneGeometry(QUADRO.meiaL * 2, QUADRO.meiaA * 2), new THREE.MeshBasicMaterial({ map: tex, alphaTest: 0.5 }));
+  cena.add(malha); Object.assign(BONECO, { pronto: true, malha, tex, folha: f, tempo: 0 });
+}).catch((e) => console.error('personagem não carregou', e));
+const angDe = (x, z) => Math.atan2(-z, x);
+const ANG_FOTO = angDe(-OFF_ISO.x, -OFF_ISO.z);   // para onde a câmera da fábrica olha
+let arrasto = null;
+tela.addEventListener('pointerdown', (e) => { arrasto = [e.clientX, e.clientY]; tela.setPointerCapture(e.pointerId); });
+tela.addEventListener('pointermove', (e) => {
+  if (!arrasto) return;
+  cam.giro -= (e.clientX - arrasto[0]) * 0.006; cam.alt = Math.max(0.06, Math.min(1.35, cam.alt + (e.clientY - arrasto[1]) * 0.005));
+  arrasto = [e.clientX, e.clientY];
+});
+tela.addEventListener('pointerup', () => arrasto = null);
+tela.addEventListener('dblclick', () => cam.giro = 0);
+tela.addEventListener('wheel', (e) => { cam.dist = Math.max(16, Math.min(420, cam.dist * (e.deltaY > 0 ? 1.12 : 0.89))); e.preventDefault(); }, { passive: false });
+
+const caixaRot = document.getElementById('rotulos');
+function rotulo(texto, classe = '') { const el = document.createElement('div'); el.className = 'rot ' + classe; el.textContent = texto; caixaRot.appendChild(el); return el; }
+const v3 = new THREE.Vector3();
+function fixar(el, x, y, z, alcance) {
+  v3.set(x, y, z); const d = camera.position.distanceTo(v3); v3.project(camera);
+  if (v3.z > 1 || d > alcance || Math.abs(v3.x) > 1.1 || Math.abs(v3.y) > 1.1) { el.style.display = 'none'; return; }
+  el.style.display = 'block'; el.style.opacity = Math.min(1, (alcance - d) / (alcance * 0.25));
+  el.style.transform = `translate(-50%,-100%) translate(${(v3.x * 0.5 + 0.5) * innerWidth}px,${(-v3.y * 0.5 + 0.5) * innerHeight}px)`;
+}
+const placas = LUGARES.map(([nome, x, n, raio]) => ({ el: rotulo(nome), x, z: -n, y: Math.max(0, amostra(A, x, -n)) + 34, alcance: raio >= 200 ? 1500 : 600 }));
+
+// minimapa: fundo pintado uma vez, marcadores a cada quadro
+const mini = document.getElementById('mini'), MW = 176, MH = Math.round(MW * COMP / LARG);
+mini.width = MW; mini.height = MH; mini.style.width = MW + 'px';
+const mctx = mini.getContext('2d'), fundoMini = document.createElement('canvas');
+fundoMini.width = NX + 1; fundoMini.height = NZ + 1;
+{
+  const c = fundoMini.getContext('2d'), img = c.createImageData(NX + 1, NZ + 1);
+  for (let k = 0; k < S.length; k++) {
+    const s = S[k], h = A[k];
+    const cor = s > 0 ? (h < 1.3 ? [234, 217, 164] : h > 90 ? [143, 136, 124] : [96, 150, 84]) : s > -12 ? [120, 214, 212] : s > -45 ? [64, 160, 190] : [38, 122, 163];
+    img.data.set([cor[0], cor[1], cor[2], 255], k * 4);
+  }
+  c.putImageData(img, 0, 0);
+}
+function desenharMini() {
+  mctx.imageSmoothingEnabled = true; mctx.drawImage(fundoMini, 0, 0, MW, MH);
+  const mx = (x) => (x - X0) / LARG * MW, mz = (z) => (z - Z0) / COMP * MH;
+  for (const n of npcs) if (n.obj) { mctx.fillStyle = n.cor || '#141414'; mctx.beginPath(); mctx.arc(mx(n.x), mz(n.z), 2.6, 0, 6.3); mctx.fill(); }
+  mctx.save(); mctx.translate(mx(estado.x), mz(estado.z)); mctx.rotate(-estado.rumo);
+  mctx.fillStyle = '#c0281c'; mctx.strokeStyle = '#fff'; mctx.lineWidth = 1.2;
+  mctx.beginPath(); mctx.moveTo(7, 0); mctx.lineTo(-5, 4.5); mctx.lineTo(-2.5, 0); mctx.lineTo(-5, -4.5); mctx.closePath(); mctx.fill(); mctx.stroke(); mctx.restore();
+}
+const elAgulha = document.getElementById('agulha'), elAjudaMar = document.getElementById('ajuda');
+elAjudaMar.classList.add('some');   // a ajuda vai para a central de avisos (ícone do pergaminho; F1 abre)
+setTimeout(() => avisos.novo('controles', 'Controles do mar', elAjudaMar.innerHTML, { fechado: true }), 80);
+addEventListener('keydown', (e) => { if (e.key === 'F1') { e.preventDefault(); avisos.aberto() ? avisos.fechar() : avisos.abrir(); } });
+const elNome = document.getElementById('lugarNome'), elDesc = document.getElementById('lugarDesc'), elNos = document.getElementById('nos'),
+      elRumo = document.getElementById('rumo'), elVelas = [...document.querySelectorAll('#velas span')], elAviso = document.getElementById('aviso');
+let avisoAte = 0;
+function avisar(texto, t) { elAviso.textContent = texto; elAviso.style.opacity = 1; avisoAte = t + 2.2; }
+function ondeEstou() {
+  let melhor = null, dmin = Infinity;
+  for (const [nome, x, n, raio, desc] of LUGARES) { const d = Math.hypot(estado.x - x, estado.z + n) / raio; if (d < 1 && d < dmin) { dmin = d; melhor = [nome, desc]; } }
+  if (melhor) return melhor;
+  if (estado.z > 1020) return ['Mar aberto', 'ondas fortes: aqui a chalupa sofre'];
+  if (estado.z > 780) return ['Barra da Guanabara', 'a passagem entre a baía e o mar'];
+  return ['Baía de Guanabara', 'águas calmas, boas para quem está começando'];
+}
+
+function ajustar() { renderer.setSize(innerWidth, innerHeight, false); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); }
+addEventListener('resize', ajustar); ajustar();
+
+// =====================================================================
+// 5. LAÇO DO JOGO
+// =====================================================================
+const volta = (a) => Math.atan2(Math.sin(a), Math.cos(a));
+const relogio = new THREE.Clock();
+let t = 0;
+function quadro() {
+  requestAnimationFrame(quadro);
+  const dt = Math.min(relogio.getDelta(), 0.05); t += dt;
+
+  // --- o seu navio
+  const querLeme = (teclas.has('a') || teclas.has('arrowleft') ? 1 : 0) - (teclas.has('d') || teclas.has('arrowright') ? 1 : 0);
+  estado.leme += (querLeme - estado.leme) * Math.min(1, dt * 3);
+  estado.vel += (estado.velas / MAX_VELAS * VEL_MAX - estado.vel) * Math.min(1, dt * 0.45);
+  estado.rumo = volta(estado.rumo + estado.leme * 0.55 * (0.2 + 0.8 * Math.abs(estado.vel) / VEL_MAX) * dt);
+  const nx = estado.x + Math.cos(estado.rumo) * estado.vel * dt, nz = estado.z - Math.sin(estado.rumo) * estado.vel * dt;
+  const proaX = nx + Math.cos(estado.rumo) * 1.6 * Math.sign(estado.vel || 1), proaZ = nz - Math.sin(estado.rumo) * 1.6 * Math.sign(estado.vel || 1);
+  if (Math.max(amostra(S, nx, nz), amostra(S, proaX, proaZ)) > CALADO) {            // raso demais: encalha e recua
+    if (Math.abs(estado.vel) > 1.5) avisar('A jangada encalhou na areia.', t);
+    estado.vel = -estado.vel * 0.35;
+  } else if (Math.abs(nx) > 1500 || nz > 1700) {
+    avisar('O mapa acaba aqui, por enquanto.', t); estado.vel = -Math.abs(estado.vel) * 0.35; estado.x = Math.max(-1499, Math.min(1499, estado.x)); estado.z = Math.min(1699, estado.z);
+  } else { estado.x = nx; estado.z = nz; }
+
+  if (navio) {
+    pousar(navio, estado.x, estado.z, estado.rumo, t, estado.leme * estado.vel / VEL_MAX * 0.16);
+    navio.panos.forEach((p, i) => { if (p) p.visible = estado.velas > i; });
+  }
+  // --- os outros navios seguem a rota deles
+  for (const n of npcs) {
+    if (!n.obj) continue;
+    const [ax, an] = n.rota[n.i], dx = ax - n.x, dz = -an - n.z;
+    if (Math.hypot(dx, dz) < 40) n.i = (n.i + 1) % n.rota.length;
+    const dif = volta(Math.atan2(-dz, dx) - n.rumo);
+    n.rumo += Math.max(-0.4 * dt, Math.min(0.4 * dt, dif));
+    n.x += Math.cos(n.rumo) * n.vel * dt; n.z -= Math.sin(n.rumo) * n.vel * dt;
+    pousar(n.obj, n.x, n.z, n.rumo, t);
+  }
+
+  // --- câmera: fica atrás do navio, com um pouco de atraso
+  cam.segue += volta(estado.rumo - cam.segue) * Math.min(1, dt * 1.6);
+  const ang = cam.segue + Math.PI + cam.giro, ch = Math.cos(cam.alt) * cam.dist;
+  camera.position.set(estado.x + Math.cos(ang) * ch, Math.max(2.5, Math.sin(cam.alt) * cam.dist), estado.z - Math.sin(ang) * ch);
+  const chao = amostra(A, camera.position.x, camera.position.z) + 3; if (camera.position.y < chao) camera.position.y = chao;
+  // iso = 1: câmera no mesmo ângulo fixo da terra, olhando a jangada de cima (início e fim da transição)
+  const iso = Math.max(chegada, partida), suave = iso * iso * (3 - 2 * iso);
+  if (suave > 0) { v3.copy(OFF_ISO).normalize().multiplyScalar(22).add(navio.position); camera.position.lerp(v3, suave); }
+  camera.lookAt(estado.x, 5 * (1 - suave) + 0.5 * suave, estado.z);
+  if (BONECO.pronto) {   // o náufrago a bordo, de frente para a câmera
+    const b = BONECO, f = b.folha; b.tempo += dt;
+    b.malha.position.set(navio.position.x, navio.position.y + 0.35 + QUADRO.alvoY, navio.position.z); b.malha.quaternion.copy(camera.quaternion);
+    const rel = estado.rumo - (angDe(estado.x - camera.position.x, estado.z - camera.position.z) - ANG_FOTO);
+    const k = ((Math.round(rel / (Math.PI / 4)) % DIRECOES) + DIRECOES) % DIRECOES, an = f.quadros.Sentado || f.quadros.Idle;   // sentado na jangada
+    b.tex.offset.set((an.inicio + Math.floor(b.tempo * 4) % an.n) / f.colunas, 1 - (k + 1) / f.linhas);
+  }
+
+  // --- mar acompanha o navio (em passos, para as facetas não "nadarem")
+  mar.position.set(Math.round(estado.x / PASSO_MAR) * PASSO_MAR, 0, Math.round(estado.z / PASSO_MAR) * PASSO_MAR);
+  matMar.uniforms.uT.value = t; matMar.uniforms.uCentro.value.set(estado.x, 0, estado.z);
+
+  { const h = hora(), e = escuro(h); sol.intensity = 2.6 * (1 - 0.6 * e); ceu.intensity = 1.5 * (1 - 0.5 * e);
+    const luzes = []; if (e > 0.01) { v3noite.set(estado.x, 2, estado.z).project(camera); luzes.push({ x: (v3noite.x * 0.5 + 0.5) * innerWidth, y: (-v3noite.y * 0.5 + 0.5) * innerHeight, r: Math.min(innerWidth, innerHeight) * 0.28, forca: 0.85, fogo: true }); }
+    veu.desenhar(luzes, h); elHoraMar.textContent = textoHora(h); }
+  renderer.render(cena, camera);
+
+  // --- painéis
+  for (const p of placas) fixar(p.el, p.x, p.y, p.z, p.alcance);
+  for (const n of npcs) if (n.obj) fixar(n.rot, n.x, 17, n.z, 420);
+  const [nome, desc] = ondeEstou(); if (elNome.textContent !== nome) { elNome.textContent = nome; elDesc.textContent = desc; }
+  elNos.textContent = Math.round(Math.abs(estado.vel) * 0.8);
+  elRumo.textContent = ['L', 'NE', 'N', 'NO', 'O', 'SO', 'S', 'SE'][((Math.round(estado.rumo / (Math.PI / 4)) % 8) + 8) % 8];
+  elVelas.forEach((e, i) => e.classList.toggle('on', estado.velas > i));
+  elAgulha.style.transform = `rotate(${90 - estado.rumo * 180 / Math.PI}deg)`;   // 0° = norte, sentido horário
+  if (t > avisoAte) elAviso.style.opacity = 0;
+  desenharMini();
+  const dPraia = Math.hypot(estado.x - PRAIA.xAgua, estado.z - PRAIA.z), perto = dPraia < 45 && Math.abs(estado.vel) < 3;
+  const dica = partida ? '' : perto ? '<b>E</b> desembarcar na sua praia' : dPraia < 120 ? 'sua praia fica logo ali' : '';
+  if (elDica.innerHTML !== dica) { elDica.innerHTML = dica; elDica.style.display = dica ? 'block' : 'none'; }
+  podeDesembarcar = perto;
+  if (chegada > 0) { chegada = Math.max(0, chegada - dt / 1.6); elVeu.style.opacity = Math.min(1, chegada * 1.4); }
+  if (partida > 0) {
+    partida = Math.min(1, partida + dt / 1.4); elVeu.style.opacity = Math.max(0, partida * 1.6 - 0.6); estado.velas = 0;
+    if (partida >= 1 && !foi) { foi = true; location.href = 'terra.html'; }
+  }
+  if (t - salvoEm > 5) salvarMar();
+  // para o sul, depois das ilhas do mar aberto, abre a carta das Américas (carta.html)
+  if (estado.z > 1420 && !avisouCarta) { avisouCarta = true; avisar('Mar aberto ao sul: siga em frente para abrir a carta das Américas.', t); }
+  if (!saindoCarta && !partida && estado.z > 1640) {
+    saindoCarta = 0.001; salvo.salvarProgresso({ ...(salvo.progresso() || {}), local: 'carta', mar: null, carta: null });
+    try { sessionStorage.setItem('cap.transicao', 'mar-carta'); } catch {}
+  }
+  if (saindoCarta) { saindoCarta += dt; elVeu.style.opacity = Math.min(1, saindoCarta / 1.1); if (saindoCarta > 1.2 && !foi) { foi = true; location.href = 'carta.html'; } }
+  if (temRede) {   // online: conta onde você está e desenha as jangadas dos outros
+    const eu = salvo.jogador();
+    enviar({ cena: 'mar', nome: eu?.nome || 'Náufrago', comp: eu?.aparencia?.personagem || {}, x: estado.x, z: estado.z, rumo: estado.rumo, velas: estado.velas });
+    atualizarJangadas(dt, t);
+  }
+}
+elDesc.textContent = ondeEstou()[1];
+// jangadas dos outros jogadores: cópia da sua, com o nome numa placa
+const JANGADAS = new Map(), elOnline = document.getElementById('online');
+function atualizarJangadas(dt, t) {
+  const vistos = new Set();
+  for (const [peer, bruto] of lista()) {
+    const e = limpar(bruto); if (e.cena !== 'mar' || !navio) continue;
+    vistos.add(peer);
+    let o = JANGADAS.get(peer);
+    if (!o) { const g = navio.clone(true); g.panos = [g.children.find((c) => c.geometry && c.geometry.type === 'ShapeGeometry')]; cena.add(g); o = { g, x: e.x, z: e.z, rumo: e.rumo, rot: rotulo('', 'navio') }; JANGADAS.set(peer, o); }
+    o.x += (e.x - o.x) * Math.min(1, dt * 6); o.z += (e.z - o.z) * Math.min(1, dt * 6); o.rumo += volta(e.rumo - o.rumo) * Math.min(1, dt * 6);
+    pousar(o.g, o.x, o.z, o.rumo, t); if (o.g.panos[0]) o.g.panos[0].visible = e.velas > 0;
+    o.rot.textContent = e.nome; fixar(o.rot, o.x, 6, o.z, 500);
+  }
+  for (const [peer, o] of JANGADAS) if (!vistos.has(peer)) { cena.remove(o.g); o.rot.remove(); JANGADAS.delete(peer); }
+  const n = quantos(); elOnline.style.display = 'block';
+  elOnline.textContent = n > 1 ? `online · ${n} piratas (${JANGADAS.size} no mar)` : 'online · só você por enquanto';
+}
+const elDica = document.getElementById('dica'), elVeu = document.getElementById('veu');
+let chegada = 0, partida = 0, foi = false, podeDesembarcar = false, salvoEm = 0, saindoCarta = 0, avisouCarta = false;
+try { if (sessionStorage.getItem('cap.transicao')) { sessionStorage.removeItem('cap.transicao'); chegada = 1; elVeu.style.opacity = 1; } } catch {}
+function salvarMar() {
+  salvoEm = t; if (partida || saindoCarta) return;
+  salvo.salvarProgresso({ ...(salvo.progresso() || {}), local: 'mar', mar: { x: estado.x, z: estado.z, rumo: estado.rumo } });
+}
+addEventListener('beforeunload', salvarMar);
+addEventListener('keydown', (e) => {
+  if (e.key.toLowerCase() !== 'e' || e.repeat || partida) return;
+  if (!podeDesembarcar) { if (Math.max(...[0, 1, 2, 3].map((q) => amostra(S, estado.x + Math.cos(q * 1.57) * 15, estado.z + Math.sin(q * 1.57) * 15))) > 0) avisar('Esta terra ainda não foi mapeada: por enquanto, só a sua praia.', t); return; }
+  salvo.salvarProgresso({ ...(salvo.progresso() || {}), local: 'terra', mar: null, chegouDoMar: true });
+  try { sessionStorage.setItem('cap.transicao', 'mar-terra'); } catch {}
+  partida = 0.001; estado.velas = 0;
+});
+// placa da sua praia
+placas.push({ el: rotulo('Sua praia'), x: PRAIA.xTerra, z: PRAIA.z, y: Math.max(0, amostra(A, PRAIA.xTerra, PRAIA.z)) + 14, alcance: 700 });
+// controles de toque: leme à esquerda, velas e desembarque à direita; arrastar o dedo no mar gira a câmera
+const TQ = criarControles({
+  esquerda: [{ nome: 'bombordo', rotulo: '◀', legenda: 'leme', key: 'a', classe: 'grande' }, { nome: 'boreste', rotulo: '▶', legenda: 'leme', key: 'd', classe: 'grande' }],
+  acoes: [
+    { nome: 'sobe', rotulo: '▲', legenda: 'vela', key: 'w' }, { nome: 'desce', rotulo: '▼', legenda: 'vela', key: 's' },
+    { nome: 'desembarcar', rotulo: 'E', legenda: 'desembarcar', key: 'e', classe: 'grande' },
+  ],
+  topo: [
+    { nome: 'perto', rotulo: '+', legenda: 'zoom', f: () => (cam.dist = Math.max(16, cam.dist * 0.8)) }, { nome: 'longe', rotulo: '−', legenda: 'zoom', f: () => (cam.dist = Math.min(420, cam.dist * 1.25)) },
+    { nome: 'cheia', rotulo: '⛶', legenda: 'tela', f: telaCheia },
+  ],
+});
+if (TQ.ativo) { elAjudaMar.innerHTML = '<b>◀ ▶</b> leme · <b>▲ ▼</b> içar e baixar a vela · <b>E</b> perto da sua praia: desembarcar · <b>arraste</b> no mar para girar a câmera'; elAjudaMar.style.pointerEvents = 'auto'; elAjudaMar.addEventListener('click', () => elAjudaMar.classList.add('some')); }
+quadro();
+window.__jogo = { estado, cam, npcs, amostra, S, A, PRAIA, get podeDesembarcar() { return podeDesembarcar; } };   // para testes no console
+</script>
+</body>
+</html>

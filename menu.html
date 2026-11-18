@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Procurados</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#2b1d0e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Procurados">
+<link rel="apple-touch-icon" href="icones/icone-180.png">
+<link rel="icon" href="icones/icone-192.png">
+<link rel="stylesheet" href="fontes/fontes.css">
+<style>
+  :root { --papel: #f1e2bf; --papel2: #e6d0a2; --tinta: #2b1d0e; --madeira: #5e3a1e; --vermelho: #a8221a; --ouro: #d9a441; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #1f86ad; font-family: var(--fonte-texto); color: var(--tinta); }
+  #fundo { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  .tela { position: fixed; inset: 0; display: none; place-items: center; padding: 16px; overflow-y: auto; }
+  .tela.ativa { display: grid; }
+
+  /* o cartaz de procurado: papel com as bordas queimadas, pregado com dois cravos */
+  .cartaz { position: relative; border-style: solid; border-width: 28px; border-color: transparent; border-image: var(--pergaminho) 64 fill / 28px stretch;
+    filter: drop-shadow(0 14px 26px rgba(0,0,0,.5)); padding: 14px 22px 12px; transform: rotate(-1.2deg); }
+  .cartaz::before, .cartaz::after { content: ''; position: absolute; top: -6px; width: 16px; height: 16px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #c9c2b0, #5a554c 60%, #2e2b26); box-shadow: 0 2px 3px rgba(0,0,0,.6); }
+  .cartaz::before { left: -4px; } .cartaz::after { right: -4px; }
+  .titulo { text-align: center; }
+  .titulo small { display: block; letter-spacing: .5em; font-size: 13px; color: var(--vermelho); font-weight: bold; }
+  .titulo h1 { margin: 6px 0 2px; font-family: var(--fonte-titulo); font-size: clamp(48px, 9vw, 82px); line-height: .9; letter-spacing: .02em; font-weight: normal; text-shadow: 2px 2px 0 rgba(168, 34, 26, .25); }
+  .titulo p { margin: 8px 0 0; font-style: italic; font-size: 15px; opacity: .8; }
+  .filete { height: 3px; background: var(--tinta); margin: 16px 0; box-shadow: 0 5px 0 -1px var(--tinta); }
+
+  /* botões: tábuas de madeira com cravos de latão */
+  #inicio .cartaz { width: min(440px, 100%); }
+  .menu button, .botao { position: relative; display: block; width: 100%; margin: 10px 0; padding: 9px 34px; cursor: pointer;
+    font: 22px var(--fonte-titulo); letter-spacing: .05em; color: #f6e7c4; text-shadow: 0 -1px 0 rgba(0,0,0,.7);
+    background: repeating-linear-gradient(90deg, rgba(0,0,0,.06) 0 2px, transparent 2px 11px), linear-gradient(#8f5f31, #6b4321 55%, #5a3719);
+    border: 2px solid #3a220e; border-radius: 6px; box-shadow: inset 0 1px 0 rgba(255,220,160,.28), 0 3px 0 #2e1a09, 0 6px 9px rgba(0,0,0,.3); transition: transform .12s, filter .12s, box-shadow .12s; }
+  .menu button::before, .menu button::after, .botao::before, .botao::after { content: ''; position: absolute; top: 50%; width: 9px; height: 9px; margin-top: -4.5px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #f3d77a, #b8892f 60%, #6e4f17); box-shadow: 0 1px 1px rgba(0,0,0,.6); }
+  .menu button::before, .botao::before { left: 11px; } .menu button::after, .botao::after { right: 11px; }
+  .menu button:hover:not(:disabled), .botao:hover:not(:disabled), .menu button:focus-visible, .botao:focus-visible { transform: translateY(-2px); filter: brightness(1.12); outline: none; }
+  .menu button:active:not(:disabled), .botao:active:not(:disabled) { transform: translateY(2px); box-shadow: inset 0 1px 0 rgba(255,220,160,.2), 0 1px 0 #2e1a09; }
+  .menu button:disabled, .botao:disabled { filter: grayscale(.8) brightness(.8); opacity: .55; cursor: default; }
+  .menu button small { display: block; font: italic 13px var(--fonte-texto); letter-spacing: 0; color: #ead9b4; opacity: .85; }
+  .rodape { text-align: center; font-size: 12px; opacity: .65; margin-top: 12px; }
+
+  /* criar personagem: duas colunas que cabem na tela */
+  #novo .cartaz { width: min(1020px, 100%); max-height: calc(100vh - 28px); display: grid; grid-template-columns: minmax(190px, 280px) 1fr; grid-template-rows: minmax(0, 1fr); gap: 20px; transform: rotate(-.6deg); }
+  @media (max-width: 560px) { #novo .cartaz { grid-template-columns: 1fr; max-height: none; } }
+  @media (max-height: 640px) { .procurado b.big { font-size: 34px; } .procurado .nome { font-size: 24px; } }
+  .procurado { text-align: center; border: 3px double var(--tinta); padding: 10px 10px 12px; align-self: start; }
+  .procurado b.big { display: block; font-family: var(--fonte-titulo); font-weight: normal; font-size: 46px; letter-spacing: .06em; line-height: 1; }
+  .procurado .quadro { margin: 8px auto; width: 100%; max-width: 240px; max-height: 42vh; aspect-ratio: 240 / 290; border: 3px solid var(--tinta); background: radial-gradient(#efe1bd, #ddc792); display: grid; place-items: end center; overflow: hidden; }
+  .procurado canvas { display: block; width: 100%; height: 100%; object-fit: contain; object-position: bottom; }
+  .procurado .nome { font: 30px var(--fonte-titulo); min-height: 34px; word-break: break-word; }
+  .procurado .recompensa { font-size: 13px; letter-spacing: .1em; margin-top: 2px; }
+  .procurado .recompensa b { display: block; font: 24px var(--fonte-titulo); color: var(--vermelho); letter-spacing: .02em; }
+  .direita { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+  .opcoes { overflow-y: auto; flex: 1; min-height: 0; padding-right: 8px; }
+  .campo { margin-bottom: 11px; }
+  .campo > label { display: block; font-weight: bold; font-size: 13px; letter-spacing: .12em; margin-bottom: 5px; }
+  input[type=text] { width: 100%; padding: 7px 10px; font: 22px var(--fonte-titulo); color: var(--tinta); background: rgba(255,255,255,.35); border: none; border-bottom: 2px solid var(--tinta); border-radius: 0; outline: none; }
+  input[type=text]:focus { background: rgba(255,255,255,.55); }
+  .amostras { display: flex; gap: 7px; flex-wrap: wrap; }
+  .amostras button { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--tinta); cursor: pointer; padding: 0; font: 11px var(--fonte-texto); }
+  .amostras button.sel { box-shadow: 0 0 0 3px #f1e2bf, 0 0 0 5px var(--vermelho); }
+  .amostras.texto button { width: auto; border-radius: 3px; padding: 4px 11px; background: rgba(255,255,255,.3); font-size: 15px; border: 1.5px solid rgba(43,29,14,.6); }
+  .amostras.texto button.sel { background: var(--tinta); color: #f1e2bf; box-shadow: none; }
+  .cidades { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 6px; }
+  @media (max-width: 900px) { .cidades { grid-template-columns: repeat(2, 1fr); } }
+  .cidade { position: relative; text-align: left; padding: 6px 9px; border: 1.5px solid rgba(43,29,14,.6); border-radius: 3px; background: rgba(255,255,255,.3); cursor: pointer; font: 13px var(--fonte-texto); color: var(--tinta); }
+  .cidade b { font: 18px var(--fonte-titulo); font-weight: normal; } .cidade i { display: block; font-size: 12px; opacity: .75; }
+  .cidade .dif { letter-spacing: 2px; color: var(--vermelho); font-size: 12px; }
+  .cidade.sel { background: var(--tinta); color: #f1e2bf; } .cidade.sel .dif { color: var(--ouro); }
+  .cidade:disabled { opacity: .45; cursor: default; }
+  .cidade em { position: absolute; top: 5px; right: 6px; font-size: 10px; font-style: normal; border: 1px solid currentColor; padding: 0 4px; border-radius: 2px; }
+  #descCidade { font-style: italic; font-size: 14px; margin-top: 5px; min-height: 18px; }
+  .acoes { display: flex; gap: 12px; margin-top: 12px; padding-top: 10px; border-top: 2px solid rgba(43,29,14,.3); } .acoes .botao { margin: 0; }
+  .acoes .botao.principal { flex: 1.6; padding-right: 54px; }
+  .acoes .botao.principal::after { width: 34px; height: 34px; margin-top: -17px; right: 8px; border-radius: 50% 46% 52% 48%; transform: rotate(-12deg);
+    background: radial-gradient(circle at 36% 34%, #e0574a, #a3231a 58%, #6e130d); box-shadow: 0 2px 3px rgba(0,0,0,.55), inset 0 0 0 4px rgba(0,0,0,.15); }
+
+  /* telas simples */
+  .simples .cartaz { width: min(540px, 100%); }
+  .simples h2 { margin: 0 0 10px; text-align: center; font-family: var(--fonte-titulo); font-weight: normal; font-size: 38px; letter-spacing: .05em; }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  td { padding: 5px 4px; border-bottom: 1px dashed rgba(43,29,14,.35); } td:first-child { font-weight: bold; white-space: nowrap; width: 40%; }
+  .linha { display: flex; justify-content: space-between; align-items: center; margin: 12px 0; font-size: 16px; }
+  .aviso { font-size: 13px; color: var(--vermelho); text-align: center; min-height: 18px; }
+</style>
+<script type="importmap">{ "imports": { "three": "./lib/three.module.min.js" } }</script>
+</head>
+<body>
+<canvas id="fundo"></canvas>
+<script src="js/pergaminho.js"></script>
+
+<!-- tela inicial -->
+<section id="inicio" class="tela ativa">
+  <div class="cartaz">
+    <div class="titulo"><small>VIVOS OU MORTOS</small><h1>Procurados</h1><p>piratas, fora-da-lei e a Ordem, da Guanabara ao Caribe</p></div>
+    <div class="filete"></div>
+    <div class="menu">
+      <button id="bContinuar" disabled>Continuar<small id="bContinuarInfo"></small></button>
+      <button data-ir="novo">Novo jogo</button>
+      <button data-ir="codigo" id="bCodigo" hidden>Tenho um código</button>
+      <button data-ir="opcoes">Opções</button>
+      <button data-ir="controles">Controles</button>
+      <button data-ir="creditos">Créditos</button>
+    </div>
+    <div class="rodape" id="rodape">protótipo · tudo é salvo neste navegador</div>
+  </div>
+</section>
+
+<!-- criar personagem -->
+<section id="novo" class="tela">
+  <div class="cartaz">
+    <div class="procurado">
+      <b class="big">PROCURADO</b>
+      <div class="quadro"><canvas id="retrato" width="240" height="290"></canvas></div>
+      <div class="nome" id="cNome">—</div>
+      <div class="recompensa">RECOMPENSA<b>ninguém ainda</b></div>
+      <div style="font-size:12px;margin-top:8px;font-style:italic;opacity:.75">Você nasce sem lado. O primeiro cartaz depende do que fizer.</div>
+    </div>
+    <div class="direita"><div class="opcoes">
+      <div class="campo"><label for="nome">NOME</label><input type="text" id="nome" maxlength="20" placeholder="Como vão te chamar?" autocomplete="off"></div>
+      <div class="campo"><label for="arroba">SEU @ DO INSTAGRAM <small style="opacity:.7">(para ganhar seu lote: comente no Reel do @procurados2027 e use o mesmo @ aqui)</small></label><input type="text" id="arroba" maxlength="31" placeholder="@seuperfil" autocomplete="off" spellcheck="false"></div>
+      <div id="pecas"><div class="aviso" style="color:inherit;opacity:.7">carregando as peças do personagem…</div></div>
+      <div class="campo"><label>ONDE VOCÊ NASCE</label><div class="cidades" id="cidades"></div><div id="descCidade"></div></div>
+      </div>
+      <div class="aviso" id="avisoNovo"></div>
+      <div class="acoes"><button class="botao" data-ir="inicio">Voltar</button><button class="botao principal" id="bComecar">Acordar na praia</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- opções -->
+<section id="opcoes" class="tela simples">
+  <div class="cartaz">
+    <h2>OPÇÕES</h2>
+    <div class="linha"><span>Qualidade gráfica</span><div class="amostras texto" id="qualidade"></div></div>
+    <div class="linha"><span>Mostrar quadros por segundo</span><input type="checkbox" id="qps"></div>
+    <div class="filete"></div>
+    <div class="linha"><span>Apagar personagem e progresso</span><button class="botao" id="bApagar" style="width:auto;margin:0">Apagar</button></div>
+    <div class="aviso" id="avisoOpcoes"></div>
+    <div class="acoes"><button class="botao" data-ir="inicio">Voltar</button></div>
+  </div>
+</section>
+
+<!-- controles -->
+<section id="controles" class="tela simples">
+  <div class="cartaz">
+    <h2>CONTROLES</h2>
+    <table>
+      <tr><td class="numeros">W A S D</td><td>andar (setas também)</td></tr>
+      <tr><td class="numeros">Shift</td><td>correr (gasta fôlego)</td></tr>
+      <tr><td class="numeros">E</td><td>pegar, cortar, catar, usar o objeto aceso</td></tr>
+      <tr><td class="numeros">Clique</td><td>atacar na direção do mouse</td></tr>
+      <tr><td class="numeros">Espaço</td><td>esquivar (gasta fôlego)</td></tr>
+      <tr><td class="numeros">1 a 9 · rodinha</td><td>escolher o atalho da barra (comida se usa na hora)</td></tr>
+      <tr><td class="numeros">Q</td><td>próxima arma da barra</td></tr>
+      <tr><td class="numeros">Tab ou C</td><td>bolsa e oficina (arraste itens para a barra)</td></tr>
+      <tr><td class="numeros">J</td><td>diário de bordo</td></tr>
+      <tr><td class="numeros">Ctrl + rodinha · + −</td><td>zoom</td></tr>
+      <tr><td class="numeros">F1</td><td>mostrar ou esconder a ajuda</td></tr>
+      <tr><td class="numeros">Esc</td><td>pausa</td></tr>
+      <tr><td class="numeros">No mar</td><td>W/S vela, A/D leme, E desembarca na sua praia</td></tr>
+      <tr><td class="numeros">B · R · X</td><td>dentro de casa: mobiliar, girar o móvel, desmontar</td></tr>
+      <tr><td class="numeros">No celular</td><td>tela deitada; joystick à esquerda, botões à direita. Toque no chão para atacar ali</td></tr>
+    </table>
+    <div class="acoes"><button class="botao" data-ir="inicio">Voltar</button></div>
+  </div>
+</section>
+
+<!-- créditos -->
+<section id="codigo" class="tela simples">
+  <div class="cartaz">
+    <h2>CÓDIGO DE PIRATA</h2>
+    <p style="text-align:center">Digite o código que aparece na pausa do jogo para trazer o seu personagem para este aparelho.</p>
+    <p style="text-align:center"><input id="campoCodigo" maxlength="20" autocomplete="off" spellcheck="false" placeholder="XXXX-XXXX-XXXX" style="font: 24px Palatino, serif; letter-spacing: .1em; text-align: center; width: min(320px, 80vw); padding: 6px; text-transform: uppercase"></p>
+    <p id="avisoCodigo" style="text-align:center; min-height: 1.4em"></p>
+    <div class="acoes"><button class="botao" data-ir="inicio">Voltar</button><button class="botao principal" id="bCarregarCodigo">Carregar</button></div>
+  </div>
+</section>
+
+<section id="creditos" class="tela simples">
+  <div class="cartaz">
+    <h2>CRÉDITOS</h2>
+    <table>
+      <tr><td>Criação e direção de arte</td><td>Tiago</td></tr>
+      <tr><td>Código e propostas</td><td>Claude</td></tr>
+      <tr><td>Motor 3D</td><td>Three.js</td></tr>
+      <tr><td>Modelos (CC0)</td><td>Kenney, Quaternius, Kay Lousberg (KayKit)</td></tr>
+      <tr><td>Bichos (CC-BY 3.0)</td><td>Capivara, cateto, tatu, jacaré, jararaca, caranguejo e quati: Poly by Google, via Poly Pizza</td></tr>
+      <tr><td>Itens (CC-BY 3.0)</td><td>Chapéu: Republic Clone · Carne: S. Paul Michael · Clava, pote e dente: Poly by Google · via Poly Pizza</td></tr>
+      <tr><td>Inspiração</td><td>Dofus, Diablo, ARK, Albion Online e o folclore da América do Sul</td></tr>
+    </table>
+    <div class="acoes"><button class="botao" data-ir="inicio">Voltar</button></div>
+  </div>
+</section>
+
+<script type="module">
+import { desenharBoneco, APARENCIA_PADRAO, CIDADES, salvo } from './js/boneco.js';
+import { nuvemAtiva, baixarNuvem, codigoDoJogador, formatar, novoCodigo } from './js/nuvem.js';
+import { criarFabrica, SEXOS, AMOSTRA_PELE, CABELOS, CORES_CABELO, COMPOSICAO_PADRAO, QUADRO } from './js/fabrica.js';
+
+// ---------- navegação entre telas
+function ir(id) { document.querySelectorAll('.tela').forEach((s) => s.classList.toggle('ativa', s.id === id)); const f = document.querySelector('#' + id + ' button:not(:disabled), #' + id + ' input'); if (f) f.focus({ preventScroll: true }); }
+document.querySelectorAll('[data-ir]').forEach((b) => b.addEventListener('click', () => ir(b.dataset.ir)));
+addEventListener('keydown', (e) => { if (e.key === 'Escape' && !document.getElementById('inicio').classList.contains('ativa')) ir('inicio'); });
+
+// ---------- continuar
+function atualizarContinuar() {
+  const j = salvo.jogador(), b = document.getElementById('bContinuar');
+  b.disabled = !j; document.getElementById('bContinuarInfo').textContent = j ? `${j.nome} · ${CIDADES.find((c) => c.id === j.cidade)?.nome || ''}` : 'nenhum jogo salvo';
+}
+// save na nuvem: mostra o código e deixa trazer um personagem de outro aparelho
+if (nuvemAtiva) {
+  document.getElementById('bCodigo').hidden = false;
+  if (salvo.jogador()) document.getElementById('rodape').innerHTML = 'salvo na nuvem · seu código: <b style="font-family: Palatino, serif; letter-spacing: .06em">' + formatar(codigoDoJogador()) + '</b>';
+  else document.getElementById('rodape').textContent = 'o progresso fica salvo na nuvem, com um código de pirata';
+}
+document.getElementById('bCarregarCodigo').onclick = async () => {
+  const el = document.getElementById('avisoCodigo'), b = document.getElementById('bCarregarCodigo'), txt = document.getElementById('campoCodigo').value;
+  const atual = salvo.jogador();
+  el.textContent = 'Procurando…';
+  try {
+    const d = await baixarNuvem(txt);
+    if (!d) { el.textContent = 'Nenhum pirata com esse código. Confira as letras.'; return; }
+    if (atual && atual.codigo !== d.jogador.codigo && !b.dataset.confirma) { b.dataset.confirma = '1'; el.textContent = `Achei ${d.jogador.nome}. Este aparelho já tem ${atual.nome}: clique em Carregar de novo para trocar.`; setTimeout(() => delete b.dataset.confirma, 6000); return; }
+    salvo.salvarJogador(d.jogador); salvo.salvarProgresso(d.progresso || null);
+    el.textContent = 'Bem-vindo de volta, ' + d.jogador.nome + '!';
+    setTimeout(() => (location.href = ({ mar: 'mar.html', carta: 'carta.html' })[d.progresso?.local] || 'terra.html'), 700);
+  } catch (e) { console.error(e); el.textContent = 'Não consegui falar com o servidor. Tente de novo em instantes.'; }
+};
+document.getElementById('campoCodigo').addEventListener('keydown', (e) => { if (e.key === 'Enter') document.getElementById('bCarregarCodigo').click(); });
+document.getElementById('bContinuar').onclick = () => (location.href = ({ mar: 'mar.html', carta: 'carta.html' })[salvo.progresso()?.local] || 'terra.html');
+atualizarContinuar();
+
+// ---------- criar personagem
+const ap = { ...APARENCIA_PADRAO };
+const comp = { ...COMPOSICAO_PADRAO };
+let cidade = 'niteroi', fabrica = null;
+const retrato = document.getElementById('retrato'), rctx = retrato.getContext('2d');
+const foto = document.createElement('canvas'); foto.width = QUADRO.l; foto.height = QUADRO.a; const fotoCtx = foto.getContext('2d');
+const GIRO = [7, 7, 7, 0, 1, 2, 3, 4, 5, 6];   // fica de frente um pouco e dá uma volta
+let giro = 0;
+setInterval(() => { if (fabrica && document.getElementById('novo').classList.contains('ativa')) { giro++; desenharRetrato(); } }, 420);
+function desenharRetrato() {
+  rctx.clearRect(0, 0, retrato.width, retrato.height);
+  if (fabrica) {   // foto do personagem montado, ampliada
+    fotoCtx.clearRect(0, 0, foto.width, foto.height); fabrica.retrato(comp, fotoCtx, 0, 0, GIRO[giro % GIRO.length]);
+    const e = 2.05; rctx.drawImage(foto, (retrato.width - foto.width * e) / 2, retrato.height - foto.height * e + 46, foto.width * e, foto.height * e);
+  } else { rctx.save(); rctx.translate(100 - 64 * 1.3, 230 - 192 * 1.3 + 12); rctx.scale(1.3, 1.3); desenharBoneco(rctx, 'frente', 0, ap); rctx.restore(); }
+}
+function montarSeletores() {
+  // o náufrago acorda sem nada: escolhe-se só o corpo, o cabelo e a barba
+  const caixa = document.getElementById('pecas'); caixa.innerHTML = '';
+  const campo = (rotulo, opcoes, atual, aoEscolher, cores) => {
+    const c = document.createElement('div'); c.className = 'campo'; c.innerHTML = `<label>${rotulo}</label>`;
+    const linha = document.createElement('div'); linha.className = 'amostras' + (cores ? '' : ' texto');
+    opcoes.forEach((rot, i) => {
+      const b = document.createElement('button'); b.type = 'button';
+      if (cores) { b.style.background = cores[i]; b.title = rot; } else b.textContent = rot;
+      if (atual === i) b.classList.add('sel');
+      b.onclick = () => { aoEscolher(i); montarSeletores(); desenharRetrato(); };
+      linha.appendChild(b);
+    });
+    c.appendChild(linha); caixa.appendChild(c);
+  };
+  campo('SEXO', SEXOS.map((s) => s[1]), SEXOS.findIndex((s) => s[0] === comp.sexo), (i) => { comp.sexo = SEXOS[i][0]; comp.cabelo = 0; comp.barba = comp.sexo === 'm' && comp.barba; });
+  campo('TOM DE PELE', AMOSTRA_PELE.map((_, i) => 'tom ' + (i + 1)), comp.pele, (i) => (comp.pele = i), AMOSTRA_PELE);
+  campo('CABELO', CABELOS[comp.sexo].map((c) => c[1]), comp.cabelo, (i) => (comp.cabelo = i));
+  campo('COR DO CABELO', ['preto', 'castanho', 'ruivo', 'loiro', 'grisalho'], comp.corCabelo, (i) => (comp.corCabelo = i), CORES_CABELO);
+  if (comp.sexo === 'm') campo('BARBA', ['sem barba', 'com barba'], comp.barba ? 1 : 0, (i) => (comp.barba = i === 1));
+  const nota = document.createElement('div'); nota.className = 'aviso'; nota.style.cssText = 'color:inherit;opacity:.7;font-style:italic;text-align:left';
+  nota.textContent = 'Você acorda na praia só com a roupa do corpo. Tudo o mais se acha ou se faz.'; caixa.appendChild(nota);
+}
+criarFabrica().then((f) => { fabrica = f; montarSeletores(); desenharRetrato(); })
+  .catch((e) => { console.error(e); document.getElementById('pecas').innerHTML = '<div class="aviso">Não consegui carregar as peças (abra pelo servidor local).</div>'; });
+const elCidades = document.getElementById('cidades');
+for (const c of CIDADES) {
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'cidade' + (c.id === cidade ? ' sel' : ''); b.disabled = !c.aberta;
+  b.innerHTML = `${c.aberta ? '' : '<em>em breve</em>'}<b>${c.nome}</b><i>${c.regiao}</i><span class="dif">${'★'.repeat(c.dif)}${'☆'.repeat(5 - c.dif)}</span>`;
+  b.title = c.desc;
+  b.onclick = () => { cidade = c.id; elCidades.querySelectorAll('.cidade').forEach((x) => x.classList.toggle('sel', x === b)); document.getElementById('descCidade').textContent = c.desc; };
+  if (c.id === cidade) setTimeout(() => (document.getElementById('descCidade').textContent = c.desc));
+  elCidades.appendChild(b);
+}
+const elNome = document.getElementById('nome'), elCNome = document.getElementById('cNome');
+elNome.addEventListener('input', () => (elCNome.textContent = elNome.value.trim() || '—'));
+document.getElementById('bComecar').onclick = () => {
+  const nome = elNome.value.trim();
+  if (nome.length < 2) { document.getElementById('avisoNovo').textContent = 'Escolha um nome com pelo menos 2 letras.'; elNome.focus(); return; }
+  const atual = salvo.jogador();
+  // confirmação dentro da página (a página publicada não pode abrir janelas de confirmação do navegador)
+  const bc = document.getElementById('bComecar');
+  if (atual && !bc.dataset.confirma) { bc.dataset.confirma = '1'; document.getElementById('avisoNovo').textContent = `Já existe um jogo salvo (${atual.nome}). Clique de novo em Acordar na praia para começar outro e apagar esse progresso.`; setTimeout(() => { delete bc.dataset.confirma; }, 6000); return; }
+  salvo.apagarTudo();
+  // personagem novo no mesmo aparelho: continua com o mesmo código de pirata e o mesmo lote (um lote por pessoa)
+  if (!salvo.salvarJogador({ nome, aparencia: { ...ap, personagem: { ...comp } }, cidade, criado: Date.now(), codigo: atual?.codigo || novoCodigo(), lote: atual?.lote || null, instagram: (document.getElementById('arroba').value || '').trim().toLowerCase().replace(/^@/, '').replace(/[^a-z0-9._]/g, '').slice(0, 30) || null })) document.getElementById('avisoNovo').textContent = 'Este navegador não deixou salvar; o jogo abre, mas não vai lembrar de você.';
+  location.href = 'terra.html';
+};
+elNome.addEventListener('keydown', (e) => { if (e.key === 'Enter') document.getElementById('bComecar').click(); });
+desenharRetrato();
+
+// ---------- opções
+const op = salvo.opcoes();
+const elQual = document.getElementById('qualidade');
+for (const [v, txt] of [['baixa', 'baixa'], ['media', 'média'], ['alta', 'alta']]) {
+  const b = document.createElement('button'); b.type = 'button'; b.textContent = txt; if (op.qualidade === v) b.classList.add('sel');
+  b.onclick = () => { op.qualidade = v; salvo.salvarOpcoes(op); elQual.querySelectorAll('button').forEach((x) => x.classList.toggle('sel', x === b)); };
+  elQual.appendChild(b);
+}
+const elQps = document.getElementById('qps'); elQps.checked = op.mostrarQps;
+elQps.onchange = () => { op.mostrarQps = elQps.checked; salvo.salvarOpcoes(op); };
+document.getElementById('bApagar').onclick = () => {
+  if (!salvo.jogador()) { document.getElementById('avisoOpcoes').textContent = 'Não há jogo salvo.'; return; }
+  const ba = document.getElementById('bApagar');
+  if (!ba.dataset.confirma) { ba.dataset.confirma = '1'; ba.textContent = 'Confirmar'; document.getElementById('avisoOpcoes').textContent = 'Clique em Confirmar para apagar o personagem e todo o progresso. Não dá para desfazer.'; setTimeout(() => { delete ba.dataset.confirma; ba.textContent = 'Apagar'; }, 6000); return; }
+  delete ba.dataset.confirma; ba.textContent = 'Apagar';
+  salvo.apagarTudo(); atualizarContinuar(); document.getElementById('avisoOpcoes').textContent = 'Apagado.';
+};
+
+// ---------- fundo animado: céu, sol, ilha com coqueiros e mar em faixas (pintado, sem 3D, leve)
+const cv = document.getElementById('fundo'), c = cv.getContext('2d');
+function tamanho() { const r = Math.min(devicePixelRatio, 1.5); cv.width = innerWidth * r; cv.height = innerHeight * r; c.setTransform(r, 0, 0, r, 0, 0); }
+addEventListener('resize', tamanho); tamanho();
+const gaivotas = Array.from({ length: 5 }, (_, k) => ({ x: Math.random() * innerWidth, y: 60 + Math.random() * 140, v: 18 + Math.random() * 14, f: Math.random() * 6 }));
+let t0 = performance.now();
+function coqueiro(x, y, h, inc) {
+  c.strokeStyle = '#2b1d0e'; c.lineWidth = 7; c.lineCap = 'round';
+  c.beginPath(); c.moveTo(x, y); c.quadraticCurveTo(x + inc * 0.4, y - h * 0.6, x + inc, y - h); c.stroke();
+  c.strokeStyle = '#7a5a36'; c.lineWidth = 4; c.stroke();
+  for (let k = 0; k < 6; k++) {
+    const a = -Math.PI / 2 + (k - 2.5) * 0.55, tx = x + inc, ty = y - h;
+    c.fillStyle = k % 2 ? '#2f6f35' : '#3c8244'; c.strokeStyle = '#2b1d0e'; c.lineWidth = 2.5;
+    c.beginPath(); c.moveTo(tx, ty); c.quadraticCurveTo(tx + Math.cos(a) * 40, ty + Math.sin(a) * 40 - 14, tx + Math.cos(a) * 62, ty + Math.sin(a) * 30 + 22);
+    c.quadraticCurveTo(tx + Math.cos(a) * 34, ty + Math.sin(a) * 26, tx, ty); c.fill(); c.stroke();
+  }
+}
+function fundo(agora) {
+  requestAnimationFrame(fundo);
+  const t = (agora - t0) / 1000, W = innerWidth, H = innerHeight, mar = H * 0.58;
+  const ceu = c.createLinearGradient(0, 0, 0, mar); ceu.addColorStop(0, '#f2b766'); ceu.addColorStop(0.55, '#f7d9a0'); ceu.addColorStop(1, '#bfe3f2');
+  c.fillStyle = ceu; c.fillRect(0, 0, W, mar);
+  c.fillStyle = '#fff1c9'; c.beginPath(); c.arc(W * 0.78, mar - 40, 70, 0, 6.3); c.fill();
+  // ilha distante (Pão de Açúcar estilizado)
+  c.fillStyle = '#6f8f86'; c.beginPath(); c.moveTo(W * 0.05, mar); c.quadraticCurveTo(W * 0.1, mar - 120, W * 0.15, mar - 10); c.quadraticCurveTo(W * 0.2, mar - 70, W * 0.27, mar); c.fill();
+  // mar em faixas
+  for (let k = 0; k < 9; k++) {
+    const y = mar + k * (H - mar) / 9, cor = ['#7fd0d6', '#5fc1cf', '#47aec8', '#3a9cc0', '#2f8db6', '#2680ab', '#1f74a0', '#1b6994', '#175f88'][k];
+    c.fillStyle = cor; c.beginPath(); c.moveTo(0, H);
+    for (let x = 0; x <= W + 20; x += 20) c.lineTo(x, y + Math.sin(x * 0.012 + t * (0.6 + k * 0.08) + k) * (3 + k * 1.2));
+    c.lineTo(W, H); c.fill();
+  }
+  // navio ao longe balançando
+  const nx = ((t * 12) % (W + 200)) - 100, ny = mar + 8 + Math.sin(t * 1.3) * 2;
+  c.save(); c.translate(nx, ny); c.rotate(Math.sin(t * 1.1) * 0.04); c.fillStyle = '#2b1d0e';
+  c.beginPath(); c.moveTo(-26, 0); c.lineTo(26, 0); c.lineTo(18, 9); c.lineTo(-20, 9); c.fill(); c.fillRect(-1, -40, 2.5, 40);
+  c.beginPath(); c.moveTo(2, -36); c.lineTo(22, -8); c.lineTo(2, -6); c.fill(); c.beginPath(); c.moveTo(-2, -32); c.lineTo(-20, -6); c.lineTo(-2, -6); c.fill(); c.restore();
+  // praia e coqueiros na frente
+  c.fillStyle = '#ead9a4'; c.strokeStyle = '#2b1d0e'; c.lineWidth = 3;
+  c.beginPath(); c.moveTo(W, H); c.lineTo(W, H * 0.8); c.quadraticCurveTo(W * 0.86, H * 0.84, W * 0.74, H); c.fill(); c.stroke();
+  c.beginPath(); c.moveTo(0, H); c.lineTo(0, H * 0.84); c.quadraticCurveTo(W * 0.12, H * 0.86, W * 0.22, H); c.fill(); c.stroke();
+  coqueiro(W * 0.93, H * 0.86, H * 0.42, -60 + Math.sin(t * 0.8) * 4); coqueiro(W * 0.86, H * 0.93, H * 0.3, -30 + Math.sin(t * 0.9 + 1) * 3);
+  coqueiro(W * 0.06, H * 0.9, H * 0.36, 50 + Math.sin(t * 0.7 + 2) * 4);
+  // gaivotas
+  c.strokeStyle = '#2b1d0e'; c.lineWidth = 2;
+  for (const g of gaivotas) {
+    g.x = (g.x + g.v / 60) % (W + 40); const asa = Math.sin(t * 6 + g.f) * 5;
+    c.beginPath(); c.moveTo(g.x - 9, g.y - asa); c.quadraticCurveTo(g.x - 4, g.y - 6, g.x, g.y); c.quadraticCurveTo(g.x + 4, g.y - 6, g.x + 9, g.y - asa); c.stroke();
+  }
+}
+requestAnimationFrame(fundo);
+</script>
+</body>
+</html>

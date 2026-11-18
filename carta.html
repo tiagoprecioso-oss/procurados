@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Procurados · mar aberto</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#2b1d0e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Procurados">
+<link rel="apple-touch-icon" href="icones/icone-180.png">
+<link rel="icon" href="icones/icone-192.png">
+<link rel="stylesheet" href="fontes/fontes.css">
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #bfe3f2; font-family: var(--fonte-texto); color: #2b1d0e; }
+  #tela { position: fixed; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; }
+  #tela:active { cursor: grabbing; }
+  .painel { position: fixed; pointer-events: none; }
+  #lugar { top: 10px; left: 10px; padding: 6px 40px 8px 14px; background: linear-gradient(to right, rgba(15,10,5,.5), rgba(15,10,5,0)); color: #fff3d6; text-shadow: 0 1px 3px #000, 0 0 8px rgba(0,0,0,.6); border-radius: 30px 0 0 30px; }
+  #lugar small { letter-spacing: .14em; font-size: 10px; opacity: .75; }
+  #lugar h1 { margin: 0; font: 32px var(--fonte-titulo); font-weight: normal; letter-spacing: .03em; }
+  #lugar p { margin: 0; font-size: 14px; font-style: italic; }
+  #lugar .dif { color: #ffb84a; letter-spacing: 2px; font-style: normal; }
+  #leme { bottom: 16px; left: 16px; display: flex; align-items: center; gap: 12px; padding: 8px 16px 8px 10px; background: rgba(15,10,5,.45); border-radius: 40px; color: #fff3d6; text-shadow: 0 1px 2px #000; font-size: 15px; }
+  #leme b { font-size: 22px; color: #ffd76a; }
+  #vela { display: inline-block; width: 22px; height: 26px; clip-path: polygon(10% 0, 100% 85%, 10% 100%); background: rgba(243,230,200,.25); transition: background .3s; }
+  #vela.on { background: #f3e6c8; }
+  #bussola { width: 46px; height: 46px; filter: drop-shadow(0 1px 2px rgba(0,0,0,.6)); }
+  #agulha { transform-origin: 23px 23px; }
+  #ajuda { bottom: 16px; right: 16px; font-size: 13px; line-height: 1.6; padding: 8px 12px; background: rgba(15,10,5,.45); color: #f3e6c8; text-shadow: 0 1px 2px #000; transition: opacity .8s; border-radius: 8px; max-width: 46vw; }
+  #ajuda b { color: #ffd76a; }
+  #ajuda.some { opacity: 0; }
+  #mapa { top: 10px; right: 10px; transform: rotate(1.5deg); }
+  #mapa canvas { display: block; filter: sepia(.35) saturate(.85); }
+  #cartaGrande { position: fixed; inset: 0; z-index: 7; display: none; place-items: center; background: rgba(20,30,40,.55); pointer-events: auto; }
+  #cartaGrande.aberta { display: grid; }
+  #cartaGrande canvas { max-width: 94vw; max-height: 90vh; filter: sepia(.3) saturate(.9) drop-shadow(0 8px 20px rgba(0,0,0,.5)); }
+  #aviso { top: 120px; left: 50%; transform: translateX(-50%); font-size: 17px; opacity: 0; transition: opacity .3s; background: rgba(15,10,5,.55); color: #fff3d6; text-shadow: 0 1px 2px #000; border-radius: 20px; padding: 7px 18px; }
+  #rotulos { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
+  .rot { position: absolute; left: 0; top: 0; white-space: nowrap; font-size: 15px; padding: 1px 10px; border-radius: 12px; background: rgba(15,10,5,.42); color: #fff3d6; text-shadow: 0 1px 2px #000; will-change: transform; }
+  .rot.porto { background: rgba(43,29,14,.75); color: #ffd76a; font: 18px var(--fonte-titulo); }
+  .rot.breve { opacity: .8; }
+  .rot.navio { background: rgba(43,29,14,.7); color: #ffd76a; font-size: 13px; }
+  #dica { bottom: 84px; left: 50%; transform: translateX(-50%); font-size: 17px; display: none; background: rgba(15,10,5,.55); color: #fff3d6; text-shadow: 0 1px 2px #000; border-radius: 20px; padding: 6px 18px; white-space: nowrap; }
+  #dica b { color: #ffd76a; }
+  #online { position: fixed; top: 60px; right: 16px; font-size: 13px; padding: 2px 10px; border-radius: 10px; background: rgba(15,10,5,.45); color: #f3e6c8; text-shadow: 0 1px 2px #000; pointer-events: none; display: none; }
+  #veu { position: fixed; inset: 0; z-index: 9; background: #e3f2f6; opacity: 1; pointer-events: none; transition: opacity .2s; }
+  #carregando { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; background: #ead9b4; font: 42px var(--fonte-titulo); color: #2b1d0e; }
+  .pergaminho { box-sizing: border-box; border-style: solid; border-width: 22px; border-color: transparent; border-image: var(--pergaminho) 64 fill / 22px stretch; filter: drop-shadow(0 6px 12px rgba(0,0,0,.45)); }
+  html.toque #leme { bottom: auto; top: 96px; left: 10px; transform: scale(.85); transform-origin: left top; }
+  html.toque #mapa { display: none; }
+</style>
+<script type="importmap">{ "imports": { "three": "./lib/three.module.min.js" } }</script>
+</head>
+<body>
+<canvas id="tela"></canvas>
+<div id="rotulos"></div>
+<div id="lugar" class="painel"><small>PROCURADOS · MAR ABERTO</small><h1 id="lugarNome">Atlântico Sul</h1><p id="lugarDesc"></p></div>
+<div id="mapa" class="painel pergaminho"><canvas id="mini"></canvas></div>
+<div id="leme" class="painel"><span id="vela" title="vela"></span><span><b id="nos" class="numeros">0</b> nós</span>
+  <svg id="bussola" viewBox="0 0 46 46" aria-label="rumo"><circle cx="23" cy="23" r="20" fill="rgba(243,230,200,.85)" stroke="#2b1d0e" stroke-width="2"/><circle cx="23" cy="23" r="15" fill="none" stroke="rgba(43,29,14,.3)"/>
+    <text x="23" y="10" text-anchor="middle" font-size="8" fill="#a8221a" font-weight="bold">N</text>
+    <g id="agulha"><path d="M23 8 L27 23 L23 38 L19 23 Z" fill="#2b1d0e"/><path d="M23 8 L27 23 L19 23 Z" fill="#c0281c"/></g><circle cx="23" cy="23" r="2.5" fill="#d8b24a" stroke="#2b1d0e"/></svg></div>
+<div id="ajuda" class="painel"><b>W / S</b> içar e baixar a vela · <b>A / D</b> leme · <b>M</b> carta grande · <b>E</b> perto de um porto: entrar<br><b>arrastar</b> gira a câmera · <b>rolagem</b> zoom · <b>F1</b> esconde esta ajuda</div>
+<div id="dica" class="painel"></div>
+<div id="cartaGrande"><canvas id="cartaCanvas"></canvas></div>
+<div id="online"></div>
+<div id="aviso" class="painel"></div>
+<div id="veu"></div>
+<div id="carregando">Abrindo a carta…</div>
+<script src="js/pergaminho.js"></script>
+
+<script type="module">
+import * as THREE from 'three';
+import { salvo } from './js/boneco.js';
+import { temRede, enviar, lista, quantos, limpar } from './js/rede.js';
+import { criarControles, telaCheia } from './js/toque.js';
+import { criarAvisos } from './js/avisos.js';
+const avisos = criarAvisos();
+import { sincronizarSempre } from './js/nuvem.js';
+sincronizarSempre();
+
+// =====================================================================
+// CARTA DO MAR ABERTO: a costa real (Natural Earth, ver ferramentas/recortar-mundo.js)
+// em escala de carta náutica: 1 km de verdade = 1,5 m de jogo. A jangada aqui é um "marcador" grande.
+// As regiões detalhadas (por enquanto, a Baía de Guanabara em mar.html) se abrem perto do porto.
+// =====================================================================
+const M = await (await fetch('dados/mundo.json')).json();
+const { x0: MX0, z0: MZ0, x1: MX1, z1: MZ1 } = M.limites;
+const deLonLat = (lon, lat) => { const r = lat * Math.PI / 180; return [(lon - M.lon0) * Math.cos(r) * M.kmGrau * M.esc, -lat * M.kmGrau * M.esc]; };
+const paraLonLat = (x, z) => { const lat = -z / (M.kmGrau * M.esc); return [x / (Math.cos(lat * Math.PI / 180) * M.kmGrau * M.esc) + M.lon0, lat]; };
+const sm = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+let semente = 20261117;
+const rnd = () => { semente |= 0; semente = semente + 0x6D2B79F5 | 0; let t = Math.imul(semente ^ semente >>> 15, 1 | semente); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+
+// ---------- máscara de terra (desenhada num canvas) e distância até a costa
+const NX = 720, CEL = (MX1 - MX0) / NX, NZ = Math.ceil((MZ1 - MZ0) / CEL);
+const terra = new Uint8Array(NX * NZ);
+{
+  const cv = document.createElement('canvas'); cv.width = NX; cv.height = NZ; const c = cv.getContext('2d');
+  c.setTransform(1 / CEL, 0, 0, 1 / CEL, -MX0 / CEL, -MZ0 / CEL);
+  c.fillStyle = '#fff'; c.beginPath();
+  for (const t of M.terras) for (const anel of t) { c.moveTo(anel[0][0], anel[0][1]); for (const p of anel) c.lineTo(p[0], p[1]); c.closePath(); }
+  c.fill('evenodd');
+  c.fillStyle = '#000';   // lagos navegáveis (os dos Andes ficam de fora: seriam buracos no meio da serra)
+  for (const l of M.lagos) { const [lon, lat] = paraLonLat(l.pts[0][0], l.pts[0][1]); if (lon < -66 && lat < -10) continue; c.beginPath(); c.moveTo(l.pts[0][0], l.pts[0][1]); for (const p of l.pts) c.lineTo(p[0], p[1]); c.closePath(); c.fill(); }
+  c.strokeStyle = '#000'; c.lineCap = c.lineJoin = 'round';   // rios grandes: navegáveis
+  for (const r of M.rios) { c.lineWidth = Math.max(r.larg, CEL * 2.2); c.beginPath(); c.moveTo(r.pts[0][0], r.pts[0][1]); for (const p of r.pts) c.lineTo(p[0], p[1]); c.stroke(); }
+  const d = c.getImageData(0, 0, NX, NZ).data;
+  for (let k = 0; k < NX * NZ; k++) terra[k] = d[k * 4] > 127 ? 1 : 0;
+}
+// distância (em casas) de cada casa até a casa mais perto do outro tipo: duas passadas (chanfro)
+function distancia(alvo) {
+  const D = new Float32Array(NX * NZ), INF = 1e9, R2 = Math.SQRT2;
+  for (let k = 0; k < D.length; k++) D[k] = terra[k] === alvo ? INF : 0;
+  for (let j = 0; j < NZ; j++) for (let i = 0; i < NX; i++) { const k = j * NX + i; if (!D[k]) continue; let v = D[k];
+    if (i > 0) v = Math.min(v, D[k - 1] + 1); if (j > 0) { v = Math.min(v, D[k - NX] + 1); if (i > 0) v = Math.min(v, D[k - NX - 1] + R2); if (i < NX - 1) v = Math.min(v, D[k - NX + 1] + R2); } D[k] = v; }
+  for (let j = NZ - 1; j >= 0; j--) for (let i = NX - 1; i >= 0; i--) { const k = j * NX + i; if (!D[k]) continue; let v = D[k];
+    if (i < NX - 1) v = Math.min(v, D[k + 1] + 1); if (j < NZ - 1) { v = Math.min(v, D[k + NX] + 1); if (i < NX - 1) v = Math.min(v, D[k + NX + 1] + R2); if (i > 0) v = Math.min(v, D[k + NX - 1] + R2); } D[k] = v; }
+  return D;
+}
+const dTerra = distancia(1), dAgua = distancia(0);
+const S = new Float32Array(NX * NZ);   // metros até a costa: + em terra, - na água
+for (let k = 0; k < S.length; k++) S[k] = terra[k] ? (dTerra[k] - 0.5) * CEL : -(dAgua[k] - 0.5) * CEL;
+function amostra(G, x, z) {
+  const fx = Math.max(0, Math.min(NX - 1.001, (x - MX0) / CEL - 0.5)), fz = Math.max(0, Math.min(NZ - 1.001, (z - MZ0) / CEL - 0.5));
+  const i = Math.floor(fx), j = Math.floor(fz), a = fx - i, b = fz - j, k = j * NX + i;
+  return (G[k] * (1 - a) + G[k + 1] * a) * (1 - b) + (G[k + NX] * (1 - a) + G[k + NX + 1] * a) * b;
+}
+
+// ---------- relevo: Andes a partir da costa do Pacífico, serras do Brasil, planaltos
+const A = new Float32Array(NX * NZ);
+for (let j = 0; j < NZ; j++) {
+  const z = MZ0 + (j + 0.5) * CEL, lat = -z / (M.kmGrau * M.esc);
+  // costa do Pacífico nesta linha: primeira faixa longa de terra vinda do oeste (ilhas pequenas não contam)
+  let costaOeste = -1;
+  if (lat < 16 && lat > -56) for (let i = 0; i < NX - 25; i++) { const k = j * NX + i; if (terra[k] && S[k + 20 * 0] >= 0) { let corrido = 0; while (corrido < 25 && terra[k + corrido]) corrido++; if (corrido >= 25) { costaOeste = i; break; } } }
+  const picoAndes = lat > 9 ? 40 : lat > -4 ? 110 : lat > -35 ? 135 : lat > -46 ? 95 : 70;
+  const centro = lat > 9 ? 70 : lat > -18 ? 230 : lat > -40 ? 190 : 120, largura = lat > 9 ? 70 : 150;
+  for (let i = 0; i < NX; i++) {
+    const k = j * NX + i, s = S[k], x = MX0 + (i + 0.5) * CEL;
+    if (s <= 0) { A[k] = Math.max(s * 0.02, -14); continue; }
+    const [lon] = paraLonLat(x, z);
+    let h = Math.min(s * 0.05, 5) + (6 + 5 * Math.sin(x * 0.004 + 1) * Math.cos(z * 0.005) + 3 * Math.sin(x * 0.011 + z * 0.009)) * sm(20, 160, s);
+    h += 14 * sm(150, 700, s) * (lon > -60 ? 1 : 0.5);                                                         // planaltos do interior
+    if (costaOeste >= 0 && i >= costaOeste && lon < -60) { const dW = (i - costaOeste) * CEL; h += picoAndes * Math.exp(-(((dW - centro) / largura) ** 2)) * (0.8 + 0.25 * Math.sin(z * 0.02) * Math.sin(x * 0.03)); }
+    if (lat < -19 && lat > -29 && lon > -51) h += 38 * Math.exp(-(((s - 70) / 45) ** 2));                     // Serra do Mar (com a Serra dos Órgãos)
+    if (lat > 1 && lat < 7 && lon > -66 && lon < -57) h += 40 * Math.exp(-(((lat - 4.5) / 1.6) ** 2 + ((lon - 61.5) / 3) ** 2));   // tepuis das Guianas
+    if (lat > -18 && lat < -15 && lon > -58 && lon < -55) h = Math.min(h, 4);                                 // Pantanal plano
+    if (lon > -66 && lon < -48 && lat > -6 && lat < 2) h = Math.min(h, 6 + s * 0.004);                         // planície do Amazonas
+    A[k] = h;
+  }
+}
+// bioma pela posição (lon, lat), altura e distância da costa
+function corDe(x, z, h, s, incl) {
+  const [lon, lat] = paraLonLat(x, z);
+  if (h > 95 || (lat < -45 && h > 45) || (lat < -38 && h > 70)) return '#f4f6f8';    // neve
+  if (incl > 1.2 || h > 70) return '#8f887c';                                        // rocha
+  if (h < 1.6 && s < 12) return lat < -40 ? '#c9bb8a' : '#ead9a4';                   // praia (só na beira d'água)
+  if (lon > -72.5 && lon < -68.5 && lat > -27 && lat < -17) return '#dcc38e';         // Atacama
+  if (lat > -18 && lat < -4 && lon < -70 && s < 140 && h < 45) return '#d6bd88';      // deserto da costa do Peru
+  if (lat > -18 && lat < -15 && lon > -58 && lon < -55) return '#7f9a52';             // Pantanal
+  if (lat < -40 && lon > -71.5) return '#b9a873';                                    // estepe da Patagônia
+  if (lat > -39 && lat < -28 && lon > -65 && lon < -52) return '#a9c46a';             // Pampa
+  if (lat > -16 && lat < -3 && lon > -45 && lon < -35 && s > 60) return '#c4b06e';    // Caatinga
+  if (lat > -21 && lat < -12 && lon < -45 && lon > -65 && lat > -12 - 99) { if (lon > -60) return '#a8b35e'; }  // Cerrado
+  if (lat > 2 && lat < 9 && lon > -73 && lon < -62) return '#a3b45a';                 // Llanos
+  if (lat > -15 && lat < 6 && lon > -78 && lon < -45) return '#2f7a3c';               // Amazônia
+  if (lat > -30 && lat < -5 && lon > -50 && s < 420) return '#3c8244';                // Mata Atlântica
+  if (lat > -24 && lat < -5 && lon > -62) return '#a8b35e';                           // Cerrado
+  return lat > 8 ? '#4f9a4a' : '#5f9a48';
+}
+
+// =====================================================================
+// CENA
+// =====================================================================
+const tela = document.getElementById('tela');
+const renderer = new THREE.WebGLRenderer({ canvas: tela, antialias: true, preserveDrawingBuffer: /[?&]gravar/.test(location.search), powerPreference: 'high-performance' });
+const OP = salvo.opcoes(); renderer.setPixelRatio(Math.min(devicePixelRatio, OP.qualidade === 'baixa' ? 0.75 : OP.qualidade === 'alta' ? 1.5 : 1));
+const cena = new THREE.Scene(), CEU = new THREE.Color('#bfe3f2');
+cena.background = CEU; cena.fog = new THREE.Fog(CEU, 1600, 5200);
+const camera = new THREE.PerspectiveCamera(50, 1, 2, 9000);
+const SOL = new THREE.Vector3(0.45, 0.8, 0.35).normalize();
+const sol = new THREE.DirectionalLight('#fff4dd', 2.6); sol.position.copy(SOL).multiplyScalar(100); cena.add(sol);
+cena.add(new THREE.HemisphereLight('#dff3ff', '#8a7f5a', 1.5));
+const lambert = (cor) => new THREE.MeshLambertMaterial({ color: cor, flatShading: true });
+
+// ---------- terreno low-poly (uma cor por triângulo), uma casa sim, outra não
+{
+  const P = 2, pos = [], cor = [], c = new THREE.Color();
+  const alt = (i, j) => A[Math.min(NZ - 1, j) * NX + Math.min(NX - 1, i)];
+  for (let j = 0; j < NZ - P; j += P) for (let i = 0; i < NX - P; i += P) {
+    const h00 = alt(i, j), h10 = alt(i + P, j), h01 = alt(i, j + P), h11 = alt(i + P, j + P);
+    if (Math.max(h00, h10, h01, h11) < -1.5) continue;   // mar aberto: a água cobre
+    const x = MX0 + (i + 0.5) * CEL, z = MZ0 + (j + 0.5) * CEL, L = P * CEL;
+    const a = [x, h00, z], b = [x + L, h10, z], d = [x, h01, z + L], e = [x + L, h11, z + L];
+    for (const [p, q, r] of [[a, d, b], [b, d, e]]) {
+      const h = (p[1] + q[1] + r[1]) / 3, incl = (Math.max(p[1], q[1], r[1]) - Math.min(p[1], q[1], r[1])) / L;
+      c.set(corDe((p[0] + q[0] + r[0]) / 3, (p[2] + q[2] + r[2]) / 3, h, amostra(S, (p[0] + q[0] + r[0]) / 3, (p[2] + q[2] + r[2]) / 3), incl)).offsetHSL(0, 0, (rnd() - 0.5) * 0.05);
+      for (const v of [p, q, r]) { pos.push(v[0], v[1], v[2]); cor.push(c.r, c.g, c.b); }
+    }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(cor, 3));
+  cena.add(new THREE.Mesh(g, new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true })));
+}
+// ---------- florestas: copas instanciadas onde o bioma é mata
+{
+  const N = 7000, copas = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(9, 0), new THREE.MeshLambertMaterial({ flatShading: true }), N), o = new THREE.Object3D(), c = new THREE.Color();
+  let k = 0;
+  for (let t = 0; t < N * 12 && k < N; t++) {
+    const x = MX0 + rnd() * (MX1 - MX0), z = MZ0 + rnd() * (MZ1 - MZ0), s = amostra(S, x, z), h = amostra(A, x, z);
+    if (s < 8 || h < 2 || h > 60) continue;
+    const corB = corDe(x, z, h, s, 0); if (!['#2f7a3c', '#3c8244', '#4f9a4a', '#5f9a48', '#7f9a52'].includes(corB) || (corB === '#5f9a48' && rnd() < 0.6)) continue;
+    const e = 0.7 + rnd() * 0.8; o.position.set(x, h + 6 * e, z); o.scale.set(e, e * (0.9 + rnd() * 0.4), e); o.rotation.set(0, rnd() * 6.3, 0); o.updateMatrix();
+    copas.setMatrixAt(k, o.matrix); copas.setColorAt(k, c.set(corB === '#2f7a3c' ? '#23652f' : '#2f7a3c').offsetHSL((rnd() - 0.5) * 0.04, 0, (rnd() - 0.5) * 0.08)); k++;
+  }
+  copas.count = k; cena.add(copas);
+}
+
+// ---------- mar: ondas facetadas, cor pela distância da costa
+const texProf = (() => {
+  const d = new Uint8Array(NX * NZ * 4);
+  for (let k = 0; k < S.length; k++) { d[k * 4] = Math.max(0, Math.min(255, (S[k] + 300) / 340 * 255)); d[k * 4 + 3] = 255; }
+  const t = new THREE.DataTexture(d, NX, NZ, THREE.RGBAFormat); t.magFilter = t.minFilter = THREE.LinearFilter; t.needsUpdate = true; return t;
+})();
+const formaOnda = (x, z, t) => Math.sin(x * 0.02 + t * 1.0) * 0.5 + Math.sin(z * 0.03 + t * 0.8 + 1.3) * 0.35 + Math.sin((x + z) * 0.012 + t * 0.5) * 0.5 + Math.sin(x * 0.07 + z * 0.05 + t * 1.5) * 0.2;
+const AMP = 2.2;
+const alturaOnda = (x, z, t) => formaOnda(x, z, t) * AMP * (1 - sm(-40, -4, amostra(S, x, z)));
+const matMar = new THREE.ShaderMaterial({
+  uniforms: { uT: { value: 0 }, uCentro: { value: new THREE.Vector3() }, uProf: { value: texProf }, uMapa: { value: new THREE.Vector4(MX0, MZ0, NX * CEL, NZ * CEL) },
+    uFundo: { value: new THREE.Color('#15698f') }, uRaso: { value: new THREE.Color('#4fd0cf') }, uEspuma: { value: new THREE.Color('#f4fbff') }, uNevoa: { value: CEU }, uSol: { value: SOL } },
+  vertexShader: /* glsl */`
+    uniform float uT; uniform vec3 uCentro; uniform sampler2D uProf; uniform vec4 uMapa;
+    varying vec3 vW; varying float vS;
+    void main() {
+      vec4 w = modelMatrix * vec4(position, 1.0);
+      vec2 uv = (w.xz - uMapa.xy) / uMapa.zw;
+      float s = (uv.x < 0.0 || uv.y < 0.0 || uv.x > 1.0 || uv.y > 1.0) ? -300.0 : texture2D(uProf, uv).r * 340.0 - 300.0;
+      float perto = 1.0 - smoothstep(900.0, 1800.0, distance(w.xz, uCentro.xz));
+      float fundo = 1.0 - smoothstep(-40.0, -4.0, s);
+      float onda = sin(w.x * 0.02 + uT * 1.0) * 0.5 + sin(w.z * 0.03 + uT * 0.8 + 1.3) * 0.35 + sin((w.x + w.z) * 0.012 + uT * 0.5) * 0.5 + sin(w.x * 0.07 + w.z * 0.05 + uT * 1.5) * 0.2;
+      w.y += onda * ${AMP.toFixed(2)} * perto * fundo;
+      vW = w.xyz; vS = s;
+      gl_Position = projectionMatrix * viewMatrix * w;
+    }`,
+  fragmentShader: /* glsl */`
+    uniform float uT; uniform vec3 uFundo, uRaso, uEspuma, uNevoa, uSol;
+    varying vec3 vW; varying float vS;
+    void main() {
+      vec3 n = normalize(cross(dFdx(vW), dFdy(vW))); if (n.y < 0.0) n = -n;
+      n = normalize(vec3(n.x * 4.0, n.y, n.z * 4.0));
+      vec3 cor = mix(uFundo, uRaso, smoothstep(-160.0, -4.0, vS));
+      cor *= 0.74 + 0.38 * max(dot(n, uSol), 0.0);
+      cor += 0.25 * pow(max(dot(reflect(-uSol, n), normalize(cameraPosition - vW)), 0.0), 40.0);
+      cor = mix(cor, uEspuma, smoothstep(-14.0, -2.0, vS + sin(uT * 1.5 + vW.x * 0.03 + vW.z * 0.02) * 3.0) * 0.65);
+      cor = mix(cor, uNevoa, smoothstep(1600.0, 5200.0, distance(cameraPosition, vW)));
+      gl_FragColor = vec4(cor, 1.0);
+      #include <colorspace_fragment>
+    }`,
+});
+const mar = (() => {
+  const n = 160, R = 9000, f = (u) => R * (0.06 * u + 0.94 * u * u * u), pos = [], idx = [];
+  for (let j = 0; j <= n; j++) for (let i = 0; i <= n; i++) pos.push(f(i / n * 2 - 1), 0, f(j / n * 2 - 1));
+  for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) { const k = j * (n + 1) + i; idx.push(k, k + n + 1, k + 1, k + 1, k + n + 1, k + n + 2); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx);
+  const m = new THREE.Mesh(g, matMar); m.frustumCulled = false; cena.add(m); return m;
+})();
+
+// =====================================================================
+// PORTOS E REGIÕES
+// =====================================================================
+// [nome, lon, lat, aberto (entra numa região detalhada), descrição]
+const PORTOS = [
+  ['Niterói', -43.12, -23.0, true, 'Baía de Guanabara: o seu porto de origem'],
+  ['Paraty', -44.7, -23.25, false, 'ouro de Minas descendo a serra'],
+  ['Salvador', -38.55, -13.05, false, 'Baía de Todos os Santos'],
+  ['Recife', -34.85, -8.1, false, 'arrecifes e açúcar'],
+  ['Fernando de Noronha', -32.43, -3.9, false, 'ilha-presídio no meio do Atlântico'],
+  ['Belém', -48.5, -1.3, false, 'a porta do Amazonas'],
+  ['Manaus', -60.0, -3.15, false, 'encontro das águas, no coração da floresta'],
+  ['Caiena', -52.3, 4.95, false, 'as Guianas'],
+  ['Maracaibo', -71.6, 10.75, false, 'lago de petróleo e contrabando'],
+  ['Cartagena', -75.55, 10.35, false, 'a joia murada do Caribe'],
+  ['Portobelo', -79.65, 9.6, false, 'onde a prata cruza o istmo'],
+  ['Port Royal', -76.85, 17.9, false, 'a cidade mais perversa do mundo'],
+  ['Tortuga', -72.8, 20.1, false, 'refúgio de bucaneiros'],
+  ['Havana', -82.35, 23.2, false, 'o forte do Morro e a frota da prata'],
+  ['Buenos Aires', -58.35, -34.6, false, 'Rio da Prata'],
+  ['Montevidéu', -56.2, -34.95, false, 'a outra margem do Prata'],
+  ['Valparaíso', -71.65, -33.0, false, 'o porto do Pacífico Sul'],
+  ['Callao (Lima)', -77.2, -12.05, false, 'prata dos Andes'],
+  ['Galápagos', -90.4, -0.75, false, 'ilhas encantadas, tartarugas e esconderijos'],
+  ['Cabo Horn', -67.3, -56.0, false, 'a passagem mais perigosa do mundo'],
+].map(([nome, lon, lat, aberto, desc]) => { const [x, z] = deLonLat(lon, lat); return { nome, x, z, aberto, desc }; });
+// o porto fica no mar: puxa o marcador para a água mais perto
+for (const p of PORTOS) for (let t = 0; t < 60 && amostra(S, p.x, p.z) > -12; t++) {
+  let mx = 0, mz = 0, md = Infinity;
+  for (let a = 0; a < 16; a++) { const x = p.x + Math.cos(a * 0.3927) * 12, z = p.z + Math.sin(a * 0.3927) * 12, s = amostra(S, x, z); if (s < md) { md = s; mx = x; mz = z; } }
+  p.x = mx; p.z = mz;
+}
+// faixas de dificuldade (DESIGN seção 4): [nome, lon, lat, raio em km, faixa 1 a 6, descrição]
+const REGIOES = [
+  ['Baía de Guanabara', -43.15, -22.9, 120, 1, 'águas calmas, boas para quem está começando'],
+  ['Região dos Lagos', -42.0, -22.9, 130, 1, 'cabos, lagoas e salinas'],
+  ['Ilha Grande e Paraty', -44.5, -23.2, 140, 1, 'enseadas e contrabando de ouro'],
+  ['Litoral de São Paulo', -46.5, -24.2, 260, 2, 'serra do mar e vilas de pescadores'],
+  ['Litoral Sul', -48.5, -27.5, 380, 2, 'ilhas e baías frias'],
+  ['Bahia e Abrolhos', -38.5, -15.5, 520, 2, 'recifes, cacau e a rota do açúcar'],
+  ['Sertão e Lençóis', -42.5, -4.0, 520, 3, 'dunas, sol e cangaço'],
+  ['Pampa e Rio da Prata', -57.0, -34.5, 520, 3, 'gado, contrabando e fronteira'],
+  ['Amazônia', -60.0, -3.0, 1300, 4, 'rios sem fim, febres e piratas de rio'],
+  ['Orinoco e Guianas', -60.0, 7.0, 650, 4, 'deltas, tepuis e corsários'],
+  ['Patagônia', -67.0, -46.0, 900, 4, 'vento, frio e geleiras'],
+  ['Andes', -72.0, -20.0, 1500, 4, 'montanhas, prata e neve'],
+  ['Cabo Horn', -66.5, -55.5, 380, 5, 'tempestades e icebergs'],
+  ['Costa do Pacífico', -80.0, -20.0, 1200, 5, 'a frota da prata e o mar sem abrigo'],
+  ['Galápagos', -90.5, -0.7, 350, 5, 'ilhas encantadas'],
+  ['Atacama', -70.3, -23.0, 450, 5, 'o deserto mais seco do mundo'],
+  ['Mar do Caribe', -75.0, 15.0, 1500, 6, 'as melhores recompensas do mapa, e os maiores riscos'],
+  ['América Central', -86.0, 13.0, 700, 6, 'istmo, prata e selva'],
+].map(([nome, lon, lat, km, faixa, desc]) => { const [x, z] = deLonLat(lon, lat); return { nome, x, z, raio: km * M.esc, faixa, desc }; });
+function ondeEstou(x, z) {
+  let melhor = null, dmin = 1;
+  for (const r of REGIOES) { const d = Math.hypot(x - r.x, z - r.z) / r.raio; if (d < dmin) { dmin = d; melhor = r; } }
+  if (melhor) return melhor;
+  const [lon, lat] = paraLonLat(x, z);
+  if (lat > 9 && lon > -88) return { nome: 'Mar do Caribe', faixa: 6, desc: 'as melhores recompensas do mapa' };
+  if (lon < -76 || (lat < -40 && lon < -72)) return { nome: 'Oceano Pacífico', faixa: 5, desc: 'mar sem abrigo' };
+  return { nome: lat > 0 ? 'Atlântico Norte' : 'Atlântico Sul', faixa: lat > -10 ? 3 : 2, desc: 'alto-mar' };
+}
+// marcos dos portos: torre com bandeira, visível de longe
+const caixaRot = document.getElementById('rotulos');
+function rotulo(texto, classe = '') { const el = document.createElement('div'); el.className = 'rot ' + classe; el.textContent = texto; caixaRot.appendChild(el); return el; }
+for (const p of PORTOS) {
+  const g = new THREE.Group(), base = Math.max(0, amostra(A, p.x, p.z));
+  const torre = new THREE.Mesh(new THREE.CylinderGeometry(3, 4.5, 26, 6).translate(0, 13, 0), lambert(p.aberto ? '#e9dcc0' : '#b9ad95')); g.add(torre);
+  const mastro = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 14, 5).translate(0, 33, 0), lambert('#5e3a1e')); g.add(mastro);
+  const bandeira = new THREE.Mesh(new THREE.BoxGeometry(8, 5, 0.4).translate(4, 37, 0), lambert(p.aberto ? '#c0281c' : '#6e6a62')); g.add(bandeira);
+  g.position.set(p.x, base, p.z); cena.add(g);
+  p.rot = rotulo(p.nome + (p.aberto ? '' : ' · em breve'), 'porto' + (p.aberto ? '' : ' breve'));
+}
+
+// =====================================================================
+// O SEU BARCO (a jangada, em tamanho de carta)
+// =====================================================================
+const ESC_BARCO = 5;
+function criarBarco(corVela = '#7fa64a') {
+  const g = new THREE.Group(); g.rotation.order = 'YZX';
+  const tora = new THREE.CylinderGeometry(0.17, 0.19, 3.0, 7).rotateZ(Math.PI / 2);
+  for (let k = 0; k < 5; k++) { const m = new THREE.Mesh(tora, lambert(k % 2 ? '#8a6a44' : '#7a5a36')); m.position.set((k % 2) * 0.12, 0.05, (k - 2) * 0.36); g.add(m); }
+  const mastroB = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 2.2, 5).translate(0, 1.1, 0), lambert('#6e4a2c')); mastroB.position.set(-0.3, 0.2, 0); g.add(mastroB);
+  const forma = new THREE.Shape(); forma.moveTo(0, 0); forma.lineTo(0, 1.7); forma.lineTo(1.1, 0.15); forma.closePath();
+  const vela = new THREE.Mesh(new THREE.ShapeGeometry(forma), new THREE.MeshLambertMaterial({ color: corVela, side: THREE.DoubleSide, flatShading: true }));
+  vela.position.set(-0.25, 0.45, 0); vela.rotation.y = Math.PI / 2; g.add(vela); g.vela = vela;
+  g.scale.setScalar(ESC_BARCO); cena.add(g); return g;
+}
+const barco = criarBarco();
+const [GX, GZ] = deLonLat(-43.15, -23.12);   // em frente à barra da Guanabara
+const PROG = salvo.progresso() || {};
+const ini = PROG.local === 'carta' && PROG.carta ? PROG.carta : { x: GX, z: GZ + 25, rumo: -Math.PI / 2 };
+const estado = { x: ini.x, z: ini.z, rumo: ini.rumo, vel: 0, velas: 0, leme: 0 };
+const VEL_MAX = 7;
+function pousar(obj, x, z, rumo, t) {
+  const fx = Math.cos(rumo), fz = -Math.sin(rumo), dx = Math.sin(rumo), dz = Math.cos(rumo), L = 2.5 * ESC_BARCO;
+  const proa = alturaOnda(x + fx * L, z + fz * L, t), popa = alturaOnda(x - fx * L, z - fz * L, t), bor = alturaOnda(x + dx * L * 0.5, z + dz * L * 0.5, t), bom = alturaOnda(x - dx * L * 0.5, z - dz * L * 0.5, t);
+  obj.position.set(x, (proa + popa + bor + bom) / 4 + 0.3, z);
+  obj.rotation.set(-Math.atan2(bor - bom, L), rumo, Math.atan2(proa - popa, L * 2));
+}
+
+// =====================================================================
+// CONTROLES, CÂMERA, PAINÉIS
+// =====================================================================
+const teclas = new Set();
+const elCarta = document.getElementById('cartaGrande');
+addEventListener('keydown', (e) => {
+  const k = e.key.toLowerCase();
+  if (k === 'm' && !e.repeat) { elCarta.classList.toggle('aberta'); if (elCarta.classList.contains('aberta')) desenharCartaGrande(); return; }
+  if (k === 'escape' && elCarta.classList.contains('aberta')) { elCarta.classList.remove('aberta'); return; }
+  if (k === 'f1') { e.preventDefault(); avisos.aberto() ? avisos.fechar() : avisos.abrir(); return; }
+  if (!e.repeat && (k === 'w' || k === 'arrowup')) estado.velas = 1;
+  if (!e.repeat && (k === 's' || k === 'arrowdown')) estado.velas = 0;
+  if (k === 'e' && !e.repeat) entrarNoPorto();
+  teclas.add(k); if (k.startsWith('arrow')) e.preventDefault();
+});
+addEventListener('keyup', (e) => teclas.delete(e.key.toLowerCase()));
+addEventListener('blur', () => teclas.clear());
+elCarta.addEventListener('click', () => elCarta.classList.remove('aberta'));
+const cam = { giro: 0, alt: 0.55, dist: 260, segue: estado.rumo };
+let arrasto = null;
+tela.addEventListener('pointerdown', (e) => { arrasto = [e.clientX, e.clientY]; try { tela.setPointerCapture(e.pointerId); } catch {} });
+tela.addEventListener('pointermove', (e) => { if (!arrasto) return; cam.giro -= (e.clientX - arrasto[0]) * 0.006; cam.alt = Math.max(0.12, Math.min(1.4, cam.alt + (e.clientY - arrasto[1]) * 0.005)); arrasto = [e.clientX, e.clientY]; });
+tela.addEventListener('pointerup', () => (arrasto = null));
+tela.addEventListener('dblclick', () => (cam.giro = 0));
+tela.addEventListener('wheel', (e) => { cam.dist = Math.max(70, Math.min(2200, cam.dist * (e.deltaY > 0 ? 1.12 : 0.89))); e.preventDefault(); }, { passive: false });
+function ajustar() { renderer.setSize(innerWidth, innerHeight, false); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); }
+addEventListener('resize', ajustar); ajustar();
+const elAjuda = document.getElementById('ajuda'); elAjuda.classList.add('some'); setTimeout(() => avisos.novo('controles', 'Controles da carta', elAjuda.innerHTML, { fechado: true }), 80);
+const elNome = document.getElementById('lugarNome'), elDesc = document.getElementById('lugarDesc'), elNos = document.getElementById('nos'), elVela = document.getElementById('vela');
+const elAgulha = document.getElementById('agulha'), elDica = document.getElementById('dica'), elAviso = document.getElementById('aviso'), elVeu = document.getElementById('veu');
+let avisoAte = 0;
+function avisar(txt, t) { elAviso.textContent = txt; elAviso.style.opacity = 1; avisoAte = t + 3; }
+const v3 = new THREE.Vector3();
+function fixar(el, x, y, z, alcance) {
+  v3.set(x, y, z); const d = camera.position.distanceTo(v3); v3.project(camera);
+  if (v3.z > 1 || d > alcance || Math.abs(v3.x) > 1.1 || Math.abs(v3.y) > 1.1) { el.style.display = 'none'; return; }
+  el.style.display = 'block'; el.style.opacity = Math.min(1, (alcance - d) / (alcance * 0.25));
+  el.style.transform = `translate(-50%,-100%) translate(${(v3.x * 0.5 + 0.5) * innerWidth}px,${(-v3.y * 0.5 + 0.5) * innerHeight}px)`;
+}
+
+// ---------- cartas em pergaminho: a pequena (canto) e a grande (tecla M)
+const fundoCarta = (() => {
+  const L = 900, H = Math.round(L * (MZ1 - MZ0) / (MX1 - MX0)), cv = document.createElement('canvas'); cv.width = L; cv.height = H;
+  const c = cv.getContext('2d'), img = c.createImageData(L, H);
+  for (let y = 0; y < H; y++) for (let x = 0; x < L; x++) {
+    const wx = MX0 + (x + 0.5) / L * (MX1 - MX0), wz = MZ0 + (y + 0.5) / H * (MZ1 - MZ0), s = amostra(S, wx, wz), h = amostra(A, wx, wz), o = (y * L + x) * 4;
+    let r, g, b;
+    if (s < 0) { const f = Math.min(1, -s / 260); r = 150 - 60 * f; g = 190 - 50 * f; b = 190 - 20 * f; }
+    else if (h > 90) { r = 236; g = 232; b = 220; } else if (h > 45) { r = 170; g = 150; b = 118; } else { r = 206 - h; g = 190 - h * 0.5; b = 140 - h; }
+    img.data[o] = r; img.data[o + 1] = g; img.data[o + 2] = b; img.data[o + 3] = 255;
+  }
+  c.putImageData(img, 0, 0);
+  c.strokeStyle = 'rgba(60,40,20,.85)'; c.lineWidth = 1;
+  c.setTransform(L / (MX1 - MX0), 0, 0, H / (MZ1 - MZ0), -MX0 * L / (MX1 - MX0), -MZ0 * H / (MZ1 - MZ0));
+  c.lineWidth = (MX1 - MX0) / L;
+  for (const t of M.terras) for (const anel of t) { c.beginPath(); c.moveTo(anel[0][0], anel[0][1]); for (const p of anel) c.lineTo(p[0], p[1]); c.closePath(); c.stroke(); }
+  return cv;
+})();
+const mini = document.getElementById('mini'); mini.width = 170; mini.height = Math.round(170 * fundoCarta.height / fundoCarta.width); const mctx = mini.getContext('2d');
+const paraCarta = (cv, x, z) => [(x - MX0) / (MX1 - MX0) * cv.width, (z - MZ0) / (MZ1 - MZ0) * cv.height];
+function desenharMini() {
+  mctx.drawImage(fundoCarta, 0, 0, mini.width, mini.height);
+  mctx.fillStyle = '#a8221a'; for (const p of PORTOS) if (p.aberto) { const [x, y] = paraCarta(mini, p.x, p.z); mctx.fillRect(x - 1.5, y - 1.5, 3, 3); }
+  const [x, y] = paraCarta(mini, estado.x, estado.z); mctx.fillStyle = '#ffd76a'; mctx.strokeStyle = '#2b1d0e'; mctx.lineWidth = 1.5; mctx.beginPath(); mctx.arc(x, y, 3.5, 0, 6.3); mctx.fill(); mctx.stroke();
+}
+const cg = document.getElementById('cartaCanvas');
+function desenharCartaGrande() {
+  cg.width = fundoCarta.width; cg.height = fundoCarta.height; const c = cg.getContext('2d');
+  c.drawImage(fundoCarta, 0, 0);
+  c.font = '15px "IM Fell English", Georgia, serif'; c.textAlign = 'left';
+  for (const p of PORTOS) { const [x, y] = paraCarta(cg, p.x, p.z); c.fillStyle = p.aberto ? '#a8221a' : '#2b1d0e'; c.beginPath(); c.arc(x, y, p.aberto ? 5 : 3.5, 0, 6.3); c.fill(); c.fillStyle = '#2b1d0e'; c.fillText(p.nome + (p.aberto ? '' : ' (em breve)'), x + 7, y + 4); }
+  c.font = 'italic 22px "IM Fell English", Georgia, serif'; c.fillStyle = 'rgba(43,29,14,.55)'; c.textAlign = 'center';
+  for (const [t, lon, lat] of [['Oceano Atlântico', -28 - 7, -20], ['Oceano Pacífico', -88, -20], ['Mar do Caribe', -75, 14.5]]) { const [x, y] = paraCarta(cg, ...deLonLat(lon, lat)); c.fillText(t, x, y); }
+  const [x, y] = paraCarta(cg, estado.x, estado.z); c.fillStyle = '#ffd76a'; c.strokeStyle = '#2b1d0e'; c.lineWidth = 2; c.beginPath(); c.arc(x, y, 7, 0, 6.3); c.fill(); c.stroke();
+  c.font = '32px "Pirata One", Georgia, serif'; c.fillStyle = '#2b1d0e'; c.textAlign = 'left'; c.fillText('Carta das Américas', 24, 44);
+  c.font = '14px "IM Fell English", Georgia, serif'; c.fillText('toque ou M para fechar', 26, 66);
+}
+
+// ---------- portos: entrar na região detalhada
+let portoPerto = null, saindo = 0;
+function entrarNoPorto() {
+  if (!portoPerto || saindo) return;
+  if (!portoPerto.aberto) { avisar(portoPerto.nome + ': este porto ainda está sendo construído.', t); return; }
+  salvar(); saindo = 0.001; estado.velas = 0;
+  const p = salvo.progresso() || {};
+  salvo.salvarProgresso({ ...p, local: 'mar', carta: null, mar: { x: 0, z: 1560, rumo: Math.PI / 2 } });   // entra pela barra, rumo ao norte
+  try { sessionStorage.setItem('cap.transicao', 'carta-mar'); } catch {}
+}
+let salvoEm = 0;
+function salvar() { salvoEm = t; if (saindo) return; salvo.salvarProgresso({ ...(salvo.progresso() || {}), local: 'carta', carta: { x: estado.x, z: estado.z, rumo: estado.rumo } }); }
+addEventListener('beforeunload', salvar);
+
+// ---------- outros jogadores na carta
+const OUTROS = new Map(), elOnline = document.getElementById('online');
+function atualizarOutros(dt, t) {
+  const vistos = new Set();
+  for (const [peer, bruto] of lista()) {
+    const e = limpar(bruto); if (e.cena !== 'carta') continue; vistos.add(peer);
+    let o = OUTROS.get(peer); if (!o) { o = { g: criarBarco('#d8c9a0'), x: e.x, z: e.z, rumo: e.rumo, rot: rotulo('', 'navio') }; OUTROS.set(peer, o); }
+    o.x += (e.x - o.x) * Math.min(1, dt * 4); o.z += (e.z - o.z) * Math.min(1, dt * 4); o.rumo += Math.atan2(Math.sin(e.rumo - o.rumo), Math.cos(e.rumo - o.rumo)) * Math.min(1, dt * 4);
+    pousar(o.g, o.x, o.z, o.rumo, t); o.g.vela.visible = e.velas > 0; o.rot.textContent = e.nome; fixar(o.rot, o.x, 16, o.z, 2500);
+  }
+  for (const [peer, o] of OUTROS) if (!vistos.has(peer)) { cena.remove(o.g); o.rot.remove(); OUTROS.delete(peer); }
+  const n = quantos(); elOnline.style.display = 'block';
+  elOnline.textContent = n > 1 ? `online · ${n} piratas (${OUTROS.size} no mar aberto)` : 'online · só você por enquanto';
+}
+
+// ---------- toque
+const TQ = criarControles({
+  esquerda: [{ nome: 'bombordo', rotulo: '◀', legenda: 'leme', key: 'a', classe: 'grande' }, { nome: 'boreste', rotulo: '▶', legenda: 'leme', key: 'd', classe: 'grande' }],
+  acoes: [{ nome: 'sobe', rotulo: '▲', legenda: 'vela', key: 'w' }, { nome: 'desce', rotulo: '▼', legenda: 'vela', key: 's' }, { nome: 'entrar', rotulo: 'E', legenda: 'entrar', key: 'e', classe: 'grande' }],
+  topo: [{ nome: 'carta', rotulo: '✦', legenda: 'carta', key: 'm' }, { nome: 'perto', rotulo: '+', legenda: 'zoom', f: () => (cam.dist = Math.max(70, cam.dist * 0.8)) },
+    { nome: 'longe', rotulo: '−', legenda: 'zoom', f: () => (cam.dist = Math.min(2200, cam.dist * 1.25)) }, { nome: 'cheia', rotulo: '⛶', legenda: 'tela', f: telaCheia }],
+});
+if (TQ.ativo) elAjuda.innerHTML = '<b>◀ ▶</b> leme · <b>▲ ▼</b> vela · <b>✦</b> carta grande · <b>E</b> perto de um porto: entrar · <b>arraste</b> para girar a câmera';
+
+// =====================================================================
+// LAÇO
+// =====================================================================
+const relogio = new THREE.Clock();
+let t = 0, chegada = 1;
+const ROSA = ['N', 'NO', 'O', 'SO', 'S', 'SE', 'L', 'NE'];
+function quadro() {
+  requestAnimationFrame(quadro);
+  const dt = Math.min(relogio.getDelta(), 0.05); t += dt;
+  // navegação
+  const querLeme = (teclas.has('a') || teclas.has('arrowleft') ? 1 : 0) - (teclas.has('d') || teclas.has('arrowright') ? 1 : 0);
+  estado.leme += (querLeme - estado.leme) * Math.min(1, dt * 3);
+  estado.vel += (estado.velas * VEL_MAX - estado.vel) * Math.min(1, dt * 0.45);
+  estado.rumo = Math.atan2(Math.sin(estado.rumo + estado.leme * 0.45 * (0.25 + 0.75 * estado.vel / VEL_MAX) * dt), Math.cos(estado.rumo + estado.leme * 0.45 * (0.25 + 0.75 * estado.vel / VEL_MAX) * dt));
+  const nx = estado.x + Math.cos(estado.rumo) * estado.vel * dt, nz = estado.z - Math.sin(estado.rumo) * estado.vel * dt;
+  const proaX = nx + Math.cos(estado.rumo) * 8, proaZ = nz - Math.sin(estado.rumo) * 8;
+  if (Math.max(amostra(S, nx, nz), amostra(S, proaX, proaZ)) > -3) { if (estado.vel > 2) avisar('Terra à vista: a jangada encalhou.', t); estado.vel *= -0.3; }
+  else if (nx > MX0 + 20 && nx < MX1 - 20 && nz > MZ0 + 20 && nz < MZ1 - 20) { estado.x = nx; estado.z = nz; }
+  else { estado.vel = 0; avisar('Além daqui, a carta não mostra nada.', t); }
+  pousar(barco, estado.x, estado.z, estado.rumo, t); barco.vela.visible = estado.velas > 0;
+  mar.position.set(Math.round(estado.x / 12) * 12, 0, Math.round(estado.z / 12) * 12);
+  matMar.uniforms.uT.value = t; matMar.uniforms.uCentro.value.set(estado.x, 0, estado.z);
+  // câmera atrás do barco, girando devagar com o rumo
+  cam.segue += Math.atan2(Math.sin(estado.rumo - cam.segue), Math.cos(estado.rumo - cam.segue)) * Math.min(1, dt * 0.8);
+  const ang = cam.segue + Math.PI + cam.giro;
+  camera.position.set(estado.x + Math.cos(ang) * cam.dist * Math.cos(cam.alt), cam.dist * Math.sin(cam.alt) + 8, estado.z - Math.sin(ang) * cam.dist * Math.cos(cam.alt));
+  camera.lookAt(estado.x, 6, estado.z);
+  // portos e regiões
+  portoPerto = null;
+  for (const p of PORTOS) { fixar(p.rot, p.x, Math.max(0, amostra(A, p.x, p.z)) + 46, p.z, 3200); if (Math.hypot(p.x - estado.x, p.z - estado.z) < 70) portoPerto = p; }
+  const dica = portoPerto ? (portoPerto.aberto ? `<b>E</b> entrar em ${portoPerto.nome}` : `${portoPerto.nome}: em breve`) : '';
+  if (elDica.innerHTML !== dica) { elDica.innerHTML = dica; elDica.style.display = dica ? 'block' : 'none'; }
+  TQ.apagar('entrar', !portoPerto?.aberto);
+  const r = ondeEstou(estado.x, estado.z);
+  if (elNome.textContent !== r.nome) { elNome.textContent = r.nome; elDesc.innerHTML = `<span class="dif">${'★'.repeat(r.faixa)}${'☆'.repeat(Math.max(0, 6 - r.faixa))}</span> ${r.desc}`; }
+  elNos.textContent = Math.round(Math.abs(estado.vel) * 1.6); elVela.classList.toggle('on', estado.velas > 0);
+  elAgulha.style.transform = `rotate(${(-estado.rumo + Math.PI / 2) * 180 / Math.PI}deg)`;
+  if (t > avisoAte) elAviso.style.opacity = 0;
+  if (Math.floor(t * 4) !== Math.floor((t - dt) * 4)) desenharMini();
+  if (t - salvoEm > 5) salvar();
+  if (temRede) { const eu = salvo.jogador(); enviar({ cena: 'carta', nome: eu?.nome || 'Náufrago', comp: eu?.aparencia?.personagem || {}, x: estado.x, z: estado.z, rumo: estado.rumo, velas: estado.velas }); atualizarOutros(dt, t); }
+  // véu: abre ao chegar, fecha ao entrar num porto
+  if (chegada > 0) { chegada = Math.max(0, chegada - dt / 1.2); elVeu.style.opacity = chegada; }
+  if (saindo) { saindo += dt; elVeu.style.opacity = Math.min(1, saindo / 1.1); cam.dist = Math.max(70, cam.dist * (1 - dt)); if (saindo > 1.2 && saindo < 10) { saindo = 99; location.href = 'mar.html'; } }
+  renderer.render(cena, camera);
+}
+document.getElementById('carregando').remove();
+desenharMini();
+avisar(ondeEstou(estado.x, estado.z).nome, 0);
+quadro();
+window.__carta = { estado, PORTOS, REGIOES, amostra, S, A, deLonLat, paraLonLat, cam };   // para testes no console
+</script>
+</body>
+</html>

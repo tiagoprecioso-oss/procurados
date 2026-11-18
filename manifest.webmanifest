@@ -1,0 +1,16 @@
+{
+  "name": "Procurados",
+  "short_name": "Procurados",
+  "description": "RPG pirata brasileiro, online, no navegador e no celular.",
+  "lang": "pt-BR",
+  "start_url": "./menu.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#1f2a33",
+  "theme_color": "#2b1d0e",
+  "icons": [
+    { "src": "icones/icone-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icones/icone-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
