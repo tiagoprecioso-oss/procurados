@@ -104,6 +104,7 @@ export const ITENS = {
   colarDentes: { nome: 'Colar de dentes de jacaré', nivel: 3, tipo: 'Veste', veste: 'amuleto', dano: 0.2, desc: 'Dentes de jacaré enfiados num cordão. A primeira marca de fama de um pirata.', onde: 'Oficina', efeito: 'Amuleto: +20% de dano' },
   elmoFerro: { nome: 'Elmo de ferro', nivel: 3, tipo: 'Veste', veste: 'cabeca', defesa: 0.18, desc: 'Capacete batido em chapa de ferro na forja. Protege bem contra botes.', onde: 'Oficina, perto de uma forja', efeito: 'Cabeça: recebe 18% menos dano' },
   peitoralFerro: { nome: 'Peitoral de ferro', nivel: 3, tipo: 'Veste', veste: 'corpo', defesa: 0.52, vel: -0.09, desc: 'Couraça de placas de ferro sobre couro. A maior proteção de Niterói, mas pesa no passo.', onde: 'Oficina, perto de uma forja', efeito: 'Corpo: recebe 52% menos dano, anda 9% mais devagar' },
+  elmoOnca: { nome: 'Elmo de onça', nivel: 3, tipo: 'Veste', veste: 'cabeca', defesa: 0.15, desc: 'Cabeça da onça-pintada curtida sobre um gorro de couro. Completa o conjunto Predador da Mata.', onde: 'Oficina', efeito: 'Cabeça: recebe 15% menos dano' },
   mantoOnca: { nome: 'Manto de onça', nivel: 3, tipo: 'Veste', veste: 'corpo', defesa: 0.42, vel: 0.1, desc: 'Gibão forrado com pele de onça-pintada. Protege firme e deixa o passo mais leve.', onde: 'Oficina', efeito: 'Corpo: recebe 42% menos dano e anda 10% mais rápido' },
   colarOnca: { nome: 'Colar de garras de onça', nivel: 3, tipo: 'Veste', veste: 'amuleto', dano: 0.3, desc: 'Garras da onça-pintada num cordão trançado. Impõe respeito na mata e na cidade.', onde: 'Oficina', efeito: 'Amuleto: +30% de dano' },
   broquel: { nome: 'Broquel de ferro', nivel: 3, tipo: 'Veste', veste: 'escudo', defesa: 0.15, desc: 'Escudo redondo reforçado com aro de ferro. Fica no braço sem ocupar a mão da arma.', onde: 'Oficina, perto de uma forja', efeito: 'Escudo: recebe 15% menos dano' },
@@ -233,6 +234,8 @@ Object.assign(FEITOS, {
   escamaRei: () => [malha(new THREE.OctahedronGeometry(0.95, 0).scale(1.1, 0.35, 1.35), '#2e6b3e'), malha(new THREE.OctahedronGeometry(0.55, 0).scale(1.1, 0.4, 1.2), '#d9b23c', 0, 0.16, 0)],
   elmoFerro: () => [malha(new THREE.SphereGeometry(0.88, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.56), '#7e8e9c', 0, -0.05, 0), malha(new THREE.BoxGeometry(0.18, 0.55, 1.55), '#a8b8c6', 0, 0.55, 0), malha(new THREE.BoxGeometry(0.16, 0.65, 0.16), '#5a6874', 0, -0.2, 0.85)],
 });
+// elmo de onça: o desenho do elmo de ferro, em couro dourado com rosetas
+FEITOS.elmoOnca = () => FEITOS.elmoFerro().map((m) => { m.material = lam('#d99a3a'); return m; }).concat([[-0.4, 0.35, 0.6], [0.3, 0.5, 0.65], [0, 0.65, 0.55], [0.5, 0.2, 0.6], [-0.2, 0.15, 0.78]].map(([x, y, z]) => malha(new THREE.SphereGeometry(0.11, 6, 4), '#2b1d0e', x, y, z)));
 // itens que reaproveitam o ícone de outro, só com outra cor (sem modelar nada novo)
 const TINGIR = {
   carneSeca: ['carne', '#8a4a2a'], peixeSeco: ['peixe', '#b08a5a'], podre: ['carne', '#7f8a3e'], pacoca: ['carne', '#c9a06a'], garrafada: ['cantil', '#6fae46'],

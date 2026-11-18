@@ -1007,7 +1007,18 @@ var vestido = { cabeca: null, corpo: null, pernas: null, escudo: null, amuleto: 
 const vestes = () => Object.values(vestido).filter((id) => id && ter(id)).map((id) => ITENS[id]);
 const vesteSoma = (k) => vestes().reduce((s, it) => s + (it[k] || 0), 0);
 const vesteTem = (k) => vestes().some((it) => it[k]);
-const defesaVestes = () => vestes().reduce((m, it) => m * (1 - (it.defesa || 0)), 1);
+// CONJUNTOS (18/11): 3 peças do mesmo conjunto vestidas (no Rei da Lagoa, a espada na mão também conta) ligam o bônus
+const CONJUNTOS = {
+  tatu: { nome: 'Casco de Tatu', pecas: ['capaceteTatu', 'couracaTatu', 'perneiras'], bonus: 'esquiva gasta 30% menos fôlego e recebe 10% menos dano' },
+  ferro: { nome: 'Muralha de Ferro', pecas: ['elmoFerro', 'peitoralFerro', 'broquel'], bonus: 'recebe 10% menos dano e o fôlego volta 20% mais rápido' },
+  onca: { nome: 'Predador da Mata', pecas: ['elmoOnca', 'mantoOnca', 'colarOnca'], bonus: 'à noite anda 15% mais rápido e os bichos te notam 20% mais perto' },
+  rei: { nome: 'Majestade da Lagoa', pecas: ['coroaRei', 'escudoRei', 'denteRei', 'sabreRei'], bonus: '+10% de dano, cada golpe cura 1 de vida e não pega veneno' },
+};
+const armaNaMao = () => { try { return armaAtual; } catch { return null; } };   // a arma pode ainda não existir no começo do carregamento
+const pecasDoConjunto = (k) => CONJUNTOS[k].pecas.filter((id) => Object.values(vestido).includes(id) || (id === 'sabreRei' && armaNaMao() === 'sabreRei')).length;
+const conjunto = (k) => pecasDoConjunto(k) >= 3;
+const conjuntoDe = (id) => Object.keys(CONJUNTOS).find((k) => CONJUNTOS[k].pecas.includes(id));
+const defesaVestes = () => vestes().reduce((m, it) => m * (1 - (it.defesa || 0)), 1) * (conjunto('tatu') ? 0.9 : 1) * (conjunto('ferro') ? 0.9 : 1);
 function vestir(id) {
   const lugar = ITENS[id]?.veste; if (!lugar || !ter(id)) return;
   if (vestido[lugar] === id) { vestido[lugar] = null; avisar('Tirou ' + NOMES[id].toLowerCase() + '.', 1.6); }
@@ -1090,6 +1101,7 @@ const RECEITAS = [
   { id: 'peitoralFerro', nome: 'Peitoral de ferro', pede: { barraFerro: 4, couro: 2 }, obs: 'na forja · corpo · 52% menos dano', forja: true },
   { id: 'broquel', nome: 'Broquel de ferro', pede: { barraFerro: 2, tabua: 2, couro: 1 }, obs: 'na forja · escudo · 15% menos dano', forja: true },
   { id: 'mantoOnca', nome: 'Manto de onça', pede: { peleOnca: 2, couro: 2, cipo: 2 }, obs: 'corpo · 42% defesa e +10% velocidade' },
+  { id: 'elmoOnca', nome: 'Elmo de onça', pede: { peleOnca: 1, garraOnca: 2, couro: 1 }, obs: 'cabeça · 15% defesa · conjunto Predador da Mata' },
   { id: 'colarOnca', nome: 'Colar de garras de onça', pede: { garraOnca: 4, cipo: 1 }, obs: 'amuleto · +30% de dano' },
   { id: 'sabreRei', nome: 'Espada do Rei da Lagoa', pede: { escamaRei: 1, barraFerro: 4, denteJacare: 2 }, obs: 'na forja · Nv 8 · dano 42 · lendária', forja: true },
   { id: 'coroaRei', nome: 'Coroa de Escamas', pede: { moldeCoroa: 1, escamaRei: 2, barraFerro: 2 }, obs: 'na forja · Nv 8 · cabeça: 18% defesa e sem veneno', forja: true },
@@ -1265,7 +1277,9 @@ function desenharBolsa() {
       elVestes.appendChild(d);
     }
     const def = Math.round((1 - defesaVestes()) * 100), dano = Math.round(vesteSoma('dano') * 100);
-    document.getElementById('vestesResumo').textContent = `defesa ${def}%` + (dano ? ` · dano +${dano}%` : '') + (vesteTem('antiveneno') ? ' · contra veneno' : '');
+    const conj = Object.keys(CONJUNTOS).map((k) => [k, pecasDoConjunto(k)]).filter(([, n]) => n >= 2).map(([k, n]) => `${CONJUNTOS[k].nome} ${Math.min(n, 3)}/3${n >= 3 ? ' ✓' : ''}`);
+    document.getElementById('vestesResumo').textContent = `defesa ${def}%` + (dano ? ` · dano +${dano}%` : '') + (vesteTem('antiveneno') ? ' · contra veneno' : '') + (conj.length ? ' · ' + conj.join(' · ') : '');
+    document.getElementById('vestesResumo').title = Object.values(CONJUNTOS).map((c) => c.nome + ': ' + c.bonus).join('\n');
   }
   elBolsa.innerHTML = '';
   atalhos.forEach((k, i) => {
@@ -1334,6 +1348,7 @@ function mostrarFicha(id, perto, fixa = false) {
     ${it.serve ? `<h4>PARA QUE SERVE</h4><ul>${it.serve.map((x) => `<li>${x}</li>`).join('')}</ul>` : ''}
     ${usos.length || cozinha.length ? `<h4>DÁ PARA FAZER</h4>${usos.map(linhaReceita).join('')}${cozinha.map((c) => `<div class="receita">${icone(c.de, 22)}<span class="seta">→ fogueira →</span>${icone(c.vira, 22)}<b>${NOMES[c.vira]}</b></div>`).join('')}` : ''}
     ${vemDe ? `<h4>COMO FAZER</h4>${linhaReceita(vemDe)}` : ''}
+    ${conjuntoDe(id) ? (() => { const k = conjuntoDe(id), C = CONJUNTOS[k], n = pecasDoConjunto(k); return `<h4>CONJUNTO: ${C.nome.toUpperCase()} (${Math.min(n, 3)}/3)</h4><div class="efeito" style="background:${n >= 3 ? '#d8ecc4' : '#ece4cf'}">3 peças: ${C.bonus}</div><div style="font-size:11px">Peças: ${C.pecas.map((p) => (Object.values(vestido).includes(p) || (p === 'sabreRei' && armaNaMao() === p) ? '✓ ' : '') + NOMES[p]).join(' · ')}</div>`; })() : ''}
     <h4>ONDE ACHAR</h4><div>${it.onde}</div>`;
   elFicha.classList.toggle('fixa', !!fixa);
   elFicha.style.display = 'block';
@@ -2909,7 +2924,7 @@ function quadro() {
   if (j.anda) {
     mx /= ml; mz /= ml;
     const fraco = j.fome <= 0 || j.sede <= 0 ? 0.6 : 1, lama = tipoChao(j.x, j.z) === 'lama' && !vesteTem('lama') ? 0.7 : 1, n = prof(j.x, j.z) > 0 ? 0.6 : 1;
-    const v = ((teclas.has('shift') || correrLivre) && j.folego > 2 ? 6 : 3.6) * fraco * lama * n * (1 + vesteSoma('vel')) * (1 + 0.03 * atr('pernas'));
+    const v = ((teclas.has('shift') || correrLivre) && j.folego > 2 ? 6 : 3.6) * fraco * lama * n * (1 + vesteSoma('vel')) * (1 + 0.03 * atr('pernas')) * (conjunto('onca') && escuroAgora > 0.4 ? 1.15 : 1);
     j.a = Math.atan2(-mz, mx); j.passo += dt * v * 1.8;
     const nx = j.x + mx * v * dt, nz = j.z + mz * v * dt;
     const ax = j.x, az = j.z;
@@ -3388,7 +3403,7 @@ function atualizarFojos(dt) {
 }
 function esquivar() {
   const j = jogador; if (j.caido || j.esquiva || j.folego < 30) return;
-  j.folego -= 30 * (1 - 0.2 * marca('esquiva')); contarMarca('esquiva');
+  j.folego -= 30 * (1 - 0.2 * marca('esquiva')) * (conjunto('tatu') ? 0.7 : 1); contarMarca('esquiva');
   let dx = 0, dz = 0;
   if (joy.ativo) { dx = CIMA.x * joy.y + DIR.x * joy.x; dz = CIMA.y * joy.y + DIR.y * joy.x; }
   else {
@@ -3404,7 +3419,7 @@ function esquivar() {
 function ferirJogador(dano, veneno = false) {
   const j = jogador; if (j.caido || j.esquiva) return;
   dano = Math.round(dano * defesaVestes());   // vestes (gibão, couraças, capacete, perneiras)
-  if (veneno && !vesteTem('antiveneno') && !buff('imune')) { if (!(j.veneno > 0)) flutuar('envenenado!', j.x, 2.5, j.z, '#9fe07a', 1.8); j.veneno = 9; }
+  if (veneno && !vesteTem('antiveneno') && !buff('imune') && !conjunto('rei')) { if (!(j.veneno > 0)) flutuar('envenenado!', j.x, 2.5, j.z, '#9fe07a', 1.8); j.veneno = 9; }
   dano = Math.max(1, Math.round(dano * resistencia() * (1 - 0.03 * atr('couro'))));   // cada nível aguenta um pouco mais; Couro grosso também
   j.vida = Math.max(0, j.vida - dano); flutuar('-' + dano, j.x, 2.1, j.z, '#ff6b5a', 1);
   elVinheta.classList.add('dano'); setTimeout(() => elVinheta.classList.remove('dano'), 180);
@@ -3553,6 +3568,7 @@ function voltarBicho(b, seg) {   // outro bicho da mesma espécie aparece no lug
 function ferirBicho(b, dano, d) {
   const E = ESPECIES[b.tipo];
   if ((d[0] || d[1]) && (E.l || 1.3) >= 1.6 && marca('cacadorOnca')) dano = Math.round(dano * (1 + 0.1 * marca('cacadorOnca')));   // Caçador de Onças: bicho grande
+  if ((d[0] || d[1]) && conjunto('rei')) { dano = Math.round(dano * 1.1); jogador.vida = Math.min(100, jogador.vida + 1); }   // Majestade da Lagoa
   if ((d[0] || d[1]) && vesteSoma('curaGolpe')) jogador.vida = Math.min(100, jogador.vida + vesteSoma('curaGolpe'));   // Dente do Rei: cada golpe cura
   b.vida -= dano; flutuar('-' + dano, b.x, 1.3, b.z, '#ffe08a', 0.9);
   b.malha.material.color.set('#ffb0a0'); setTimeout(() => b.malha.material.color.set(b.corBase), 120);
@@ -3632,7 +3648,7 @@ function atualizarBicho(b, dt) {
   if (j.caido && b.estado !== 'vaga' && b.estado !== 'foge') b.estado = 'vaga';
   if (b.estado === 'vaga') {
     const raio = E.jeito === 'bote' ? 0.8 : E.jeito === 'emboscada' ? 2.5 : 7, passo = E.jeito === 'bote' ? 0.3 : E.jeito === 'emboscada' ? 0.6 : 1.2;
-    if (d < E.ve * (1 - 0.06 * atr('faro')) && !j.caido) {
+    if (d < E.ve * (1 - 0.06 * atr('faro')) * (conjunto('onca') ? 0.8 : 1) && !j.caido) {
       if (E.jeito === 'foge') b.estado = 'foge';
       else if (E.jeito === 'bote') { if (b.t <= 0) prepararGolpe(b, E, dx, dz); }
       else b.estado = 'persegue';
@@ -3688,7 +3704,7 @@ function combate(dt) {
     if (j.esquiva.t > 0.22) j.esquiva = null;
   }
   const correndo = j.anda && (teclas.has('shift') || joy.correndo);
-  j.folego = Math.max(0, Math.min(100, j.folego + (correndo ? -18 * (1 - 0.08 * atr('folego')) : j.esquiva ? 0 : 22 * (buff('descansado') ? 1.5 : 1)) * dt));
+  j.folego = Math.max(0, Math.min(100, j.folego + (correndo ? -18 * (1 - 0.08 * atr('folego')) : j.esquiva ? 0 : 22 * (buff('descansado') ? 1.5 : 1) * (conjunto('ferro') ? 1.2 : 1)) * dt));
   armaAtual = armaDoAtivo();   // a arma é o que está no espaço ativo da barra
   if (elArma.textContent !== ARMAS[armaAtual].nome) elArma.textContent = ARMAS[armaAtual].nome;
   atualizarMarcas(dt);
