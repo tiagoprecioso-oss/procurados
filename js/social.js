@@ -66,3 +66,6 @@ export const minhasOfertas = () => rpc('minhas_ofertas', { p_codigo: cod() });
 export const encomendasHoje = () => rpc('encomendas_hoje', { p_codigo: cod() });
 export const entregarEncomenda = (id) => rpc('entregar_encomenda', { p_codigo: cod(), p_id: id });
 export const mural = (cidade) => rpc('mural', { p_cidade: cidade });
+// feitos lendários: o primeiro da cidade a derrubar cada chefe (ferramentas/supabase-feitos.sql)
+export const registrarFeito = async (feito) => { await registrar(); return rpc('registrar_feito', { p_codigo: cod(), p_feito: feito }); };
+export const feitosCidade = (cidade) => rpc('feitos_cidade', { p_cidade: cidade });
