@@ -36,7 +36,18 @@ export const ITENS = {
   paTatu: { nome: 'Pá de casco de tatu', nivel: 2, tipo: 'Ferramenta do kit', desc: 'Cava fundo: desenterra os baús marcados com X.', onde: 'Oficina (substitui a de concha)', serve: ['Desenterrar baús (nível 2)'] },
   martelo: { nome: 'Martelo de pedra', nivel: 1, tipo: 'Ferramenta do kit', desc: 'Abre os caixotes que o mar traz para a praia.', onde: 'Oficina (uma vez só)', serve: ['Abrir caixote nível 1'] },
   marteloOsso: { nome: 'Martelo de osso', nivel: 2, tipo: 'Ferramenta do kit', desc: 'Arromba os barris reforçados da vila e do engenho.', onde: 'Oficina (substitui o de pedra)', serve: ['Arrombar barril nível 2'] },
-  ferro: { nome: 'Minério de ferro', nivel: 2, tipo: 'Recurso', desc: 'Pedra pesada e avermelhada. Guarde: é a porta da era do metal.', onde: 'Rocha com ferro (picareta nível 2), barris e baús', serve: ['Em breve: ferramentas e armadilhas de ferro'] },
+  ferro: { nome: 'Minério de ferro', nivel: 2, tipo: 'Recurso', desc: 'Pedra pesada e avermelhada. Fundida na forja, vira barra de ferro.', onde: 'Rocha com ferro (picareta nível 2), barris e baús', serve: ['Fundir em barra de ferro na forja (com carvão)', 'Reivindicar Cais, Engenho e Fortaleza'] },
+  carvao: { nome: 'Carvão vegetal', nivel: 1, tipo: 'Recurso', desc: 'Madeira queimada devagar na brasa. Esquenta a forja o bastante para derreter ferro.', onde: 'Oficina, perto de uma fogueira, fogão ou forja', serve: ['Fundir minério de ferro na forja'] },
+  tabua: { nome: 'Tábua serrada', nivel: 2, tipo: 'Recurso', desc: 'Madeira aparelhada para obras firmes e sobrados.', onde: 'Oficina (a partir de tronco)', serve: ['Erguer o Sobrado no lote', 'Montar bancada e móveis reforçados'] },
+  barraFerro: { nome: 'Barra de ferro', nivel: 3, tipo: 'Recurso', desc: 'Ferro puro fundido na forja. Abre a era do metal em Niterói.', onde: 'Oficina, perto de uma forja (minério de ferro + carvão)', serve: ['Forjar pregos, armas, armaduras, armadilhas e ferramentas nível 3'] },
+  prego: { nome: 'Pregos de ferro', nivel: 3, tipo: 'Recurso', desc: 'Pregos batidos a martelo na forja. Seguram sobrados e armadilhas pesadas.', onde: 'Oficina, perto de uma forja (barra de ferro)', serve: ['Erguer o Sobrado no lote', 'Forjar armadilha de ferro e bancada'] },
+  peleOnca: { nome: 'Pele de onça', nivel: 3, tipo: 'Recurso', desc: 'Pele pintada da onça-pintada da mata profunda. Leve, resistente e imponente.', onde: 'Esfolar onça-pintada (mata do interior, atrás do Engenho)', serve: ['Fazer o Manto de onça (armadura ágil)'] },
+  garraOnca: { nome: 'Garra de onça', nivel: 3, tipo: 'Recurso', desc: 'Garra curva e afiada da rainha da mata.', onde: 'Esfolar onça-pintada (mata do interior)', serve: ['Fazer o Colar de garras de onça (+30% de dano)'] },
+  escamaRei: { nome: 'Escama do Rei da Lagoa', nivel: 3, tipo: 'Recurso', desc: 'Placa grossa e reluzente do Jacaré-Açu, o chefe raro da Lagoa de Piratininga.', onde: 'Derrotar e esfolar o Jacaré-Açu (lagoa)', serve: ['Forjar a Espada do Rei da Lagoa', 'Forjar o Escudo do Rei da Lagoa'] },
+  machadoFerro: { nome: 'Machado de ferro', nivel: 3, tipo: 'Ferramenta do kit', desc: 'Lâmina de ferro forjado. Derruba qualquer árvore mais rápido e rende +1 tronco garantido.', onde: 'Oficina, perto de uma forja (substitui o de presa)', serve: ['Cortar árvores nível 1 e 2 com +1 tronco extra'] },
+  picaretaFerro: { nome: 'Picareta de ferro', nivel: 3, tipo: 'Ferramenta do kit', desc: 'Ponta de ferro temperado. Quebra rochas em menos golpes e dobra o ferro extraído.', onde: 'Oficina, perto de uma forja (substitui a de presa)', serve: ['Quebrar rochas nível 1 e 2 com dobro de ferro'] },
+  paFerro: { nome: 'Pá de ferro', nivel: 3, tipo: 'Ferramenta do kit', desc: 'Lâmina de ferro firme. Desenterra baús e areia em 1 golpe com saque extra.', onde: 'Oficina, perto de uma forja (substitui a de tatu)', serve: ['Cavar areia e baús nível 1 e 2 com tesouro extra'] },
+  marteloFerro: { nome: 'Martelo de ferro', nivel: 3, tipo: 'Ferramenta do kit', desc: 'Marreta de ferro pesado. Abre caixotes e barris num golpe só com saque extra.', onde: 'Oficina, perto de uma forja (substitui o de osso)', serve: ['Abrir caixotes e barris nível 1 e 2 num golpe só'] },
   minhoca: { nome: 'Minhoca', nivel: 1, tipo: 'Recurso', desc: 'Isca de pesca: com minhoca na bolsa, o peixe morde bem mais rápido (gasta 1 por lançada).', onde: 'Areia remexida da praia (pá)', serve: ['Isca de pesca'] },
   carne: { nome: 'Carne crua', nivel: 1, tipo: 'Comida', desc: 'Carne de caça. Crua faz mal: asse na fogueira.', onde: 'Esfolar bichos abatidos', efeito: 'Comer crua: fome +10, vida −8' },
   carneAssada: { nome: 'Carne assada', nivel: 2, tipo: 'Comida', desc: 'Carne assada na fogueira. Sustenta bem.', onde: 'Fogueira', efeito: 'Comer: fome +35, vida +8' },
@@ -70,6 +81,13 @@ export const ITENS = {
   // ---- armas novas
   borduna: { nome: 'Borduna', nivel: 2, tipo: 'Arma', desc: 'Clava de madeira dura com pedra amarrada na ponta. Lenta, mas derruba.', onde: 'Oficina', efeito: 'Arma: dano 21, arco de 3 casas, golpe lento' },
   facaDente: { nome: 'Faca de dente de jacaré', nivel: 3, tipo: 'Arma', desc: 'Dente de jacaré encabado em osso, com pele de cobra no cabo. A melhor lâmina antes do ferro.', onde: 'Oficina', efeito: 'Arma: dano 16, 1 casa, golpe rápido', serve: ['Cortar cipó e cana', 'Esfolar'] },
+  adagaFerro: { nome: 'Adaga de ferro', nivel: 3, tipo: 'Arma', desc: 'Lâmina fina e letal forjada a ferro. Golpes velozes e corte limpo.', onde: 'Oficina, perto de uma forja', efeito: 'Arma: dano 22, golpe muito rápido', serve: ['Cortar cipó e cana', 'Esfolar'] },
+  sabreFerro: { nome: 'Sabre de ferro', nivel: 3, tipo: 'Arma', desc: 'A primeira espada pirata de verdade. Equilibrada, com corte largo.', onde: 'Oficina, perto de uma forja', efeito: 'Arma: dano 28, arco largo e firme' },
+  machadoLuta: { nome: 'Machado de abordagem', nivel: 3, tipo: 'Arma', desc: 'Machado pesado de ferro de duas mãos. Devastador no corpo a corpo.', onde: 'Oficina, perto de uma forja', efeito: 'Arma: dano 36, arco amplo, golpe pesado' },
+  sabreRei: { nome: 'Espada do Rei da Lagoa', nivel: 3, tipo: 'Arma', nivelMin: 8, desc: 'Lâmina de ferro temperado com escamas do Jacaré-Açu. Uma arma lendária em Niterói.', onde: 'Oficina, perto de uma forja (pede Nv 8)', efeito: 'Arma lendária: dano 42, arco amplo e veloz' },
+  besta: { nome: 'Besta de ferro', nivel: 3, tipo: 'Arma', desc: 'Arco de ferro montado em coronha de madeira. Dispara virotes de ferro com força e alcance.', onde: 'Oficina, perto de uma forja', efeito: 'Arma: dano 26 de longe (até 14 m), gasta 1 virote por tiro', serve: ['Caçar onça-pintada e enfrentar o Jacaré-Açu à distância'] },
+  virote: { nome: 'Virote de ferro', nivel: 3, tipo: 'Munição', desc: 'Seta curta com ponta de ferro para a besta. Metade das vezes dá para recuperar do chão.', onde: 'Oficina, perto de uma forja (faz 8 de uma vez)', serve: ['Atirar com a besta de ferro'] },
+  armadilhaFerro: { nome: 'Armadilha de ferro', nivel: 3, tipo: 'Armadilha', desc: 'Mordente de aço com mola forte. Segura até onça e jacaré.', onde: 'Oficina, perto de uma forja (monta à sua frente)', efeito: 'Bicho que pisa: dano 55 e preso por 7 s; E arma de novo', construcao: true },
   // ---- vestes (cabeça, corpo, pernas e amuleto). O que está vestido vale enquanto estiver na bolsa.
   chapeuPalha: { nome: 'Chapéu de palha', nivel: 1, tipo: 'Veste', veste: 'cabeca', sede: 0.25, desc: 'Palha de coqueiro trançada. Protege do sol de Icaraí. Dizem que um chapéu assim já foi promessa de um grande capitão.', onde: 'Oficina', efeito: 'Cabeça: a sede cai 25% mais devagar' },
   capaceteTatu: { nome: 'Capacete de casco de tatu', nivel: 2, tipo: 'Veste', veste: 'cabeca', defesa: 0.08, desc: 'Meia carapaça de tatu presa com cipó.', onde: 'Oficina', efeito: 'Cabeça: recebe 8% menos dano' },
@@ -80,6 +98,12 @@ export const ITENS = {
   perneiras: { nome: 'Perneiras de couro', nivel: 2, tipo: 'Veste', veste: 'pernas', defesa: 0.06, lama: true, desc: 'Couro grosso, que não encharca. Feitas para andar no mangue.', onde: 'Oficina', efeito: 'Pernas: a lama do mangue não atrasa · 6% menos dano' },
   colarPresas: { nome: 'Colar de presas', nivel: 2, tipo: 'Veste', veste: 'amuleto', dano: 0.1, desc: 'Presas de cateto num fio de cipó. Troféu de caçador: o bicho respeita, o homem também.', onde: 'Oficina', efeito: 'Amuleto: +10% de dano' },
   colarDentes: { nome: 'Colar de dentes de jacaré', nivel: 3, tipo: 'Veste', veste: 'amuleto', dano: 0.2, desc: 'Dentes de jacaré enfiados num cordão. A primeira marca de fama de um pirata.', onde: 'Oficina', efeito: 'Amuleto: +20% de dano' },
+  elmoFerro: { nome: 'Elmo de ferro', nivel: 3, tipo: 'Veste', veste: 'cabeca', defesa: 0.18, desc: 'Capacete batido em chapa de ferro na forja. Protege bem contra botes.', onde: 'Oficina, perto de uma forja', efeito: 'Cabeça: recebe 18% menos dano' },
+  peitoralFerro: { nome: 'Peitoral de ferro', nivel: 3, tipo: 'Veste', veste: 'corpo', defesa: 0.52, vel: -0.09, desc: 'Couraça de placas de ferro sobre couro. A maior proteção de Niterói, mas pesa no passo.', onde: 'Oficina, perto de uma forja', efeito: 'Corpo: recebe 52% menos dano, anda 9% mais devagar' },
+  mantoOnca: { nome: 'Manto de onça', nivel: 3, tipo: 'Veste', veste: 'corpo', defesa: 0.42, vel: 0.1, desc: 'Gibão forrado com pele de onça-pintada. Protege firme e deixa o passo mais leve.', onde: 'Oficina', efeito: 'Corpo: recebe 42% menos dano e anda 10% mais rápido' },
+  colarOnca: { nome: 'Colar de garras de onça', nivel: 3, tipo: 'Veste', veste: 'amuleto', dano: 0.3, desc: 'Garras da onça-pintada num cordão trançado. Impõe respeito na mata e na cidade.', onde: 'Oficina', efeito: 'Amuleto: +30% de dano' },
+  broquel: { nome: 'Broquel de ferro', nivel: 3, tipo: 'Veste', veste: 'escudo', defesa: 0.15, desc: 'Escudo redondo reforçado com aro de ferro. Fica no braço sem ocupar a mão da arma.', onde: 'Oficina, perto de uma forja', efeito: 'Escudo: recebe 15% menos dano' },
+  escudoRei: { nome: 'Escudo do Rei da Lagoa', nivel: 3, tipo: 'Veste', veste: 'escudo', nivelMin: 8, defesa: 0.25, dano: 0.1, desc: 'Escudo cravado com escamas e dentes do Jacaré-Açu. Defesa e impacto lendários.', onde: 'Oficina, perto de uma forja (pede Nv 8)', efeito: 'Escudo lendário: 25% menos dano e +10% de dano' },
   // construções (não vão para a bolsa, mas aparecem na oficina)
   arco: { nome: 'Arco', nivel: 2, tipo: 'Arma', desc: 'Galho vergado com corda de cipó. Caça de longe o bicho que foge.', onde: 'Oficina', efeito: 'Arma: dano 13 de longe (até 11 m), gasta 1 flecha por tiro', serve: ['Caçar capivara, quati e tatu antes que fujam'] },
   flecha: { nome: 'Flecha', nivel: 1, tipo: 'Munição', desc: 'Haste de galho com ponta de pedra lascada. Metade das vezes dá para pegar de volta.', onde: 'Oficina (faz 4 de uma vez)', serve: ['Atirar com o arco'] },
@@ -97,7 +121,7 @@ export const COMBINACOES = [
 export const ESTRAGA = { carne: 5, peixe: 5, caranguejo: 5, sururu: 5, carneAssada: 12, peixeAssado: 12, mariscos: 12, caranguejoCozido: 12 , moqueca: 20, caldoSururu: 20 };
 export const COZINHA = [{ de: 'sururu', vira: 'mariscos' }, { de: 'carne', vira: 'carneAssada' }, { de: 'peixe', vira: 'peixeAssado' }, { de: 'caranguejo', vira: 'caranguejoCozido' }];
 // vestes: em que lugar do corpo cada uma vai
-export const LUGARES_VESTE = { cabeca: 'Cabeça', corpo: 'Corpo', pernas: 'Pernas', amuleto: 'Amuleto' };
+export const LUGARES_VESTE = { cabeca: 'Cabeça', corpo: 'Corpo', pernas: 'Pernas', escudo: 'Escudo', amuleto: 'Amuleto' };
 // receitas em que o item entra como ingrediente
 export const usosDe = (id, receitas) => receitas.filter((r) => r.pede[id]);
 
@@ -105,8 +129,8 @@ export const usosDe = (id, receitas) => receitas.filter((r) => r.pede[id]);
 // ESTÚDIO DE ÍCONES: renderiza cada item em 3D (3/4 de cima) com contorno
 // ---------------------------------------------------------------------
 const TRACO = '#2b1d0e';
-const K = new URL('../modelos/kenney/', import.meta.url).href, PP = new URL('../modelos/polypizza/', import.meta.url).href;
-const MODELOS = {   // itens que usam modelo pronto da Kenney (CC0)
+const K = new URL('../modelos/kenney/', import.meta.url).href, PP = new URL('../modelos/polypizza/', import.meta.url).href, KK = new URL('../modelos/kaykit-adventurers/acessorios/', import.meta.url).href;
+const MODELOS = {   // itens que usam modelo pronto da Kenney (CC0), Poly Pizza e KayKit (CC0)
   pedra: K + 'nature-kit/Models/GLTF format/stone_smallA.json',
   tronco: K + 'survival-kit/Models/GLB format/resource-wood.json',
   machado: K + 'survival-kit/Models/GLB format/tool-axe.json',
@@ -120,7 +144,11 @@ const MODELOS = {   // itens que usam modelo pronto da Kenney (CC0)
   machadoPresa: K + 'survival-kit/Models/GLB format/tool-axe-upgraded.json', picaretaPresa: K + 'survival-kit/Models/GLB format/tool-pickaxe-upgraded.json',
   paTatu: K + 'survival-kit/Models/GLB format/tool-shovel-upgraded.json', marteloOsso: K + 'survival-kit/Models/GLB format/tool-hammer-upgraded.json',
   ferro: K + 'nature-kit/Models/GLTF format/rock_smallC.json',
-  arco: PP + 'arco.json', fojo: PP + 'fojo.json', flecha: new URL('../modelos/kaykit-adventurers/acessorios/arrow_bundle.json', import.meta.url).href,
+  arco: PP + 'arco.json', fojo: PP + 'fojo.json', armadilhaFerro: PP + 'armadilhaFerro.json',
+  flecha: KK + 'arrow_bundle.json',
+  adagaFerro: KK + 'dagger.json', sabreFerro: KK + 'sword_1handed.json', machadoLuta: KK + 'axe_2handed.json',
+  sabreRei: KK + 'sword_2handed_color.json', besta: KK + 'crossbow_2handed.json',
+  broquel: KK + 'shield_round.json', escudoRei: KK + 'shield_spikes_color.json',
   cantil: K + 'pirate-kit/Models/GLB format/bottle.json', cantilCheio: K + 'pirate-kit/Models/GLB format/bottle.json',
 };
 const lam = (cor) => new THREE.MeshLambertMaterial({ color: cor, flatShading: true });
@@ -189,9 +217,21 @@ Object.assign(FEITOS, {
   perneiras: () => [-0.45, 0.45].flatMap((x) => [malha(new THREE.CylinderGeometry(0.32, 0.26, 1.6, 8), '#b98a5a', x, 0, 0), malha(new THREE.TorusGeometry(0.3, 0.05, 4, 10), '#6e4a2c', x, 0.4, 0, Math.PI / 2), malha(new THREE.TorusGeometry(0.28, 0.05, 4, 10), '#6e4a2c', x, -0.3, 0, Math.PI / 2)]),
   colarPresas: () => colar('#f1ead8', 5, () => new THREE.ConeGeometry(0.11, 0.45, 5)),
   colarDentes: () => colar('#f3ecd6', 7, () => new THREE.ConeGeometry(0.1, 0.5, 6)),
+  carvao: () => [malha(new THREE.DodecahedronGeometry(0.6, 0).scale(1.2, 0.7, 0.9), '#2b2826', -0.25, -0.1, 0), malha(new THREE.DodecahedronGeometry(0.48, 0), '#1f1d1c', 0.45, 0.15, 0.2), malha(new THREE.DodecahedronGeometry(0.35, 0), '#d95a24', 0.1, 0.28, -0.15)],
+  tabua: () => [0, 1, 2].map((k) => malha(new THREE.BoxGeometry(2.1, 0.22, 0.65), k % 2 ? '#b88a54' : '#a07442', 0, -0.35 + k * 0.3, (k - 1) * 0.12, 0, (k - 1) * 0.08, 0)),
+  barraFerro: () => [malha(new THREE.BoxGeometry(1.75, 0.45, 0.72), '#7e8e9c', 0, -0.1, 0, 0, 0.25, 0), malha(new THREE.BoxGeometry(1.5, 0.16, 0.52), '#a8b8c6', 0, 0.2, 0, 0, 0.25, 0)],
+  prego: () => [-0.4, 0, 0.4].flatMap((x, k) => [malha(new THREE.CylinderGeometry(0.06, 0.02, 1.5, 5), '#6e7c88', x, 0, k * 0.08, 0, 0, -0.35 + k * 0.12), malha(new THREE.CylinderGeometry(0.18, 0.18, 0.08, 6), '#9aa8b4', x - 0.22 + k * 0.08, 0.7, k * 0.08, 0, 0, -0.35 + k * 0.12)]),
+  peleOnca: () => [malha(new THREE.BoxGeometry(1.85, 0.08, 1.35), '#d99a3a'), ...[[-0.5, -0.3], [0, -0.2], [0.5, -0.35], [-0.35, 0.25], [0.25, 0.3], [0.6, 0.1]].map(([x, z]) => malha(new THREE.CylinderGeometry(0.15, 0.15, 0.1, 7), '#2b1d0e', x, 0.03, z))],
+  garraOnca: () => [-0.35, 0.35].map((x) => malha(new THREE.ConeGeometry(0.22, 1.35, 6), '#f2e8d0', x, 0, 0, 0, 0, x * -0.9)),
+  escamaRei: () => [malha(new THREE.OctahedronGeometry(0.95, 0).scale(1.1, 0.35, 1.35), '#2e6b3e'), malha(new THREE.OctahedronGeometry(0.55, 0).scale(1.1, 0.4, 1.2), '#d9b23c', 0, 0.16, 0)],
+  elmoFerro: () => [malha(new THREE.SphereGeometry(0.88, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.56), '#7e8e9c', 0, -0.05, 0), malha(new THREE.BoxGeometry(0.18, 0.55, 1.55), '#a8b8c6', 0, 0.55, 0), malha(new THREE.BoxGeometry(0.16, 0.65, 0.16), '#5a6874', 0, -0.2, 0.85)],
 });
 // itens que reaproveitam o ícone de outro, só com outra cor (sem modelar nada novo)
-const TINGIR = { carneSeca: ['carne', '#8a4a2a'], peixeSeco: ['peixe', '#b08a5a'], podre: ['carne', '#7f8a3e'], pacoca: ['carne', '#c9a06a'], garrafada: ['cantil', '#6fae46'] };
+const TINGIR = {
+  carneSeca: ['carne', '#8a4a2a'], peixeSeco: ['peixe', '#b08a5a'], podre: ['carne', '#7f8a3e'], pacoca: ['carne', '#c9a06a'], garrafada: ['cantil', '#6fae46'],
+  machadoFerro: ['machadoPresa', '#8aa2b8'], picaretaFerro: ['picaretaPresa', '#8aa2b8'], paFerro: ['paTatu', '#8aa2b8'], marteloFerro: ['marteloOsso', '#8aa2b8'],
+  virote: ['flecha', '#8aa2b8'], peitoralFerro: ['gibao', '#7c8b99'], mantoOnca: ['gibao', '#d89b3c'], colarOnca: ['colarDentes', '#e6a93c'],
+};
 const casco = new Map();
 function contorno(g) {
   if (!casco.has(g)) { let h = g.clone(); for (const n of Object.keys(h.attributes)) if (n !== 'position') h.deleteAttribute(n); h = mergeVertices(h); h.computeVertexNormals(); casco.set(g, h); }

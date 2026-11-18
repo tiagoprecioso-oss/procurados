@@ -940,14 +940,14 @@ const BONECO = { pronto: false };
   } catch (erro) { console.error('Personagem KayKit não carregou; fica o desenhado.', erro); }
 })();
 // VESTES NO BONECO: o que está vestido vira roupa no personagem (roupas da Quaternius, recoloridas por veste)
-const ROUPA_DAS_VESTES = { gibao: { tom: '#7a5434' }, couracaTatu: { tom: '#a08a62', ombro: true }, couracaJacare: { tom: '#55602e', ombro: true } };
+const ROUPA_DAS_VESTES = { gibao: { tom: '#7a5434' }, couracaTatu: { tom: '#a08a62', ombro: true }, couracaJacare: { tom: '#55602e', ombro: true }, peitoralFerro: { tom: '#687684', ombro: true }, mantoOnca: { tom: '#c98e34', ombro: true } };
 function roupaDoJogador() {
   const v = (l) => (vestido[l] && ter(vestido[l]) ? vestido[l] : null), c = v('corpo'), p = v('pernas'), h = v('cabeca');
   if (!c && !p && !h) return null;
   const R = ROUPA_DAS_VESTES[c];
   return { corpo: c ? 'ranger' : p ? 'peasant' : null, tomCorpo: R?.tom || null, ombro: !!R?.ombro,
     pernas: p === 'perneiras' ? 'ranger' : p || c ? 'peasant' : null, tomPernas: p === 'perneiras' ? '#7a5434' : null,
-    capuz: h === 'capaceteTatu', tomCapuz: '#a08a62', chapeu: h === 'chapeuPalha' };
+    capuz: h === 'capaceteTatu' || h === 'elmoFerro', tomCapuz: h === 'elmoFerro' ? '#687684' : '#a08a62', chapeu: h === 'chapeuPalha' };
 }
 const compJogador = () => ({ ...(SALVO_JOGADOR?.aparencia?.personagem || {}), roupa: roupaDoJogador() });
 let visualFeito = 'null', fazendoVisual = false;
@@ -996,7 +996,7 @@ let ICONES = {};   // preenchido quando o estúdio de ícones termina
 const bolsa = {};
 const ter = (item, n = 1) => (bolsa[item] || 0) >= n;
 // VESTES: cabeça, corpo, pernas e amuleto. Vale enquanto a peça estiver na bolsa (se cair, a bolsa e a veste ficam no chão).
-var vestido = { cabeca: null, corpo: null, pernas: null, amuleto: null };
+var vestido = { cabeca: null, corpo: null, pernas: null, escudo: null, amuleto: null };
 const vestes = () => Object.values(vestido).filter((id) => id && ter(id)).map((id) => ITENS[id]);
 const vesteSoma = (k) => vestes().reduce((s, it) => s + (it[k] || 0), 0);
 const vesteTem = (k) => vestes().some((it) => it[k]);
@@ -1019,8 +1019,9 @@ let jangada = null, saindo = false, saidaT = 0;   // a jangada (quando existe) e
 // fora da bolsa e da barra; o jogo usa sozinho a ferramenta certa para o que você mira. Cada uma tem nível e se fabrica
 // UMA vez: o nível 2 substitui o 1. Cada recurso tem nível e só sai com a ferramenta daquele nível ou maior.
 const kit = { machado: 0, picareta: 0, pa: 0, martelo: 0 };
-const KIT = {   // ferramenta: [item do nível 1, item do nível 2]
-  machado: ['machado', 'machadoPresa'], picareta: ['picareta', 'picaretaPresa'], pa: ['pa', 'paTatu'], martelo: ['martelo', 'marteloOsso'],
+const KIT = {   // ferramenta: [nível 1, nível 2, nível 3 (ferro)]
+  machado: ['machado', 'machadoPresa', 'machadoFerro'], picareta: ['picareta', 'picaretaPresa', 'picaretaFerro'],
+  pa: ['pa', 'paTatu', 'paFerro'], martelo: ['martelo', 'marteloOsso', 'marteloFerro'],
 };
 const NOME_KIT = { machado: 'machado', picareta: 'picareta', pa: 'pá', martelo: 'martelo' };
 const kitNv = (f) => kit[f] || 0;
@@ -1063,6 +1064,28 @@ const RECEITAS = [
   { id: 'flecha', nome: 'Flechas', pede: { galho: 1, pedraLascada: 1 }, obs: 'ponta de pedra lascada · faz 4', varios: true, qtd: 4 },
   { id: 'fojo', nome: 'Fojo de estacas', pede: { galho: 4, cipo: 1 }, obs: 'armadilha · arma à sua frente', varios: true },
   { id: 'jangada', nome: 'Jangada', pede: { tronco: 4, cipo: 2, galho: 2 }, obs: 'monta na beira d\'água' },
+  // ---- Era do Ferro (forja dentro de casa ou sobrado) e caça pesada
+  { id: 'carvao', nome: 'Carvão vegetal', pede: { tronco: 2 }, obs: 'perto de fogo · faz 3 · combustível da forja', varios: true, qtd: 3, fogo: true },
+  { id: 'tabua', nome: 'Tábua serrada', pede: { tronco: 1 }, obs: 'faz 2 · usada no Sobrado e móveis', varios: true, qtd: 2 },
+  { id: 'barraFerro', nome: 'Barra de ferro', pede: { ferro: 2, carvao: 2 }, obs: 'na forja · base da era do metal', varios: true, forja: true },
+  { id: 'prego', nome: 'Pregos de ferro', pede: { barraFerro: 1 }, obs: 'na forja · faz 6 · Sobrado e armadilhas', varios: true, qtd: 6, forja: true },
+  { id: 'machadoFerro', nome: 'Machado de ferro', pede: { barraFerro: 2, tronco: 2, couro: 1 }, obs: 'kit nível 3 · na forja · +1 tronco extra', kit: ['machado', 3], forja: true },
+  { id: 'picaretaFerro', nome: 'Picareta de ferro', pede: { barraFerro: 2, tronco: 2, couro: 1 }, obs: 'kit nível 3 · na forja · dobro de ferro', kit: ['picareta', 3], forja: true },
+  { id: 'paFerro', nome: 'Pá de ferro', pede: { barraFerro: 2, tronco: 1, couro: 1 }, obs: 'kit nível 3 · na forja · tesouro extra', kit: ['pa', 3], forja: true },
+  { id: 'marteloFerro', nome: 'Martelo de ferro', pede: { barraFerro: 2, tronco: 2, couro: 1 }, obs: 'kit nível 3 · na forja · abre em 1 golpe', kit: ['martelo', 3], forja: true },
+  { id: 'adagaFerro', nome: 'Adaga de ferro', pede: { barraFerro: 1, couro: 1, peleCobra: 1 }, obs: 'na forja · dano 22 · muito rápida', forja: true },
+  { id: 'sabreFerro', nome: 'Sabre de ferro', pede: { barraFerro: 3, couro: 1, galho: 1 }, obs: 'na forja · dano 28 · espada pirata', forja: true },
+  { id: 'machadoLuta', nome: 'Machado de abordagem', pede: { barraFerro: 4, tronco: 2, couro: 1 }, obs: 'na forja · dano 36 · golpe pesado', forja: true },
+  { id: 'besta', nome: 'Besta de ferro', pede: { barraFerro: 3, tabua: 4, cipo: 3 }, obs: 'na forja · dano 26 até 14 m · usa virotes', forja: true },
+  { id: 'virote', nome: 'Virotes de ferro', pede: { barraFerro: 1, galho: 2 }, obs: 'na forja · faz 8 · munição da besta', varios: true, qtd: 8, forja: true },
+  { id: 'armadilhaFerro', nome: 'Armadilha de ferro', pede: { barraFerro: 2, prego: 4 }, obs: 'na forja · dano 55 e prende 7 s', varios: true, forja: true },
+  { id: 'elmoFerro', nome: 'Elmo de ferro', pede: { barraFerro: 2, couro: 1 }, obs: 'na forja · cabeça · 18% menos dano', forja: true },
+  { id: 'peitoralFerro', nome: 'Peitoral de ferro', pede: { barraFerro: 4, couro: 2 }, obs: 'na forja · corpo · 52% menos dano', forja: true },
+  { id: 'broquel', nome: 'Broquel de ferro', pede: { barraFerro: 2, tabua: 2, couro: 1 }, obs: 'na forja · escudo · 15% menos dano', forja: true },
+  { id: 'mantoOnca', nome: 'Manto de onça', pede: { peleOnca: 2, couro: 2, cipo: 2 }, obs: 'corpo · 42% defesa e +10% velocidade' },
+  { id: 'colarOnca', nome: 'Colar de garras de onça', pede: { garraOnca: 4, cipo: 1 }, obs: 'amuleto · +30% de dano' },
+  { id: 'sabreRei', nome: 'Espada do Rei da Lagoa', pede: { escamaRei: 1, barraFerro: 4, denteJacare: 2 }, obs: 'na forja · Nv 8 · dano 42 · lendária', forja: true },
+  { id: 'escudoRei', nome: 'Escudo do Rei da Lagoa', pede: { escamaRei: 1, barraFerro: 3, couroJacare: 1 }, obs: 'na forja · Nv 8 · 25% defesa e +10% dano', forja: true },
 ];
 // COMBINAÇÕES (coco + pedra, pedra + pedra) também aparecem na oficina, na aba "Combinar": basta clicar.
 for (const c of COMBINACOES) RECEITAS.push({ id: c.vira, nome: ITENS[c.vira].nome, pede: c.a === c.b ? { [c.a]: 2 } : { [c.a]: 1, [c.b]: 1 }, obs: c.como, varios: true, combo: c });
@@ -1088,9 +1111,12 @@ function conteudoBotao(r) {
   const trava = typeof xpPronto !== 'undefined' && xpPronto && nivel() < nivelPedido(r.id) ? `<span class="travaNv">pede Nv ${nivelPedido(r.id)}</span>` : '';
   return `<span class="ic" style="${molduraNivel(r.id)}">${icone(r.id, 36)}</span><b>${r.nome}</b><span class="ingr">${ingr}</span>${trava}`;
 }
+const pertoDeFogo = () => fogueiras.some((f) => f.ativo !== false && Math.hypot(f.x - jogador.x, f.z - jogador.z) < 3.8) || objetos.some((o) => o.ativo && (o.tipo === 'fogao' || o.tipo === 'forja') && Math.hypot(o.x - jogador.x, o.z - jogador.z) < 4.2);
+const pertoDeForja = () => objetos.some((o) => o.ativo && o.tipo === 'forja' && Math.hypot(o.x - jogador.x, o.z - jogador.z) < 4.4);
 function fazer(r) {
   if (r.combo) { combinar(r.combo.a, r.combo.b); desenharReceitas(); return; }
-  if (r.fogo && !fogueiras.some((f) => f.ativo !== false && Math.hypot(f.x - jogador.x, f.z - jogador.z) < 3.5)) { avisar('Precisa estar perto de uma fogueira para isso.'); return; }
+  if (r.forja && !pertoDeForja()) { avisar('Precisa estar perto de uma Forja (entre em casa e use B → Forja).'); return; }
+  if (r.fogo && !pertoDeFogo()) { avisar('Precisa estar perto de uma fogueira, fogão ou forja para isso.'); return; }
   if (nivel() < nivelPedido(r.id)) { avisar(`Pede pirata nível ${nivelPedido(r.id)}.`); return; }
   if (r.kit) {
     const [f, t] = r.kit;
@@ -1116,14 +1142,17 @@ function fazer(r) {
     for (const [k, n] of Object.entries(r.pede)) tirar(k, n);
     fogueira(x, z); flutuar('Fogueira acesa!', x, 1, z, '#ffd27a'); cumprir('fogueira'); return;
   }
-  if (r.id === 'fojo') {
+  if (r.id === 'fojo' || r.id === 'armadilhaFerro') {
     const x = jogador.x + Math.cos(jogador.a) * 1.5, z = jogador.z - Math.sin(jogador.a) * 1.5;
-    if (prof(x, z) > -0.3 || !seco(x, z) || naCidade(x, z) || !livre(x, z, 1.0)) { avisar('Sem espaço aqui para o fojo (nem dentro da cidade).'); return; }
+    if (prof(x, z) > -0.3 || !seco(x, z) || naCidade(x, z) || !livre(x, z, 1.0)) { avisar('Sem espaço aqui para a armadilha (nem dentro da cidade).'); return; }
     for (const [k, n] of Object.entries(r.pede)) tirar(k, n);
-    fojo(x, z); flutuar('Fojo armado', x, 1, z, '#ffd27a'); desenharReceitas(); return;
+    if (r.id === 'armadilhaFerro') { armadilhaDeFerro(x, z); flutuar('Armadilha de ferro armada', x, 1, z, '#ffd27a'); }
+    else { fojo(x, z); flutuar('Fojo armado', x, 1, z, '#ffd27a'); }
+    desenharReceitas(); return;
   }
   for (const [k, n] of Object.entries(r.pede)) if (k !== 'pedra' || r.id !== 'faca') tirar(k, n);   // a pedra de afiar não se gasta
   dar(r.id, r.qtd || 1); flutuar('+ ' + (r.qtd ? r.qtd + ' ' : '') + r.nome, jogador.x, 2.2, jogador.z, '#ffd27a'); cumprir(r.id);
+  if (['adagaFerro', 'sabreFerro', 'machadoLuta', 'besta', 'sabreRei'].includes(r.id)) cumprir('armaFerro');
 }
 function desenharReceitas() {
   desenharKit();
@@ -1176,8 +1205,8 @@ let ordemBolsa = [];
 const atalhos = Array(9).fill(null);
 let ativo = 0;
 const ATALHAVEL = (id) => /Arma|Ferramenta|Comida|Remédio/.test(ITENS[id]?.tipo || '');
-const ehArma = (id) => ['faca', 'lanca', 'pedraLascada', 'borduna', 'facaDente', 'arco'].includes(id);
-const temLamina = () => ter('faca') || ter('pedraLascada') || ter('facaDente');   // corta cipó e esfola
+const ehArma = (id) => ['faca', 'lanca', 'pedraLascada', 'borduna', 'facaDente', 'arco', 'adagaFerro', 'sabreFerro', 'machadoLuta', 'sabreRei', 'besta'].includes(id);
+const temLamina = () => ter('faca') || ter('pedraLascada') || ter('facaDente') || ter('adagaFerro') || ter('sabreFerro') || ter('sabreRei');   // corta cipó, cana e esfola
 // COMBINAR dois itens da bolsa (DESIGN: tudo tem uso). Devolve true se combinou.
 function combinar(a, b) {
   const c = COMBINACOES.find((x) => (x.a === a && x.b === b) || (x.a === b && x.b === a));
@@ -1265,7 +1294,7 @@ let fichaFixa = null;
 const elDicaItem = document.createElement('div'); elDicaItem.id = 'dicaItem'; document.body.appendChild(elDicaItem);
 function comoConseguir(id) {
   const it = ITENS[id], vemDe = RECEITAS.find((r) => r.id === id), coz = COZINHA.find((c) => c.vira === id);
-  if (vemDe) return 'Oficina: ' + Object.entries(vemDe.pede).map(([k, q]) => q + ' ' + NOMES[k].toLowerCase()).join(', ') + (vemDe.fogo ? ' (perto de uma fogueira)' : '') + (nivelPedido(id) > 1 ? ' · pede Nv ' + nivelPedido(id) : '');
+  if (vemDe) return 'Oficina: ' + Object.entries(vemDe.pede).map(([k, q]) => q + ' ' + NOMES[k].toLowerCase()).join(', ') + (vemDe.forja ? ' (perto de uma forja)' : vemDe.fogo ? ' (perto de fogo)' : '') + (nivelPedido(id) > 1 ? ' · pede Nv ' + nivelPedido(id) : '');
   if (coz) return 'Cozinhe ' + NOMES[coz.de].toLowerCase() + ' na fogueira';
   return it.onde;
 }
@@ -1337,8 +1366,27 @@ elFicha.addEventListener('click', (e) => {
 });
 criarIcones().then((ic) => { ICONES = ic; desenharBolsa(); atualizarObjetivo(); }).catch((e) => console.error('ícones não carregaram', e));
 
-// ---------- objetivos: os primeiros 25 minutos da "primeira hora", encurtados
-const OBJ = [['coco', 'Beba água de um coco (abra com uma pedra)'], ['faca', 'Faça uma faca de concha'], ['cipo', 'Corte cipó na mata'], ['machado', 'Faça um machado de pedra'], ['arvore', 'Derrube uma árvore'], ['fogueira', 'Acenda uma fogueira'], ['sururu', 'Cate sururu no mangue'], ['comer', 'Cozinhe e coma os mariscos'], ['barraco', 'Levante um barraco no seu lote (o cartaz com seu nome)'],['jangada', 'Monte uma jangada (4 troncos) e saia para o mar']];
+// ---------- objetivos: fase 1 (sobrevivência) + fase 2 (Era do Ferro, Sobrado, Onça e Chefe da Lagoa)
+const OBJ = [
+  ['coco', 'Beba água de um coco (abra com uma pedra)'],
+  ['faca', 'Faça uma faca de concha'],
+  ['cipo', 'Corte cipó na mata'],
+  ['machado', 'Faça um machado de pedra'],
+  ['arvore', 'Derrube uma árvore'],
+  ['fogueira', 'Acenda uma fogueira'],
+  ['sururu', 'Cate sururu no mangue'],
+  ['comer', 'Cozinhe e coma os mariscos'],
+  ['barraco', 'Levante um barraco no seu lote (o cartaz com seu nome)'],
+  ['jangada', 'Monte uma jangada (4 troncos) e saia para o mar'],
+  ['casa', 'Levante sua casa no lote (Nv 3 e 40 patacos)'],
+  ['ferro', 'Extraia minério de ferro no pé do Morro do Cavalão (picareta Nv 2)'],
+  ['forja', 'Monte uma forja dentro de casa (B → Forja)'],
+  ['barraFerro', 'Funda sua primeira barra de ferro na forja (ferro + carvão)'],
+  ['armaFerro', 'Forje uma arma ou besta de ferro na forja'],
+  ['sobrado', 'Erga um Sobrado no seu lote (Nv 6 e 250 patacos)'],
+  ['onca', 'Abata uma onça-pintada na mata do interior'],
+  ['jacareAcu', 'Derrote o Jacaré-Açu, Rei da Lagoa de Piratininga'],
+];
 const feitos = new Set(), elObj = document.getElementById('objetivos');
 const linhasObj = OBJ.map(([id, txt]) => { const d = document.createElement('div'); d.textContent = '☐ ' + txt; elObj.appendChild(d); return [id, d, txt]; });
 const elObjetivo = document.getElementById('objetivo');
@@ -1347,6 +1395,7 @@ const elObjetivo = document.getElementById('objetivo');
 const elMarca = document.createElement('div'); elMarca.id = 'marcaObjetivo'; elMarca.innerHTML = '<img alt=""><i>▼</i>'; document.body.appendChild(elMarca);
 let alvoObjetivo = null, marcaT = 0;
 const maisPertoDe = (filtro) => { let m = null, dm = 1e9; for (const o of objetos) if (o.ativo !== false && filtro(o)) { const d = Math.hypot(o.x - jogador.x, o.z - jogador.z); if (d < dm) { dm = d; m = o; } } return m && { x: m.x, z: m.z, h: m.tipo === 'coqueiro' || m.tipo === 'arvore' ? 4.4 : 1.6 }; };
+const bichoMaisPerto = (tipo) => { let m = null, dm = 1e9; for (const b of bichos) if (b.vivo && b.tipo === tipo) { const d = Math.hypot(b.x - jogador.x, b.z - jogador.z); if (d < dm) { dm = d; m = b; } } return m && { x: m.x, z: m.z, h: 2.2 }; };
 const ALVO_OBJ = {
   coco: () => (ter('cocoAberto') || ter('coco') ? null : maisPertoDe((o) => o.tipo === 'coqueiro' && o.cocos > 0)),
   faca: () => (ter('concha') ? (ter('pedra') ? null : maisPertoDe((o) => o.tipo === 'pedra')) : maisPertoDe((o) => o.tipo === 'concha')),
@@ -1358,20 +1407,28 @@ const ALVO_OBJ = {
   comer: () => (ter('sururu') ? maisPertoDe((o) => o.tipo === 'fogueira') : maisPertoDe((o) => o.tipo === 'sururu')),
   barraco: () => (SEM_LOTE ? null : { x: cartaz.x, z: cartaz.z, h: 2 }),
   jangada: () => (ter('tronco', 4) ? { x: costaX(Z_ATRACA) + 0.5, z: Z_ATRACA, h: 1.2 } : maisPertoDe((o) => o.tipo === 'arvore' && (o.nv || 1) === 1 && o.caindo < 0)),
+  casa: () => (SEM_LOTE ? null : { x: cartaz.x, z: cartaz.z, h: 2 }),
+  ferro: () => maisPertoDe((o) => o.tipo === 'jazida' && o.nv === 2),
+  forja: () => (SEM_LOTE ? null : { x: CASA_X, z: CASA_Z, h: 2 }),
+  barraFerro: () => maisPertoDe((o) => o.tipo === 'forja'),
+  armaFerro: () => maisPertoDe((o) => o.tipo === 'forja'),
+  sobrado: () => (SEM_LOTE ? null : { x: cartaz.x, z: cartaz.z, h: 2 }),
+  onca: () => bichoMaisPerto('onca'),
+  jacareAcu: () => bichoMaisPerto('jacareAcu'),
 };
+const ICONE_OBJ = { coco: 'coco', faca: 'faca', cipo: 'cipo', machado: 'machado', arvore: 'tronco', fogueira: 'fogueira', sururu: 'sururu', comer: 'mariscos', barraco: 'tronco', jangada: 'jangada', casa: 'tabua', ferro: 'ferro', forja: 'carvao', barraFerro: 'barraFerro', armaFerro: 'sabreFerro', sobrado: 'prego', onca: 'peleOnca', jacareAcu: 'escamaRei' };
 function atualizarMarca(dt) {
   const prox = OBJ.find(([id]) => !feitos.has(id));
   if ((marcaT -= dt) <= 0) { marcaT = 0.5; alvoObjetivo = prox && ALVO_OBJ[prox[0]] ? ALVO_OBJ[prox[0]]() : null; }
   if (!alvoObjetivo || telaAberta || pausado) { elMarca.style.display = 'none'; return; }
-  const ICONE_OBJ = { coco: 'coco', faca: 'concha', cipo: 'cipo', machado: 'machado', arvore: 'tronco', fogueira: 'tronco', sururu: 'sururu', comer: 'mariscos', barraco: 'tronco', jangada: 'jangada' };
   const src = ICONES[ICONE_OBJ[prox[0]]]; if (src && elMarca.firstChild.src !== src) elMarca.firstChild.src = src;
   v3.set(alvoObjetivo.x, alvoObjetivo.h + Math.sin(t * 3) * 0.15, alvoObjetivo.z).project(camera);
-  let x = (v3.x * 0.5 + 0.5) * innerWidth, y = (-v3.y * 0.5 + 0.5) * innerHeight;
-  const m = 60, fora = x < m || y < m || x > innerWidth - m || y > innerHeight - m;
+  let x = (v3.x * 0.5 + 0.5) * telaW, y = (-v3.y * 0.5 + 0.5) * telaH;
+  const m = 60, fora = x < m || y < m || x > telaW - m || y > telaH - m;
   const perto = Math.hypot(alvoObjetivo.x - jogador.x, alvoObjetivo.z - jogador.z) < 2.2;
   elMarca.style.display = perto ? 'none' : 'block';
   if (fora) {   // fica na borda, na linha entre o centro da tela e o alvo (longe dos cantos do HUD)
-    const cx = innerWidth / 2, cy = innerHeight / 2, dx = x - cx, dy = y - cy, a = Math.atan2(dy, dx), mx = 90, my = 80;
+    const cx = telaW / 2, cy = telaH / 2, dx = x - cx, dy = y - cy, a = Math.atan2(dy, dx), mx = 90, my = 80;
     const k = Math.min((cx - mx) / Math.max(1, Math.abs(dx)), (cy - my) / Math.max(1, Math.abs(dy))); x = cx + dx * k; y = cy + dy * k; elMarca.lastChild.style.transform = `rotate(${a * 180 / Math.PI - 90}deg)`; }
   else elMarca.lastChild.style.transform = '';
   elMarca.classList.toggle('fora', fora);
@@ -1379,9 +1436,8 @@ function atualizarMarca(dt) {
 }
 function atualizarObjetivo(destacar) {
   const prox = OBJ.find(([id]) => !feitos.has(id));
-  const ICONE_OBJ = { coco: 'coco', faca: 'faca', cipo: 'cipo', machado: 'machado', arvore: 'tronco', fogueira: 'fogueira', sururu: 'sururu', comer: 'mariscos', barraco: 'tronco', jangada: 'jangada' };
-  const ic = prox && ICONES[ICONE_OBJ[prox[0]]] ? `<img src="${ICONES[ICONE_OBJ[prox[0]]]}" alt="">` : (ICONES.jangada ? `<img src="${ICONES.jangada}" alt="">` : '');
-  elObjetivo.innerHTML = `${ic}<span><small>OBJETIVO · J DIÁRIO</small>${prox ? prox[1] : 'Explore a Guanabara de jangada'}</span>`;
+  const ic = prox && ICONES[ICONE_OBJ[prox[0]]] ? `<img src="${ICONES[ICONE_OBJ[prox[0]]]}" alt="">` : (ICONES.sabreRei ? `<img src="${ICONES.sabreRei}" alt="">` : '');
+  elObjetivo.innerHTML = `${ic}<span><small>OBJETIVO · J DIÁRIO</small>${prox ? prox[1] : 'Lenda de Niterói · dispute os pontos da cidade!'}</span>`;
   if (destacar) { elObjetivo.classList.add('novo'); setTimeout(() => elObjetivo.classList.remove('novo'), 1200); }
 }
 function cumprir(id) { if (feitos.has(id)) return; feitos.add(id); for (const [i, d, txt] of linhasObj) if (i === id) { d.textContent = '☑ ' + txt; d.className = 'feito'; } if (feitos.size === OBJ.length) avisar('Primeira hora do náufrago concluída!', 6); atualizarObjetivo(true); if (XP_OBJ[id]) ganharXP(XP_OBJ[id], { motivo: 'objetivo' }); }
@@ -1409,11 +1465,11 @@ function bonusColeta(item, x, z) {   // ofício de coleta: às vezes vem um a ma
   if (Math.random() < (nivelDe('coleta') - 1) * 0.05) { dar(item); flutuar('+1 ' + NOMES[item].toLowerCase() + ' (coleta)', x, 1.5, z, '#9fd8ff'); }
 }
 // objetivos dão a maior parte da XP (como as missões do WoW). O barraco vem de graça, então não conta.
-const XP_OBJ = { coco: 50, faca: 60, cipo: 60, machado: 80, arvore: 80, fogueira: 100, sururu: 80, comer: 100, jangada: 200 };
+const XP_OBJ = { coco: 50, faca: 60, cipo: 60, machado: 80, arvore: 80, fogueira: 100, sururu: 80, comer: 100, jangada: 200, casa: 120, ferro: 140, forja: 160, barraFerro: 160, armaFerro: 200, sobrado: 250, onca: 260, jacareAcu: 400 };
 const XP_DEGRAU = (i) => (i >= 2 ? 100 * i : 0);         // casa 200, sobrado 300...
 const XP_LUGAR = 25;
 const NIVEL_RECEITA = { 2: 3, 3: 6 };                     // item de nível 2 pede pirata Nv 3; de nível 3, Nv 6
-const nivelPedido = (id) => NIVEL_RECEITA[ITENS[id]?.nivel] || 1;
+const nivelPedido = (id) => ITENS[id]?.nivelMin || NIVEL_RECEITA[ITENS[id]?.nivel] || 1;
 var xp = 0, xpPronto = false;                             // var: a oficina pode ser desenhada antes desta linha. Até carregar o save, objetivos não somam (não paga duas vezes)
 const xpOficios = { pesca: 0, lenhador: 0, coleta: 0, luta: 0 };
 const lugaresVistos = new Set();
@@ -1423,6 +1479,7 @@ const BUFFS = {
   aquecido: { nome: 'Aquecido', icone: '♨', desc: 'recupera vida em dobro' },
   forte: { nome: 'Forte', icone: '💪', desc: '+15% de dano' },
   imune: { nome: 'Fechado', icone: '🌿', desc: 'não pega veneno' },
+  descansado: { nome: 'Descansado', icone: '🛏', desc: 'fôlego volta 50% mais rápido (Sobrado)' },
 };
 const buffs = {};   // id: segundos que faltam
 const buff = (id) => (buffs[id] || 0) > 0;
@@ -1613,8 +1670,8 @@ const CIDADE = CIDADES.find((c) => c.id === SALVO_JOGADOR?.cidade) || CIDADES[0]
 const DEGRAUS = [
   { id: 'lote', nome: 'Lote demarcado', desc: 'Seu pedaço de terra na beira de ' + CIDADE.nome + '. O cartaz leva o seu nome.' },
   { id: 'barraco', nome: 'Barraco', pede: { tronco: 4, galho: 4, cipo: 3 }, desc: 'Teto de palha e uma esteira. Dormir enche a vida, e quem cai acorda aqui.' },
-  { id: 'casa', nome: 'Casa', pede: { tronco: 10, pedra: 8, cipo: 4, couro: 2 }, nivel: 3, patacos: 40, desc: 'Paredes, porta e chão de tábuas. Lá dentro você monta cama, baú e fogão.' },
-  { id: 'sobrado', nome: 'Sobrado', nivel: 6, patacos: 250, trava: 'pede tábuas e pregos (era do metal, na vila)', desc: 'Mais um andar e vaga para os primeiros tripulantes.' },
+  { id: 'casa', nome: 'Casa', pede: { tronco: 10, pedra: 8, cipo: 4, couro: 2 }, nivel: 3, patacos: 40, desc: 'Paredes, porta e chão de tábuas. Lá dentro você monta cama, baú, fogão e forja.' },
+  { id: 'sobrado', nome: 'Sobrado', pede: { tabua: 16, prego: 12, pedra: 12, barraFerro: 2 }, nivel: 6, patacos: 250, desc: 'Dois andares com sacada colonial. Dormir aqui dá bônus Descansado (fôlego +50%) e prepara o lote para tripulantes.' },
   { id: 'oficina', nome: 'Casa com oficina', nivel: 9, patacos: 600, trava: 'depois do sobrado', desc: 'Bancada própria: receitas melhores e mais rápidas.' },
   { id: 'estaleiro', nome: 'Armazém ou estaleiro', nivel: 12, patacos: 1500, trava: 'depois da oficina', desc: 'Guardar carga ou montar barcos maiores no seu cais.' },
   { id: 'quarteirao', nome: 'Quarteirão', nivel: 15, patacos: 4000, trava: 'compre os lotes vizinhos', desc: 'O lote vira um pedaço da cidade e pesa no ranking dela.' },
@@ -1723,6 +1780,29 @@ function montarCasa(g, c) {
   for (const x of [-meia - ESP / 2, meia - ESP / 2]) { const o = peca(g, G_OITAO, PAREDE, c); o.position.set(x, ALT_PAREDE, 0); g.teto.push(o); }
   for (const s of [1, -1]) { const t = peca(g, caixaG(4.6, 0.12, 2.55), '#b5562f', c); t.position.set(0, ALT_PAREDE + 0.58, s * 1.1); t.rotation.x = s * 0.49; g.teto.push(t); }
 }
+// O SOBRADO (degrau 3): térreo igual ao da casa (com corte ao entrar) + segundo andar colonial com sacada e telhado em g.teto
+function montarSobrado(g, c) {
+  montarCasa(g, c);
+  // remove o telhado baixo da casa (o sobrado sobe o 2º andar por cima!)
+  for (const m of g.teto) g.remove(m);
+  g.teto = [];
+  const meia = 2, y2 = ALT_PAREDE, alt2 = 1.85, CAL = '#efe6cf';
+  const faixa = peca(g, caixaG(4.26, 0.18, 4.26), '#6e4a2c', c); faixa.position.set(0, y2 + 0.08, 0); g.teto.push(faixa);
+  const piso2 = peca(g, caixaG(4.06, alt2, 4.06), CAL, c); piso2.position.set(0, y2 + 0.14 + alt2 / 2, 0); g.teto.push(piso2);
+  // janelas coloniais no 2º andar (frente +z e lado direito +x)
+  for (const x of [-0.95, 0.95]) { const j = peca(g, caixaG(0.65, 0.95, 0.08), '#3a2a18', c); j.position.set(x, y2 + 1.05, meia + 0.05); g.teto.push(j); }
+  for (const z of [-0.9, 0.9]) { const j = peca(g, caixaG(0.08, 0.95, 0.65), '#3a2a18', c); j.position.set(meia + 0.05, y2 + 1.05, z); g.teto.push(j); }
+  // sacada de madeira na fachada (+z)
+  const sac = peca(g, caixaG(3.6, 0.12, 0.8), '#7a5230', c); sac.position.set(0, y2 + 0.16, meia + 0.42); g.teto.push(sac);
+  const corrimao = peca(g, caixaG(3.6, 0.08, 0.08), '#5e3a1e', c); corrimao.position.set(0, y2 + 0.85, meia + 0.78); g.teto.push(corrimao);
+  for (const x of [-1.7, -0.85, 0, 0.85, 1.7]) { const p = peca(g, caixaG(0.08, 0.68, 0.08), '#5e3a1e', c); p.position.set(x, y2 + 0.52, meia + 0.78); g.teto.push(p); }
+  // telhado colonial de duas águas lá em cima
+  const yT = y2 + 0.14 + alt2;
+  const tri = new THREE.Shape(); tri.moveTo(-2.2, 0); tri.lineTo(2.2, 0); tri.lineTo(0, 1.15); tri.closePath();
+  const G_OITAO = new THREE.ExtrudeGeometry(tri, { depth: ESP, bevelEnabled: false }).rotateY(Math.PI / 2);
+  for (const x of [-meia - ESP / 2, meia - ESP / 2]) { const o = peca(g, G_OITAO, CAL, c); o.position.set(x, yT, 0); g.teto.push(o); }
+  for (const s of [1, -1]) { const t = peca(g, caixaG(4.7, 0.14, 2.65), '#b5562f', c); t.position.set(0, yT + 0.6, s * 1.12); t.rotation.x = s * 0.49; g.teto.push(t); }
+}
 function tirarObjeto(o) {
   if (!o) return; cena.remove(o.grupo); const i = objetos.indexOf(o); if (i >= 0) objetos.splice(i, 1);
   const k = obstaculos.findIndex((b) => b.o === o); if (k >= 0) obstaculos.splice(k, 1);
@@ -1735,7 +1815,7 @@ function montarDegrau() {
     obstaculos.push({ x: CASA_X, z: CASA_Z, r: 1.25, o: predio });
   }
   if (degrau >= 2) {
-    predio = novoObjeto('casa', CASA_X, CASA_Z, montarCasa); predio.mao = []; predio.ken = [];
+    predio = novoObjeto('casa', CASA_X, CASA_Z, degrau >= 3 ? montarSobrado : montarCasa); predio.mao = []; predio.ken = [];
     const { x0, z0, x1, z1 } = DENTRO, e = ESP / 2;
     for (const c of [[x0 - e, z0 - e, x1 + e, z0 + e], [x0 - e, z0 - e, x0 + e, z1 + e], [x1 - e, z0 - e, x1 + e, z1 + e], [x0 - e, z1 - e, CASA_X - 0.5, z1 + e], [CASA_X + 0.5, z1 - e, x1 + e, z1 + e]]) caixas.push({ x0: c[0], z0: c[1], x1: c[2], z1: c[3], o: predio });
   }
@@ -1753,7 +1833,9 @@ function atualizarCorte(dt) {
 const MOVEIS = {
   cama: { nome: 'Cama', pede: { tronco: 2, galho: 2, couro: 1 }, l: 1, p: 2, desc: 'Dormir enche a vida, e quem cai acorda ao lado dela.' },
   bau: { nome: 'Baú', pede: { tronco: 3, cipo: 2 }, l: 1, p: 1, desc: 'Guarda itens. O que fica no baú não cai junto com você.' },
-  fogao: { nome: 'Fogão de barro', pede: { pedra: 6, galho: 2 }, l: 1, p: 1, desc: 'Cozinha como a fogueira, sem sair de casa.' },
+  fogao: { nome: 'Fogão de barro', pede: { pedra: 6, galho: 2 }, l: 1, p: 1, desc: 'Cozinha e faz carvão sem sair de casa.' },
+  forja: { nome: 'Forja de ferro', pede: { pedra: 10, tronco: 4, ferro: 2 }, l: 1, p: 1, desc: 'Funde minério de ferro e forja armas, armaduras e ferramentas nível 3.' },
+  bancada: { nome: 'Bancada', pede: { tabua: 6, prego: 6, barraFerro: 1 }, l: 2, p: 1, desc: 'Mesa de ferreiro e carpinteiro para o seu sobrado.' },
 };
 const MONTAR_MOVEL = {
   cama: (g, c) => {
@@ -1772,6 +1854,19 @@ const MONTAR_MOVEL = {
     peca(g, caixaG(0.5, 0.06, 0.4).translate(0, 0.65, 0), '#3a2a18', c);
     peca(g, caixaG(0.32, 0.22, 0.04).translate(0, 0.2, 0.37), '#e0702a', c);   // a boca com brasa
     peca(g, new THREE.CylinderGeometry(0.09, 0.11, 1.1, 6).translate(0.26, 1.1, -0.22), '#8a5030', c);
+  },
+  forja: (g, c) => {
+    peca(g, caixaG(0.88, 0.68, 0.78).translate(0, 0.34, 0), '#7d776d', c);
+    peca(g, caixaG(0.46, 0.24, 0.06).translate(0, 0.3, 0.4), '#ff6a1a', c);     // brasa viva
+    peca(g, caixaG(0.54, 0.1, 0.48).translate(0, 0.7, -0.06), '#ff8828', c);
+    peca(g, caixaG(0.32, 0.75, 0.32).translate(-0.22, 1.05, -0.2), '#68635b', c);   // chaminé de pedra
+    peca(g, caixaG(0.34, 0.22, 0.18).translate(0.24, 0.8, 0.16), '#4a5560', c);     // bigorna de ferro
+  },
+  bancada: (g, c) => {
+    peca(g, caixaG(1.85, 0.12, 0.82).translate(0, 0.72, 0), '#8a5a2b', c);
+    for (const [x, z] of [[-0.8, -0.3], [0.8, -0.3], [-0.8, 0.3], [0.8, 0.3]]) peca(g, caixaG(0.12, 0.7, 0.12).translate(x, 0.35, z), '#5e3a1e', c);
+    peca(g, caixaG(0.45, 0.1, 0.24).translate(-0.4, 0.83, 0), '#6d7b88', c);
+    peca(g, caixaG(0.55, 0.06, 0.16).translate(0.35, 0.81, 0.1), '#c9a24f', c);
   },
 };
 const medida = (m) => (m.rot % 2 ? [MOVEIS[m.tipo].p, MOVEIS[m.tipo].l] : [MOVEIS[m.tipo].l, MOVEIS[m.tipo].p]);
@@ -1826,6 +1921,7 @@ function colocarMovel() {
   if (!p.ok) return avisar(cabeMovel(p) ? 'Faltam materiais.' : 'Não cabe aí.');
   for (const [k, n] of Object.entries(MOVEIS[p.tipo].pede)) tirar(k, n);
   const o = criarMovel({ tipo: p.tipo, i: p.i, k: p.k, rot: p.rot });
+  if (p.tipo === 'forja') cumprir('forja');
   flutuar(MOVEIS[p.tipo].nome + ' montado', o.x, 1.4, o.z, '#ffd27a'); pararMovel(); desenharReceitas(); salvar();
 }
 function desmontarMovel(o) {
@@ -1939,10 +2035,10 @@ function desenharVizinho(L, dono) {
   const papel = new THREE.Mesh(new THREE.PlaneGeometry(0.54, 0.68), new THREE.MeshBasicMaterial({ map: texPlaca(dono ? 'PROCURADO' : 'LIVRE', dono ? limparNome(dono.dono_nome) : '· · ·'), color: '#f2ead8' })); papel.position.z = 0.06; tabua.add(papel);
   if (dono) {
     const casa = new THREE.Group(); casa.position.set(x0 + 3, 0, z0 + 3); g.add(casa);
-    if (dono.degrau >= 2) { montarCasa(casa, matContorno()); caixas.push({ x0: x0 + 0.9, z0: z0 + 0.9, x1: x0 + 5.1, z1: z0 + 5.1, viz: L.id }); }
+    if (dono.degrau >= 2) { (dono.degrau >= 3 ? montarSobrado : montarCasa)(casa, matContorno()); caixas.push({ x0: x0 + 0.9, z0: z0 + 0.9, x1: x0 + 5.1, z1: z0 + 5.1, viz: L.id }); }
     else { montarBarraco(casa, matContorno()); obstaculos.push({ x: x0 + 3, z: z0 + 3, r: 1.25, viz: L.id }); }
   }
-  const rot = rotuloDeLote(dono ? limparNome(dono.dono_nome) : 'lote livre', dono ? 'dono' : 'livre'); rot.position.set((x0 + x1) / 2, dono ? 4.9 : 2.2, (z0 + z1) / 2); cena.add(rot);
+  const rot = rotuloDeLote(dono ? limparNome(dono.dono_nome) : 'lote livre', dono ? 'dono' : 'livre'); rot.position.set((x0 + x1) / 2, dono ? (dono.degrau >= 3 ? 6.6 : 4.9) : 2.2, (z0 + z1) / 2); cena.add(rot);
   cena.add(g); VIZ.set(L.id, { g: fundir(g), chave, rot });
 }
 async function atualizarVizinhos() {
@@ -2414,7 +2510,8 @@ function dormir(o) {
   elVeu.style.background = '#0d1420'; elVeu.style.transition = 'opacity .6s'; elVeu.style.opacity = 1;
   setTimeout(() => {
     Object.assign(j, { vida: 100, folego: 100, fome: Math.max(0, j.fome - 12), sede: Math.max(0, j.sede - 18) });
-    elVeu.style.opacity = 0; avisar('Dormiu bem. A vida está cheia.', 3); salvar();
+    if (degrau >= 3) darBuff('descansado', 360);
+    elVeu.style.opacity = 0; avisar(degrau >= 3 ? 'Dormiu bem no sobrado! Vida cheia + Descansado.' : 'Dormiu bem. A vida está cheia.', 3); salvar();
     setTimeout(() => { elVeu.style.background = ''; elVeu.style.transition = ''; dormindo = false; }, 700);
   }, 1300);
 }
@@ -2442,7 +2539,8 @@ function textoDe(o) {
     case 'concha': return 'pegar concha';
     case 'galho': return 'pegar galho';
     case 'flecha': return 'pegar flecha';
-    case 'fojo': return o.armado ? null : 'armar o fojo de novo';
+    case 'virote': return 'pegar virote';
+    case 'fojo': return o.armado ? null : (o.ferro ? 'armar a armadilha de ferro' : 'armar o fojo de novo');
     case 'coqueiro': return o.cocos ? 'catar coco' : null;
     case 'arvore': return o.caindo >= 0 ? null : kitServe(o) ? (o.nv === 2 ? 'cortar árvore grande' : 'cortar árvore') : `cortar árvore (precisa de machado nível ${o.nv || 1})`;
     case 'jazida': return kitServe(o) ? (o.nv === 2 ? 'quebrar rocha com ferro' : 'quebrar rocha') : `quebrar rocha (precisa de picareta nível ${o.nv})`;
@@ -2465,6 +2563,8 @@ function textoDe(o) {
     case 'lote': return 'ver seu lote';
     case 'barraco': case 'cama': return 'dormir';
     case 'fogao': return textoCozinhar('fogão aceso');
+    case 'forja': return 'usar a forja (abre oficina)';
+    case 'bancada': return 'usar a bancada (abre oficina)';
     case 'bau': return 'abrir o baú';
   }
 }
@@ -2474,13 +2574,15 @@ function interagir(o) {
   jogador.a = Math.atan2(-(o.z - jogador.z), o.x - jogador.x);
   const gesto = ['pedra', 'concha', 'galho', 'sururu', 'aroeira', 'flecha', 'fojo'].includes(tipo) ? 'PickUp' : ['arvore', 'jazida', 'caixote', 'monte'].includes(tipo) && kitServe(o) ? '1H_Melee_Attack_Chop' : 'Interact';
   jogador.acao = { nome: gesto, t: 0, dur: gesto === 'PickUp' ? 0.7 : 0.55 };
-  if (tipo === 'flecha') { dar('flecha'); flutuar('+1 flecha', o.x, 1, o.z); o.ativo = false; cena.remove(o.grupo); return; }
+  if (tipo === 'flecha' || tipo === 'virote') { dar(tipo); flutuar('+1 ' + NOMES[tipo].toLowerCase(), o.x, 1, o.z); o.ativo = false; cena.remove(o.grupo); return; }
   if (tipo === 'fojo') { armarFojo(o); return; }
   if (tipo === 'jazida' || tipo === 'caixote' || tipo === 'monte') {
     if (!kitServe(o)) return avisar(`Precisa de ${NOME_KIT[KIT_DE[tipo]]} nível ${o.nv} no kit. Faça na oficina.`);
     o.golpes++; flutuar(tipo === 'monte' ? 'tuc!' : tipo === 'jazida' ? 'tec!' : 'pou!', o.x, 1.2, o.z, '#ffe9b0', 0.7);
     o.grupo.rotation.z = 0.08; setTimeout(() => (o.grupo.rotation.z = 0), 90);
-    if (o.golpes >= ({ jazida: 3, caixote: 2, monte: 2 })[tipo] + (o.nv === 2 ? 1 : 0)) { o.golpes = 0; saque(o); }
+    const k3 = kitNv(KIT_DE[tipo]) >= 3 ? 1 : 0;
+    const precisos = Math.max(1, ({ jazida: 3, caixote: 2, monte: 2 })[tipo] + (o.nv === 2 ? 1 : 0) - k3);
+    if (o.golpes >= precisos) { o.golpes = 0; saque(o); }
     return;
   }
   if (tipo === 'pedra' || tipo === 'concha' || tipo === 'galho') {
@@ -2491,7 +2593,7 @@ function interagir(o) {
     if (!kitServe(o)) return avisar(`Precisa de machado nível ${o.nv || 1} no kit. Faça na oficina.`);
     o.golpes++; flutuar('toc!', o.x, 1.6, o.z, '#ffe9b0', 0.8);
     o.grupo.rotation.z = 0.06; setTimeout(() => (o.grupo.rotation.z = 0), 90);
-    if (o.golpes >= golpesArvore() + (o.nv === 2 ? 1 : 0)) { o.caindo = 0; const dx = o.x - jogador.x, dz = o.z - jogador.z; o.eixo = new THREE.Vector3(dz, 0, -dx).normalize(); ARVORES_CAINDO.push(o); }
+    if (o.golpes >= Math.max(1, golpesArvore() + (o.nv === 2 ? 1 : 0) - (kitNv('machado') >= 3 ? 1 : 0))) { o.caindo = 0; const dx = o.x - jogador.x, dz = o.z - jogador.z; o.eixo = new THREE.Vector3(dz, 0, -dx).normalize(); ARVORES_CAINDO.push(o); }
   } else if (tipo === 'cipo') {
     if (!temLamina()) return avisar('Precisa de algo afiado para cortar o cipó (faca ou pedra lascada).');
     dar('cipo'); flutuar('+1 cipó', o.x, 1, o.z); ganharXP(2, { oficio: 'coleta', nivelAcao: 1 }); bonusColeta('cipo', o.x, o.z); cumprir('cipo'); o.cortes--; if (o.cortes <= 0) sumir(o, 50);
@@ -2520,6 +2622,7 @@ function interagir(o) {
   else if (tipo === 'barraco' || tipo === 'cama') dormir(o);
   else if (tipo === 'bau') { bauAberto = o; desenharBau(); abrirTela(elBau); }
   else if (tipo === 'fogao') cozinhar(o);
+  else if (tipo === 'forja' || tipo === 'bancada') { abaOficina = 'tudo'; desenharReceitas(); abrirTela(elMochila); }
 }
 // o que sai de cada recurso com nível (sorteado), quanto XP dá e em quanto tempo volta
 const SAQUE = {
@@ -2532,8 +2635,15 @@ const SAQUE = {
 function saque(o) {
   const S = SAQUE[o.tipo][(o.nv || 1) - 1], ganho = { ...(S.fixo || {}) };
   for (const [k, n, p] of S.talvez || []) if (Math.random() < p) ganho[k] = (ganho[k] || 0) + n;
-  if (S.sorteia) { const l = [...S.sorteia]; for (let i = 0; i < S.quantos && l.length; i++) { const [k, n] = l.splice(Math.floor(Math.random() * l.length), 1)[0]; ganho[k] = (ganho[k] || 0) + n; } }
+  if (S.sorteia) {
+    const l = [...S.sorteia], extra = o.tipo === 'caixote' && kitNv('martelo') >= 3 ? 1 : 0;
+    for (let i = 0; i < S.quantos + extra && l.length; i++) { const [k, n] = l.splice(Math.floor(Math.random() * l.length), 1)[0]; ganho[k] = (ganho[k] || 0) + n; }
+  }
+  // bônus do kit de ferro (nível 3)
+  if (o.tipo === 'jazida' && kitNv('picareta') >= 3) { if (ganho.ferro) ganho.ferro *= 2; else ganho.pedra = (ganho.pedra || 0) + 2; }
+  if (o.tipo === 'monte' && kitNv('pa') >= 3) { if (o.nv === 2) ganho.ferro = (ganho.ferro || 0) + 1; else ganho.minhoca = (ganho.minhoca || 0) + 1; }
   for (const [k, n] of Object.entries(ganho)) dar(k, n);
+  if (ganho.ferro) cumprir('ferro');
   flutuar('+ ' + Object.entries(ganho).map(([k, n]) => n + ' ' + NOMES[k].toLowerCase()).join(', '), o.x, 1.6, o.z, '#ffd27a', 2.2);
   ganharXP(S.xp, { oficio: 'coleta', nivelAcao: o.nv === 2 ? 4 : 1 });
   sumir(o, S.volta);
@@ -2610,7 +2720,7 @@ function maisPerto() {
 function verboCurto(o) {
   if (!o) return 'usar';
   switch (o.tipo) {
-    case 'pedra': case 'concha': case 'galho': case 'flecha': return 'pegar';
+    case 'pedra': case 'concha': case 'galho': case 'flecha': case 'virote': return 'pegar';
     case 'coqueiro': case 'sururu': return 'catar';
     case 'arvore': case 'cipo': case 'cana': return 'cortar';
     case 'jazida': return 'quebrar';
@@ -2623,6 +2733,8 @@ function verboCurto(o) {
     case 'ponto': return 'placa';
     case 'bica': return 'beber';
     case 'fogueira': case 'fogao': return 'cozinhar';
+    case 'forja': return 'forja';
+    case 'bancada': return 'bancada';
     case 'pesqueiro': return pesca?.o === o ? (pesca.fisgou ? 'PUXAR!' : 'puxar') : 'pescar';
     case 'carcaca': return 'esfolar';
     case 'bolsaMorte': return 'bolsa';
@@ -2763,7 +2875,8 @@ function quadro() {
       ARVORES_CAINDO.splice(i, 1);
       o.caindo = -2; o.grupo.remove(o.grupo.corpo); o.mao = [peca(o.grupo, G.toco, '#6e4a2c', o.contorno)]; o.ken = [];
       if (KEN.pronto) o.ken.push(modeloKenney(o, 'toco')); aplicarModo(o);
-      o.tipo = 'toco'; o.ativo = false; o.obs.r = 0.25; dar('tronco', o.nv === 2 ? 3 : 2); dar('galho'); if (Math.random() < (nivelDe('lenhador') - 1) * 0.06) { dar('tronco'); flutuar('+1 tronco (lenhador)', o.x, 1.8, o.z, '#9fd8ff'); } flutuar('+' + (o.nv === 2 ? 3 : 2) + ' troncos  +1 galho', o.x, 1.2, o.z, '#ffd27a'); ganharXP(5, { oficio: 'lenhador', nivelAcao: 1 }); cumprir('arvore');
+      const tr = (o.nv === 2 ? 3 : 2) + (kitNv('machado') >= 3 ? 1 : 0);
+      o.tipo = 'toco'; o.ativo = false; o.obs.r = 0.25; dar('tronco', tr); dar('galho'); if (Math.random() < (nivelDe('lenhador') - 1) * 0.06) { dar('tronco'); flutuar('+1 tronco (lenhador)', o.x, 1.8, o.z, '#9fd8ff'); } flutuar('+' + tr + ' troncos  +1 galho', o.x, 1.2, o.z, '#ffd27a'); ganharXP(5, { oficio: 'lenhador', nivelAcao: 1 }); cumprir('arvore');
     }
   }
   // esconde objetos muito fora da câmera (economiza GPU e reduz aquecimento no celular)
@@ -2984,12 +3097,17 @@ const ARMAS = {
   lanca: { nome: 'Lança de osso', dano: 14, prep: 0.3, recarga: 0.7, forma: 'linha' },
   borduna: { nome: 'Borduna', dano: 21, prep: 0.42, recarga: 0.85, forma: 'arco' },
   facaDente: { nome: 'Faca de dente de jacaré', dano: 16, prep: 0.12, recarga: 0.36, forma: 'frente' },
-  arco: { nome: 'Arco', dano: 13, prep: 0, recarga: 0.9, forma: 'mira', tiro: true },
+  adagaFerro: { nome: 'Adaga de ferro', dano: 22, prep: 0.10, recarga: 0.30, forma: 'frente' },
+  sabreFerro: { nome: 'Sabre de ferro', dano: 28, prep: 0.22, recarga: 0.54, forma: 'arco' },
+  machadoLuta: { nome: 'Machado de abordagem', dano: 36, prep: 0.36, recarga: 0.86, forma: 'arcoG' },
+  sabreRei: { nome: 'Espada do Rei da Lagoa', dano: 42, prep: 0.20, recarga: 0.52, forma: 'arcoG' },
+  arco: { nome: 'Arco', dano: 13, prep: 0, recarga: 0.9, forma: 'mira', tiro: true, municao: 'flecha', alc: 11 },
+  besta: { nome: 'Besta de ferro', dano: 26, prep: 0, recarga: 1.05, forma: 'miraL', tiro: true, municao: 'virote', alc: 14 },
 };
 let armaAtual = 'maos';
-const armasQueTenho = () => ['maos', ...['faca', 'lanca', 'borduna', 'facaDente', 'arco'].filter((a) => ter(a))];
-// frente: golpe curto e estreito (faca, mãos); arco: largo (machado, borduna); linha: comprido e fino (lança)
-const FORMAS = { frente: { alc: 1.55, abre: 80 }, arco: { alc: 1.9, abre: 150 }, linha: { alc: 2.7, abre: 36 }, mira: { alc: 11, abre: 3 } };
+const armasQueTenho = () => ['maos', ...['faca', 'lanca', 'borduna', 'facaDente', 'arco', 'adagaFerro', 'sabreFerro', 'machadoLuta', 'sabreRei', 'besta'].filter((a) => ter(a))];
+// frente: golpe curto e estreito (faca, mãos); arco: largo (sabre, borduna); arcoG: amplo (machado, espada lendária); linha: lança
+const FORMAS = { frente: { alc: 1.55, abre: 80 }, arco: { alc: 1.95, abre: 150 }, arcoG: { alc: 2.15, abre: 165 }, linha: { alc: 2.7, abre: 36 }, mira: { alc: 11, abre: 3 }, miraL: { alc: 14, abre: 3 } };
 const golpeDe = (forma, x, z, ang) => ({ x, z, ang, ...FORMAS[forma] });
 // mira: o ponto do chão embaixo do mouse; as casas do próximo golpe aparecem clarinhas
 const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(0, -0.3), planoChao = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), pontoMira = new THREE.Vector3();
@@ -2998,7 +3116,7 @@ tela.addEventListener('pointermove', (e) => ndc.set(e.clientX / Math.max(1, tela
 const anelAlvo = new THREE.Mesh(new THREE.RingGeometry(0.45, 0.62, 24).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#ffd23f', transparent: true, opacity: 0.75, depthWrite: false, side: THREE.DoubleSide }));
 anelAlvo.visible = false; cena.add(anelAlvo);
 function bichoAlvo() {
-  const j = jogador, maxD = ARMAS[armaAtual].tiro ? 11.5 : 4.2;
+  const j = jogador, arma = ARMAS[armaAtual], maxD = arma.tiro ? (arma.alc || 11) + 0.5 : 4.2;
   const fx = Math.cos(j.a), fz = -Math.sin(j.a);
   let melhor = null, best = 1e9;
   for (const b of bichos) {
@@ -3070,9 +3188,10 @@ function atacar() {
   if (recargaAtaque > 0 || pausado || saindo || j.caido) return;
   const arma = ARMAS[armaAtual], ang = Math.atan2(pontoMira.z - j.z, pontoMira.x - j.x), d = [Math.cos(ang), Math.sin(ang)];
   if (arma.tiro) {
-    if (!ter('flecha')) { avisar('Sem flechas. Faça na oficina (galho e pedra lascada).'); return; }
-    tirar('flecha'); j.a = -ang; recargaAtaque = arma.recarga * (1 - 0.04 * atr('rapido')); j.acao = { nome: 'Interact', t: 0, dur: 0.4 };
-    atirar(ang, Math.round(arma.dano * (1 + vesteSoma('dano')) * (1 + 0.03 * (nivelDe('luta') - 1)) * (1 + 0.05 * atr('forca')) * (buff('forte') ? 1.15 : 1))); return;
+    const mun = arma.municao || 'flecha';
+    if (!ter(mun)) { avisar(mun === 'virote' ? 'Sem virotes. Faça na forja (barra de ferro e galhos).' : 'Sem flechas. Faça na oficina (galho e pedra lascada).'); return; }
+    tirar(mun); j.a = -ang; recargaAtaque = arma.recarga * (1 - 0.04 * atr('rapido')); j.acao = { nome: 'Interact', t: 0, dur: 0.4 };
+    atirar(ang, Math.round(arma.dano * (1 + vesteSoma('dano')) * (1 + 0.03 * (nivelDe('luta') - 1)) * (1 + 0.05 * atr('forca')) * (buff('forte') ? 1.15 : 1)), { mun, alc: arma.alc || 11, vel: mun === 'virote' ? 23 : 18 }); return;
   }
   j.a = -ang; recargaAtaque = arma.recarga * (1 - 0.04 * atr('rapido'));
   j.acao = { nome: '1H_Melee_Attack_Chop', t: 0, dur: Math.max(0.45, arma.prep + 0.25) };
@@ -3103,25 +3222,32 @@ function malhaFlecha() {
   peca(g, new THREE.ConeGeometry(0.05, 0.14, 5).rotateZ(-Math.PI / 2), '#8f887c', c).position.x = 0.45;
   return g;
 }
-function atirar(ang, dano) {
-  const j = jogador, g = malhaFlecha(); g.position.set(j.x, 0.9, j.z); g.rotation.y = -ang; cena.add(g);
-  FLECHAS.push({ g, x: j.x, z: j.z, dx: Math.cos(ang), dz: Math.sin(ang), voou: 0, dano });
+// virote da besta: mais curto e grosso, ponta de ferro (a mesma flecha do KayKit, encurtada e escurecida)
+function malhaVirote() {
+  const g = malhaFlecha(); g.scale.set(0.75, 1.25, 1.25);
+  g.traverse((m) => { if (m.isMesh && m.material?.color) { m.material = m.material.clone(); m.material.color.multiplyScalar(0.7); } });
+  return g;
+}
+function atirar(ang, dano, { mun = 'flecha', alc = 11, vel = 18 } = {}) {
+  const j = jogador, g = mun === 'virote' ? malhaVirote() : malhaFlecha(); g.position.set(j.x, 0.9, j.z); g.rotation.y = -ang; cena.add(g);
+  FLECHAS.push({ g, x: j.x, z: j.z, dx: Math.cos(ang), dz: Math.sin(ang), voou: 0, dano, mun, alc, vel });
 }
 function cairFlecha(f, bateu) {
   cena.remove(f.g);
-  if (rnd() < 0.5) { flutuar('a flecha quebrou', f.x, 0.8, f.z, '#d9cba6', 0.9); return; }
-  const o = novoObjeto('flecha', f.x, f.z, (g) => { const m = malhaFlecha(); m.position.y = 0.06; m.rotation.y = rnd() * 6.3; g.add(m); });
+  const nome = f.mun === 'virote' ? 'virote' : 'flecha';
+  if (rnd() < (nome === 'virote' ? 0.35 : 0.5)) { flutuar(nome === 'virote' ? 'o virote entortou' : 'a flecha quebrou', f.x, 0.8, f.z, '#d9cba6', 0.9); return; }   // ferro quebra menos
+  const o = novoObjeto(nome, f.x, f.z, (g) => { const m = nome === 'virote' ? malhaVirote() : malhaFlecha(); m.position.y = 0.06; m.rotation.y = rnd() * 6.3; g.add(m); });
   o.mao = []; o.ken = [];
 }
 function atualizarFlechas(dt) {
   for (let k = FLECHAS.length - 1; k >= 0; k--) {
-    const f = FLECHAS[k], passo = 18 * dt;
+    const f = FLECHAS[k], passo = (f.vel || 18) * dt, alc = f.alc || 11;
     f.x += f.dx * passo; f.z += f.dz * passo; f.voou += passo;
-    f.g.position.set(f.x, 0.9 - Math.max(0, f.voou - 7) * 0.12, f.z);
+    f.g.position.set(f.x, 0.9 - Math.max(0, f.voou - alc * 0.64) * 0.12, f.z);
     const alvo = bichos.find((b) => b.vivo && b.malha.visible && Math.hypot(b.x - f.x, b.z - f.z) < 0.25 + (ESPECIES[b.tipo].l || 1.3) * 0.3);
     if (alvo) { ferirBicho(alvo, f.dano, [f.dx, f.dz]); FLECHAS.splice(k, 1); cairFlecha(f, true); continue; }
     const parede = obstaculos.some((o) => (!o.o || o.o.ativo) && Math.hypot(o.x - f.x, o.z - f.z) < o.r) || bateCaixa(f.x, f.z);
-    if (parede || f.voou > 11 || !seco(f.x, f.z) || prof(f.x, f.z) > 0) { FLECHAS.splice(k, 1); if (prof(f.x, f.z) > 0 || !seco(f.x, f.z)) cena.remove(f.g); else cairFlecha(f, parede); }
+    if (parede || f.voou > alc || !seco(f.x, f.z) || prof(f.x, f.z) > 0) { FLECHAS.splice(k, 1); if (prof(f.x, f.z) > 0 || !seco(f.x, f.z)) cena.remove(f.g); else cairFlecha(f, parede); }
   }
 }
 // ---------- FOJO DE ESTACAS: buraco coberto com estacas no fundo. O bicho que pisa leva 30 de dano e fica preso 5 s.
@@ -3129,6 +3255,7 @@ function atualizarFlechas(dt) {
 const FOJOS = [];
 let fojoBuf = null; fetch('./modelos/polypizza/fojo.json').then((r) => r.arrayBuffer()).then((b) => { fojoBuf = b; for (const o of FOJOS) vestirFojo(o); }).catch(() => {});
 function vestirFojo(o) {   // cada fojo lê o modelo de novo (é animado, com esqueleto) e ganha o próprio "mixer"
+  if (o.ferro) return vestirArmFerro(o);
   if (!fojoBuf || o.modelo) return;
   leitorArmas.parse(fojoBuf.slice(0), '', (g) => {
     const m = g.scene; m.scale.setScalar(0.55);
@@ -3138,6 +3265,30 @@ function vestirFojo(o) {   // cada fojo lê o modelo de novo (é animado, com es
     if (!o.armado) { o.acao.play(); o.acao.time = o.acao.getClip().duration * 0.4; o.mixer.update(0); o.acao.paused = true; } else { o.acao.play(); o.acao.paused = true; o.acao.time = 0; o.mixer.update(0); }
     o.grupo.cobertura.visible = o.armado;
   });
+}
+// ARMADILHA DE FERRO: mandíbula de ferro aberta no chão (modelo pronto). Mais forte que o fojo: 55 de dano e prende 7 s.
+let armFerroCena = null;
+leitorArmas.load('./modelos/polypizza/armadilhaFerro.json', (g) => {
+  armFerroCena = g.scene; armFerroCena.traverse((q) => { if (q.isMesh) q.material = new THREE.MeshLambertMaterial({ color: '#8a8f96', flatShading: true }); });
+  for (const o of FOJOS) if (o.ferro) vestirArmFerro(o);
+}, undefined, () => {});
+function vestirArmFerro(o) {
+  if (!armFerroCena || o.modelo) return;
+  const m = armFerroCena.clone(true), cx = new THREE.Box3().setFromObject(m), tm = cx.getSize(new THREE.Vector3());
+  const e = 0.95 / Math.max(tm.x, tm.z, 0.01); m.scale.setScalar(e); m.position.y = -cx.min.y * e;
+  o.grupo.add(m); o.modelo = m; o.grupo.provisorio.visible = false;
+  o.grupo.rotation.y = rnd() * 6.3;
+}
+function armadilhaDeFerro(x, z) {
+  const o = novoObjeto('fojo', x, z, (g, c) => {
+    const p = new THREE.Group();   // enquanto o modelo não chega: um aro de ferro com dentes
+    peca(p, new THREE.TorusGeometry(0.38, 0.04, 5, 14).rotateX(Math.PI / 2).translate(0, 0.05, 0), '#8a8f96', c);
+    for (let k = 0; k < 8; k++) { const d = peca(p, new THREE.ConeGeometry(0.04, 0.14, 4).translate(0, 0.12, 0), '#b0b4ba', c); const a = k / 8 * 6.283; d.position.set(Math.cos(a) * 0.38, 0, Math.sin(a) * 0.38); }
+    g.add(p); g.provisorio = p;
+    g.cobertura = new THREE.Group(); g.add(g.cobertura);   // a de ferro não tem palha
+  }, { armado: true, ferro: true, dano: 55, prende: 7 });
+  o.mao = []; o.ken = []; FOJOS.push(o); vestirArmFerro(o);
+  return o;
 }
 function fojo(x, z) {
   const o = novoObjeto('fojo', x, z, (g, c) => {
@@ -3151,13 +3302,15 @@ function fojo(x, z) {
 function dispararFojo(o, b) {
   o.armado = false; o.grupo.cobertura.visible = false;
   if (o.acao) { o.acao.reset(); o.acao.play(); o.parar = o.acao.getClip().duration * 0.4; }   // as estacas sobem e ficam de pé
-  ferirBicho(b, 30, [0, 0]); if (b.vivo) b.preso = 5;
-  flutuar('o fojo pegou!', o.x, 1.4, o.z, '#ffd27a', 1.6);
+  if (o.ferro && o.modelo) o.modelo.scale.y *= 0.55;   // a mandíbula fecha
+  ferirBicho(b, o.dano || 30, [0, 0]); if (b.vivo) b.preso = o.prende || 5;
+  flutuar(o.ferro ? 'a armadilha de ferro fechou!' : 'o fojo pegou!', o.x, 1.4, o.z, '#ffd27a', 1.6);
 }
 function armarFojo(o) {
   o.armado = true; o.grupo.cobertura.visible = true;
+  if (o.ferro && o.modelo) o.modelo.scale.y /= 0.55;   // abre a mandíbula de novo
   if (o.acao) { o.acao.reset(); o.acao.play(); o.acao.paused = true; o.acao.time = 0; o.mixer.update(0); }
-  flutuar('fojo armado de novo', o.x, 1.2, o.z, '#ffd27a');
+  flutuar(o.ferro ? 'armadilha de ferro armada' : 'fojo armado de novo', o.x, 1.2, o.z, '#ffd27a');
 }
 function atualizarFojos(dt) {
   for (const o of FOJOS) {
@@ -3238,6 +3391,41 @@ const texCachorro = (() => {
   }
   const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.repeat.set(1 / 4, 1); return t;
 })();
+// ONÇA-PINTADA: folha 2D de 4 quadros (andar 1, andar 2, bote, caída), pelagem dourada com rosetas pretas
+const texOnca = (() => {
+  const L = 128, A = 72, cv = document.createElement('canvas'); cv.width = L * 4; cv.height = A; const c = cv.getContext('2d');
+  c.lineWidth = 3; c.lineJoin = 'round'; c.lineCap = 'round'; c.strokeStyle = TRACO;
+  const pelo = '#d9a441', claro = '#f3d38a', escuro = '#2b1d0e';
+  const rosetas = [[44, 40], [56, 34], [68, 42], [80, 36], [50, 50], [74, 50], [62, 46], [88, 44]];
+  for (let q = 0; q < 4; q++) {
+    c.save(); c.translate(q * L, 0);
+    if (q === 3) { c.translate(64, 46); c.rotate(Math.PI); c.translate(-64, -46); c.translate(0, -20); }
+    const bote = q === 2, passo = q === 1 ? 1 : q === 0 ? -1 : 0, dx = bote ? 10 : 0;
+    // patas
+    for (const [px, fase] of [[40, 1], [52, -1], [82, 1], [92, -1]]) { c.fillStyle = pelo; c.beginPath(); c.roundRect(px + dx * (px > 64 ? 1 : 0) + passo * fase * 5, 46, 9, 20, 4); c.fill(); c.stroke(); }
+    // rabo longo, com a ponta preta
+    c.lineWidth = 7; c.strokeStyle = TRACO; c.beginPath(); c.moveTo(30, 40); c.quadraticCurveTo(10, 36, 8, 18 + passo * 3); c.stroke();
+    c.lineWidth = 4; c.strokeStyle = pelo; c.stroke(); c.lineWidth = 3; c.strokeStyle = TRACO;
+    c.fillStyle = escuro; c.beginPath(); c.arc(8, 18 + passo * 3, 3.5, 0, 6.3); c.fill();
+    // corpo comprido e baixo
+    c.fillStyle = pelo; c.beginPath(); c.ellipse(64 + dx / 2, 42, 38, 15, bote ? -0.1 : 0, 0, 6.3); c.fill(); c.stroke();
+    c.fillStyle = claro; c.beginPath(); c.ellipse(66 + dx / 2, 51, 26, 5, 0, 0, 6.3); c.fill();
+    c.fillStyle = escuro; for (const [x, y] of rosetas) { c.beginPath(); c.arc(x + dx / 2, y, 3.2, 0, 6.3); c.fill(); c.fillStyle = pelo; c.beginPath(); c.arc(x + dx / 2, y, 1.4, 0, 6.3); c.fill(); c.fillStyle = escuro; }
+    // cabeça redonda, orelhas redondas, focinho claro
+    const hx = 104 + dx, hy = bote ? 32 : 34;
+    c.fillStyle = pelo; for (const ox of [-6, 6]) { c.beginPath(); c.arc(hx + ox - 2, hy - 11, 5, 0, 6.3); c.fill(); c.stroke(); }
+    c.beginPath(); c.arc(hx, hy, 13, 0, 6.3); c.fill(); c.stroke();
+    c.fillStyle = claro; c.beginPath(); c.ellipse(hx + 7, hy + 5, 7, 5, 0, 0, 6.3); c.fill();
+    c.fillStyle = escuro; for (const [x, y] of [[-6, -2], [-2, 6], [-8, 5]]) { c.beginPath(); c.arc(hx + x, hy + y, 1.8, 0, 6.3); c.fill(); }
+    c.beginPath(); c.arc(hx + 12, hy + 3, 2, 0, 6.3); c.fill();   // nariz
+    if (bote) { c.fillStyle = '#c0281c'; c.beginPath(); c.moveTo(hx + 6, hy + 8); c.lineTo(hx + 14, hy + 10); c.lineTo(hx + 6, hy + 12); c.closePath(); c.fill(); c.fillStyle = '#fff'; c.fillRect(hx + 8, hy + 8, 2, 3); }
+    c.fillStyle = TRACO; c.beginPath(); c.arc(hx + 4, hy - 3, q === 3 ? 0.1 : 2.4, 0, 6.3); c.fill();
+    if (q === 3) { c.beginPath(); c.moveTo(hx + 1, hy - 6); c.lineTo(hx + 7, hy); c.moveTo(hx + 7, hy - 6); c.lineTo(hx + 1, hy); c.stroke(); }
+    c.restore();
+  }
+  const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.repeat.set(1 / 4, 1); return t;
+})();
+const geoOnca = new THREE.PlaneGeometry(1.9, 1.07).translate(0, 0.5, 0);
 const geoBicho = new THREE.PlaneGeometry(1.3, 0.87).translate(0, 0.43, 0), geoBarra = new THREE.PlaneGeometry(0.8, 0.09);
 const bichos = [];
 // ---------- BICHOS DA TERRA. O cachorro-do-mato é desenhado aqui; os outros são fotos de modelos prontos
@@ -3252,26 +3440,32 @@ const ESPECIES = {
   caranguejo: { nome: 'Caranguejo-uçá', vida: 5, jeito: 'foge', ve: 2.5, corre: 1.6, xp: 3, nv: 1, pega: { caranguejo: 1 }, volta: 40, l: 0.55, lama: true },
   cateto:     { nome: 'Cateto', vida: 42, dano: 11, jeito: 'bando', ve: 6, corre: 3.6, xp: 20, nv: 4, despojos: { carne: 3, couro: 1, presa: 2, banha: 1 }, volta: 90, l: 1.3 },
   jararaca:   { nome: 'Jararaca', vida: 12, dano: 7, veneno: true, jeito: 'bote', ve: 2.3, corre: 0, xp: 12, nv: 3, despojos: { peleCobra: 1 }, volta: 80, l: 0.9 },
+  onca:       { desenho: true, cacaNoite: true, nome: 'Onça-pintada', vida: 140, dano: 26, jeito: 'bravo', ve: 8, corre: 4.6, prep: 0.6, xp: 70, nv: 7, despojos: { carne: 3, peleOnca: 1, garraOnca: 2 }, volta: 300, l: 1.8 },
+  jacareAcu:  { chefe: true, folha: 'jacare', cor: '#d8b860', nome: 'Jacaré-Açu, Rei da Lagoa', vida: 340, dano: 34, jeito: 'emboscada', ve: 4.5, corre: 3.0, prep: 1.1, abre: 95, xp: 180, nv: 9, despojos: { carne: 5, couroJacare: 2, denteJacare: 4, escamaRei: 1 }, volta: 900, l: 3.8 },
   jacare:     { dorme: true, nome: 'Jacaré-de-papo-amarelo', vida: 95, dano: 22, jeito: 'emboscada', ve: 3.5, corre: 2.8, prep: 1.0, xp: 45, nv: 6, despojos: { carne: 3, couroJacare: 1, denteJacare: 3 }, volta: 150, l: 2.4 },
 };
 const carregaTex = new THREE.TextureLoader(), texEspecie = {}, geoEspecie = {};
 for (const [k, E] of Object.entries(ESPECIES)) {
-  if (k === 'cachorro') continue;
-  const t = carregaTex.load('./modelos/bichos/' + k + '.png'); t.colorSpace = THREE.SRGBColorSpace; t.repeat.set(1 / 4, 1); texEspecie[k] = t;
+  if (k === 'cachorro' || E.desenho) continue;
+  const t = carregaTex.load('./modelos/bichos/' + (E.folha || k) + '.png'); t.colorSpace = THREE.SRGBColorSpace; t.repeat.set(1 / 4, 1); texEspecie[k] = t;
   const w = E.l * 1.25, h = w / 1.5; geoEspecie[k] = new THREE.PlaneGeometry(w, h).translate(0, h / 2 - h * 0.07, 0);   // o quadro tem um pouco de folga embaixo das patas
 }
 const pisaLama = (x, z) => tipoChao(x, z) === 'lama' && !naCidade(x, z);
 function criarBicho(tipo, x, z) {
-  const E = ESPECIES[tipo], base = tipo === 'cachorro' ? texCachorro : texEspecie[tipo];
+  const E = ESPECIES[tipo], base = tipo === 'cachorro' ? texCachorro : tipo === 'onca' ? texOnca : texEspecie[tipo];
   const tex = base.clone(); tex.needsUpdate = true;
-  const corBase = tipo === 'cachorro' ? '#f0eadf' : '#ffffff';
-  const malha = new THREE.Mesh(tipo === 'cachorro' ? geoBicho : geoEspecie[tipo], new THREE.MeshBasicMaterial({ map: tex, alphaTest: 0.5, side: THREE.DoubleSide, color: corBase }));
+  const corBase = tipo === 'cachorro' || tipo === 'onca' ? '#f0eadf' : E.cor || '#ffffff';
+  const malha = new THREE.Mesh(tipo === 'cachorro' ? geoBicho : tipo === 'onca' ? geoOnca : geoEspecie[tipo], new THREE.MeshBasicMaterial({ map: tex, alphaTest: 0.5, side: THREE.DoubleSide, color: corBase }));
   malha.rotation.y = GIRO_CAM; cena.add(malha);
   const sombra = new THREE.Mesh(geoSombra(0.3 * (E.l || 1.3)), matSombra); cena.add(sombra);
   const barra = new THREE.Group(), fundo = new THREE.Mesh(geoBarra, new THREE.MeshBasicMaterial({ color: '#2b1d0e', depthTest: false })), cheia = new THREE.Mesh(geoBarra, new THREE.MeshBasicMaterial({ color: '#c0281c', depthTest: false }));
   cheia.position.z = 0.001; barra.add(fundo, cheia); barra.renderOrder = 5; fundo.renderOrder = 5; cheia.renderOrder = 6; barra.visible = false; cena.add(barra);
   const b = { tipo, x, z, casaX: x, casaZ: z, vida: E.vida, max: E.vida, vivo: true, estado: 'vaga', t: rnd() * 3, alvo: [x, z], lado: 1, malha, tex, sombra, barra, cheia, passo: 0, corBase,
     pisa: E.lama ? pisaLama : terraFirme };
+  if (E.chefe) {   // chefe: nome dourado em cima e barra de vida maior, sempre à mostra
+    b.rot = rotuloDeLote(E.nome, 'voce'); b.rot.scale.multiplyScalar(0.8); cena.add(b.rot);
+    barra.scale.set(2.2, 1.6, 1);
+  }
   bichos.push(b); return b;
 }
 const criarCachorro = (x, z) => criarBicho('cachorro', x, z);
@@ -3288,7 +3482,7 @@ function andarBicho(b, dx, dz, v, dt) {
 function voltarBicho(b, seg) {   // outro bicho da mesma espécie aparece no lugar de origem depois de um tempo
   setTimeout(() => {
     Object.assign(b, { x: b.casaX, z: b.casaZ, vida: b.max, vivo: true, estado: 'vaga', t: 0 });
-    b.malha.visible = true; b.sombra.visible = true; b.tex.offset.x = 0;
+    b.malha.visible = true; b.sombra.visible = true; b.tex.offset.x = 0; if (b.rot) b.rot.visible = true;
   }, seg * 1000);
 }
 function ferirBicho(b, dano, d) {
@@ -3306,6 +3500,12 @@ function ferirBicho(b, dano, d) {
       flutuar('+ ' + Object.keys(E.pega).map((k) => NOMES[k].toLowerCase()).join(', '), b.x, 1.2, b.z, '#ffd27a');
       b.malha.visible = false; b.sombra.visible = false; voltarBicho(b, E.volta); return;
     }
+    if (b.tipo === 'onca') cumprir('onca');
+    if (b.tipo === 'jacareAcu') {
+      cumprir('jacareAcu'); if (b.rot) b.rot.visible = false;
+      elSubiu.innerHTML = '<small>Chefe derrotado</small><b>Rei da Lagoa</b><span>O Jacaré-Açu caiu. Esfole a carcaça: a escama do rei faz a espada e o escudo lendários.</span>';
+      elSubiu.classList.remove('mostra'); void elSubiu.offsetWidth; elSubiu.classList.add('mostra');
+    }
     flutuar(E.nome.toLowerCase() + ' abatido', b.x, 1.5, b.z, '#ffd27a', 1.8);
     objetos.push({ tipo: 'carcaca', x: b.x, z: b.z, grupo: b.malha, contorno: matContorno(), ativo: true, bicho: b, mao: [], ken: [] });
   }
@@ -3322,7 +3522,7 @@ function esfolar(o) {
 function prepararGolpe(b, E, dx, dz) {   // marca um leque na direção do jogador; depois do tempo, morde quem ainda estiver dentro
   const ang = Math.atan2(dz, dx), dd = [Math.cos(ang), Math.sin(ang)];
   b.estado = 'prepara'; b.lado = dx * DIR.x + dz * DIR.y >= 0 ? 1 : -1;
-  marcar({ x: b.x, z: b.z, ang, alc: 1.2 + (E.l || 1.3) * 0.55, abre: 64 }, E.prep || 0.8, '#c0281c', (g) => {
+  marcar({ x: b.x, z: b.z, ang, alc: 1.2 + (E.l || 1.3) * 0.55, abre: E.abre || 64 }, E.prep || 0.8, '#c0281c', (g) => {
     if (!b.vivo) return;
     b.bote = 0.25; andarBicho(b, dd[0], dd[1], 5, 0.18);
     if (noGolpe(g, jogador.x, jogador.z, 0.3)) ferirJogador(E.dano, !!E.veneno);
@@ -3359,6 +3559,7 @@ function atualizarBicho(b, dt) {
   const q = b.estado === 'prepara' || b.bote > 0 ? 2 : parado ? 0 : Math.floor(b.passo) % 2;
   b.tex.offset.x = q / 4; b.malha.scale.x = b.lado;
   b.malha.position.set(b.x, 0, b.z); b.sombra.position.set(b.x, 0.02, b.z);
+  if (b.rot) b.rot.position.set(b.x, 2.6, b.z);
   b.barra.visible = b.vida < b.max; b.barra.position.set(b.x, 0.5 + (E.l || 1.3) * 0.5, b.z); b.barra.quaternion.copy(camera.quaternion);
   b.cheia.scale.x = Math.max(0.001, b.vida / b.max); b.cheia.position.x = -0.4 * (1 - b.cheia.scale.x);
 }
@@ -3372,6 +3573,8 @@ espalhar(5, noLeste((t, x, z) => (t === 'areia' || t === 'grama') && elipLagoa(x
 espalhar(2, noLeste((t, x, z) => t === 'areia' && elipLagoa(x, z) < 1.3 && Math.hypot(x - VILA.x, z - VILA.z) > 22 && terraFirme(x, z) && longeDosBichos(x, z, 12)), (x, z) => criarBicho('jacare', x, z));
 espalhar(3, () => { const p = noTipo('mata')(); return p && terraFirme(...p) && longeDosBichos(...p, 8) ? p : null; }, (x, z) => criarBicho('tatu', x, z));
 espalhar(3, noLeste((t, x, z) => t === 'mata' && terraFirme(x, z) && longeDosBichos(x, z, 8)), (x, z) => criarBicho('tatu', x, z));
+espalhar(2, noLeste((t, x, z) => t === 'mata' && x > SERRA.x1 + 25 && Math.hypot(x - VILA.x, z - VILA.z) > 30 && Math.hypot(x - ENGENHO.x, z - ENGENHO.z) > 25 && terraFirme(x, z) && longeDosBichos(x, z, 20)), (x, z) => criarBicho('onca', x, z));
+espalhar(1, () => { const a = (rnd() - 0.5) * 0.7, x = LAGOA.x + Math.cos(a) * LAGOA.rx * 1.12, z = LAGOA.z + Math.sin(a) * LAGOA.rz * 1.12; return terraFirme(x, z) && longeDosBichos(x, z, 8) ? [x, z] : null; }, (x, z) => criarBicho('jacareAcu', x, z));
 espalhar(3, () => { const p = noTipo('mata')(); return p && terraFirme(...p) && longeDosBichos(...p, 8) ? p : null; }, (x, z) => criarBicho('quati', x, z));
 espalhar(3, () => { const p = noTipo('mata')(); return p && terraFirme(...p) && longeDosBichos(...p, 6) ? p : null; }, (x, z) => criarBicho('jararaca', x, z));
 espalhar(3, noLeste((t, x, z) => t === 'mata' && terraFirme(x, z) && longeDosBichos(x, z, 6)), (x, z) => criarBicho('jararaca', x, z));
@@ -3391,8 +3594,8 @@ function combate(dt) {
     if (andavel(nx, j.z)) j.x = nx; if (andavel(j.x, nz)) j.z = nz;
     if (j.esquiva.t > 0.22) j.esquiva = null;
   }
-  const correndo = j.anda && teclas.has('shift');
-  j.folego = Math.max(0, Math.min(100, j.folego + (correndo ? -18 * (1 - 0.08 * atr('folego')) : j.esquiva ? 0 : 22) * dt));
+  const correndo = j.anda && (teclas.has('shift') || joy.correndo);
+  j.folego = Math.max(0, Math.min(100, j.folego + (correndo ? -18 * (1 - 0.08 * atr('folego')) : j.esquiva ? 0 : 22 * (buff('descansado') ? 1.5 : 1)) * dt));
   armaAtual = armaDoAtivo();   // a arma é o que está no espaço ativo da barra
   if (elArma.textContent !== ARMAS[armaAtual].nome) elArma.textContent = ARMAS[armaAtual].nome;
   atualizarMarcas(dt);
