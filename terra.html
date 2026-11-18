@@ -172,6 +172,12 @@
   #marcaObjetivo img { width: 34px; height: 34px; display: block; border-radius: 50%; background: rgba(255,240,200,.9); border: 2px solid #e2b53e; padding: 2px; }
   #marcaObjetivo i { display: block; color: #ffd76a; font-style: normal; font-size: 14px; line-height: 1; }
   #marcaObjetivo.fora { transform: translate(-50%, -50%); } #marcaObjetivo.fora img { opacity: .9; }
+  #marcasPausa { text-align: left; } #marcasPausa > p { text-align: center; font-size: 14px; }
+  #marcasPausa .marca { border: 2px solid rgba(94,58,30,.35); border-radius: 8px; padding: 6px 10px; margin: 0 0 8px; background: #fbf4e2; cursor: pointer; }
+  #marcasPausa .marca.ativa { border-color: #c9a227; box-shadow: 0 0 0 2px rgba(201,162,39,.35); } #marcasPausa .marca.trava { opacity: .6; cursor: default; }
+  #marcasPausa .marca small { display: block; font-size: 12px; } #marcasPausa .fase { font-size: 11px; padding: 1px 7px; border-radius: 8px; color: #fff; background: #8a7f6a; }
+  #marcasPausa .fase.f1 { background: #a8743a; } #marcasPausa .fase.f2 { background: #8a97a5; } #marcasPausa .fase.f3 { background: #c9a227; }
+  #marcasPausa .barraM { height: 6px; background: rgba(94,58,30,.15); border-radius: 3px; margin: 4px 0 2px; } #marcasPausa .barraM i { display: block; height: 100%; background: #c9a227; border-radius: 3px; }
   #pausa .abasPausa { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin: 0 0 10px; }
   #pausa .abasPausa button, #pausa .rodapePausa button { display: inline-block; width: auto; margin: 0; padding: 6px 14px; font-size: 16px; }
   #pausa .abasPausa button.on { background: #5e3a1e; color: #f4e8cd; }
@@ -351,10 +357,11 @@
 <div id="pausa"><div class="caixa pergaminho">
   <h1>Pausa</h1>
   <nav class="abasPausa">
-    <button data-aba="mapa">Mapa</button><button data-aba="habilidades">Habilidades</button><button data-aba="bolsa">Bolsa</button><button data-aba="diario">Diário</button><button data-aba="config">Configurações</button>
+    <button data-aba="mapa">Mapa</button><button data-aba="habilidades">Habilidades</button><button data-aba="bolsa">Bolsa</button><button data-aba="diario">Diário</button><button data-aba="marcas">Marcas</button><button data-aba="config">Configurações</button>
   </nav>
   <section data-aba="mapa"><canvas id="mapaTerra"></canvas><p class="legenda">● você · <span style="color:#e2b53e">■</span> seu lote · <span style="color:#8a5a2b">■</span> lotes com dono · M abre o mapa</p></section>
   <section data-aba="habilidades"><p id="pontosArvore"></p><div id="arvore"></div></section>
+  <section data-aba="marcas" id="marcasPausa"></section>
   <section data-aba="config" id="configPausa"></section>
   <div class="rodapePausa"><button id="pContinuar">Continuar</button><button id="pMenu">Salvar e voltar ao menu</button></div>
   <p id="pSalvo">Seu progresso fica salvo neste navegador.</p>
@@ -1495,13 +1502,54 @@ function desenharBuffs() {
   elBuffs.innerHTML = Object.entries(buffs).map(([k, t]) => `<span title="${BUFFS[k].desc}">${BUFFS[k].icone} ${BUFFS[k].nome} <small>${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}</small></span>`).join('');
 }
 // comer/usar pela tabela: fome, sede, vida (negativo machuca), bônus
+// ---------- MARCAS DO PIRATA (18/11): fazendo, o pirata ganha marcas em 3 fases (bronze, prata, ouro).
+// Só as ATIVAS dão vantagem; começa com 2 espaços (o DESIGN 9f prevê até 4 com os Dobrões de Prata).
+const MARCAS = {
+  olhoGaviao: { nome: 'Olho de Gavião', conta: 'acertos de flecha ou virote', fases: [50, 150, 400], efeito: (f) => `+${f * 10}% de dano à distância` },
+  cacadorOnca: { nome: 'Caçador de Onças', conta: 'onças abatidas', fases: [3, 10, 25], efeito: (f) => `+${f * 10}% de dano em bichos grandes` },
+  lenhador: { nome: 'Lenhador Lendário', conta: 'árvores derrubadas', fases: [30, 120, 400], efeito: (f) => `${f * 20}% de chance de +1 tronco` },
+  peDePato: { nome: 'Pé de Pato', conta: 'peixes pescados', fases: [20, 80, 250], efeito: (f) => `+${(f * 0.25).toFixed(2).replace('.', ',')} s para puxar a fisgada` },
+  esquiva: { nome: 'Esquiva de Gato', conta: 'esquivas', fases: [40, 150, 400], efeito: (f) => `esquiva gasta ${f * 20}% menos fôlego` },
+  reiMangue: { nome: 'Rei do Mangue', conta: 'sururus e caranguejos catados', fases: [60, 200, 600], efeito: (f) => `${f * 20}% de chance de catar um a mais` },
+  buchoFerro: { nome: 'Bucho de Ferro', conta: 'comidas de nível 3', fases: [10, 40, 120], efeito: (f) => `bônus de comida duram ${[0, 25, 50, 100][f]}% mais` },
+};
+const marcasP = { cont: {}, ativas: [] };
+const ESPACOS_MARCA = 2;
+const faseMarca = (id) => { const n = marcasP.cont[id] || 0, F = MARCAS[id].fases; return n >= F[2] ? 3 : n >= F[1] ? 2 : n >= F[0] ? 1 : 0; };
+const marca = (id) => (marcasP.ativas.includes(id) ? faseMarca(id) : 0);   // fase da marca, só se ela estiver ativa
+const NOME_FASE = ['', 'bronze', 'prata', 'ouro'];
+function contarMarca(id, n = 1) {
+  const antes = faseMarca(id); marcasP.cont[id] = (marcasP.cont[id] || 0) + n; const depois = faseMarca(id);
+  if (depois > antes) {
+    if (marcasP.ativas.length < ESPACOS_MARCA && !marcasP.ativas.includes(id)) marcasP.ativas.push(id);   // espaço livre: ativa sozinha
+    elSubiu.innerHTML = `<small>Marca do pirata · ${NOME_FASE[depois]}</small><b>${MARCAS[id].nome}</b><span>${MARCAS[id].efeito(depois)}${marcasP.ativas.includes(id) ? ' · ativa' : ' · ative em Esc › Marcas'}</span>`;
+    elSubiu.classList.remove('mostra'); void elSubiu.offsetWidth; elSubiu.classList.add('mostra');
+  }
+}
+function desenharMarcas() {
+  const el = document.getElementById('marcasPausa'); if (!el) return;
+  el.innerHTML = `<p>Marcas se ganham fazendo. Só <b>${ESPACOS_MARCA}</b> ficam ativas de cada vez (${marcasP.ativas.length}/${ESPACOS_MARCA}): clique para ativar ou guardar.</p>` +
+    Object.entries(MARCAS).map(([id, M]) => {
+      const n = marcasP.cont[id] || 0, f = faseMarca(id), prox = M.fases[Math.min(f, 2)], at = marcasP.ativas.includes(id);
+      return `<div class="marca${at ? ' ativa' : ''}${f ? '' : ' trava'}" data-m="${id}"><b>${M.nome}</b> <span class="fase f${f}">${f ? NOME_FASE[f] : 'ainda não'}</span>
+        <small>${f ? M.efeito(f) : 'ganha no bronze: ' + M.efeito(1)}</small>
+        <div class="barraM"><i style="width:${Math.min(100, n / prox * 100).toFixed(0)}%"></i></div><small>${n} / ${prox} ${M.conta}${f === 3 ? ' · completa' : ''}</small></div>`;
+    }).join('');
+  for (const d of el.querySelectorAll('.marca')) d.onclick = () => {
+    const id = d.dataset.m; if (!faseMarca(id)) return;
+    if (marcasP.ativas.includes(id)) marcasP.ativas = marcasP.ativas.filter((x) => x !== id);
+    else if (marcasP.ativas.length < ESPACOS_MARCA) marcasP.ativas.push(id);
+    else { marcasP.ativas.shift(); marcasP.ativas.push(id); }
+    desenharMarcas(); salvar();
+  };
+}
 function consumir(id, { fome = 0, sede = 0, vida = 0, buff: b = null, seg = 0, cura = false, msg = '', cor = '#ffd27a' }) {
   const j = jogador; tirar(id);
   j.fome = Math.min(100, j.fome + fome); j.sede = Math.min(100, j.sede + sede);
   j.vida = vida < 0 ? Math.max(1, j.vida + vida) : Math.min(100, j.vida + vida);
   if (cura) j.veneno = 0;
   flutuar(msg || NOMES[id].toLowerCase(), j.x, 2.2, j.z, cor);
-  if (b) darBuff(b, seg);
+  if (b) { darBuff(b, seg * (1 + [0, 0.25, 0.5, 1][marca('buchoFerro')])); contarMarca('buchoFerro'); }
 }
 // ---------- ÁRVORE DE HABILIDADES (17/11): cada nível dá 1 ponto. Três ramos com três degraus; cada degrau vai até 5,
 // e o de baixo só abre com 2 pontos no de cima (como as árvores de talentos dos RPGs).
@@ -2618,7 +2666,7 @@ function interagir(o) {
     if (!temLamina()) return avisar('Precisa de algo afiado para cortar a cana (faca ou pedra lascada).');
     dar('cana'); flutuar('+1 cana', o.x, 1.6, o.z); ganharXP(2, { oficio: 'coleta', nivelAcao: 2 }); o.cortes--; if (o.cortes <= 0) sumir(o, 60);
   } else if (tipo === 'sururu') {
-    dar('sururu'); flutuar('+1 sururu', o.x, 1, o.z); ganharXP(2, { oficio: 'coleta', nivelAcao: 1 }); bonusColeta('sururu', o.x, o.z); cumprir('sururu'); o.porcoes--;
+    dar('sururu'); flutuar('+1 sururu', o.x, 1, o.z); contarMarca('reiMangue'); if (Math.random() < 0.2 * marca('reiMangue')) dar('sururu'); ganharXP(2, { oficio: 'coleta', nivelAcao: 1 }); bonusColeta('sururu', o.x, o.z); cumprir('sururu'); o.porcoes--;
     o.grupo.conchas.forEach((m, k) => (m.visible = k < o.porcoes * 2)); if (o.porcoes <= 0) sumir(o, 45);
   } else if (tipo === 'bica') {
     jogador.sede = Math.min(100, jogador.sede + 40); const n = bolsa.cantil || 0;
@@ -2696,7 +2744,7 @@ function pescar(o) {
   if (!ter('vara')) return avisar('Precisa de uma vara de pesca (oficina: galho, cipó e concha).');
   if (pesca && pesca.o === o) {
     if (pesca.fisgou) {
-      dar('peixe'); flutuar('+1 peixe!', o.x, 1.4, o.z, '#ffd27a'); ganharXP(4, { oficio: 'pesca', nivelAcao: 2 });
+      dar('peixe'); flutuar('+1 peixe!', o.x, 1.4, o.z, '#ffd27a'); contarMarca('peDePato'); ganharXP(4, { oficio: 'pesca', nivelAcao: 2 });
       o.peixes--; if (o.peixes <= 0) sumir(o, 60);
     } else flutuar('puxou cedo demais…', o.x, 1.4, o.z, '#ffb0a0');
     pararPesca(); return;
@@ -2717,7 +2765,7 @@ function atualizarPesca(dt) {
   if (j.anda || Math.hypot(o.x - j.x, o.z - j.z) > 4.5) { flutuar('recolheu a linha', j.x, 2.2, j.z, '#e8fbff'); pararPesca(); return; }
   pesca.t += dt;
   if (!pesca.fisgou && pesca.t >= pesca.morde) { pesca.fisgou = true; flutuar('Fisgou! Aperte E!', o.x, 1.6, o.z, '#ffd27a', 1.2); }
-  if (pesca.fisgou && pesca.t > pesca.morde + 1.1 + 0.12 * (nivelDe('pesca') - 1)) { flutuar('o peixe escapou…', o.x, 1.4, o.z, '#ffb0a0'); pararPesca(); return; }
+  if (pesca.fisgou && pesca.t > pesca.morde + 1.1 + 0.12 * (nivelDe('pesca') - 1) + 0.25 * marca('peDePato')) { flutuar('o peixe escapou…', o.x, 1.4, o.z, '#ffb0a0'); pararPesca(); return; }
   boia.position.y = pesca.fisgou ? -0.12 + Math.sin(t * 30) * 0.05 : 0.02 + Math.sin(t * 3) * 0.03;
   if (!pesca.fisgou && pesca.morde - pesca.t < 0.8) boia.position.y += Math.sin(t * 25) * 0.03;   // beliscadas antes da mordida
 }
@@ -2893,7 +2941,7 @@ function quadro() {
       o.caindo = -2; o.grupo.remove(o.grupo.corpo); o.mao = [peca(o.grupo, G.toco, '#6e4a2c', o.contorno)]; o.ken = [];
       if (KEN.pronto) o.ken.push(modeloKenney(o, 'toco')); aplicarModo(o);
       const tr = (o.nv === 2 ? 3 : 2) + (kitNv('machado') >= 3 ? 1 : 0);
-      o.tipo = 'toco'; o.ativo = false; o.obs.r = 0.25; dar('tronco', tr); dar('galho'); if (Math.random() < (nivelDe('lenhador') - 1) * 0.06) { dar('tronco'); flutuar('+1 tronco (lenhador)', o.x, 1.8, o.z, '#9fd8ff'); } flutuar('+' + tr + ' troncos  +1 galho', o.x, 1.2, o.z, '#ffd27a'); ganharXP(5, { oficio: 'lenhador', nivelAcao: 1 }); cumprir('arvore');
+      o.tipo = 'toco'; o.ativo = false; o.obs.r = 0.25; dar('tronco', tr); dar('galho'); contarMarca('lenhador'); if (Math.random() < 0.2 * marca('lenhador')) { dar('tronco'); flutuar('+1 tronco (marca)', o.x, 2.1, o.z, '#ffd27a'); } if (Math.random() < (nivelDe('lenhador') - 1) * 0.06) { dar('tronco'); flutuar('+1 tronco (lenhador)', o.x, 1.8, o.z, '#9fd8ff'); } flutuar('+' + tr + ' troncos  +1 galho', o.x, 1.2, o.z, '#ffd27a'); ganharXP(5, { oficio: 'lenhador', nivelAcao: 1 }); cumprir('arvore');
     }
   }
   // esconde objetos muito fora da câmera (economiza GPU e reduz aquecimento no celular)
@@ -3262,7 +3310,7 @@ function atualizarFlechas(dt) {
     f.x += f.dx * passo; f.z += f.dz * passo; f.voou += passo;
     f.g.position.set(f.x, 0.9 - Math.max(0, f.voou - alc * 0.64) * 0.12, f.z);
     const alvo = bichos.find((b) => b.vivo && b.malha.visible && Math.hypot(b.x - f.x, b.z - f.z) < 0.25 + (ESPECIES[b.tipo].l || 1.3) * 0.3);
-    if (alvo) { ferirBicho(alvo, f.dano, [f.dx, f.dz]); FLECHAS.splice(k, 1); cairFlecha(f, true); continue; }
+    if (alvo) { contarMarca('olhoGaviao'); ferirBicho(alvo, Math.round(f.dano * (1 + 0.1 * marca('olhoGaviao'))), [f.dx, f.dz]); FLECHAS.splice(k, 1); cairFlecha(f, true); continue; }
     const parede = obstaculos.some((o) => (!o.o || o.o.ativo) && Math.hypot(o.x - f.x, o.z - f.z) < o.r) || bateCaixa(f.x, f.z);
     if (parede || f.voou > alc || !seco(f.x, f.z) || prof(f.x, f.z) > 0) { FLECHAS.splice(k, 1); if (prof(f.x, f.z) > 0 || !seco(f.x, f.z)) cena.remove(f.g); else cairFlecha(f, parede); }
   }
@@ -3340,7 +3388,7 @@ function atualizarFojos(dt) {
 }
 function esquivar() {
   const j = jogador; if (j.caido || j.esquiva || j.folego < 30) return;
-  j.folego -= 30;
+  j.folego -= 30 * (1 - 0.2 * marca('esquiva')); contarMarca('esquiva');
   let dx = 0, dz = 0;
   if (joy.ativo) { dx = CIMA.x * joy.y + DIR.x * joy.x; dz = CIMA.y * joy.y + DIR.y * joy.x; }
   else {
@@ -3504,6 +3552,7 @@ function voltarBicho(b, seg) {   // outro bicho da mesma espécie aparece no lug
 }
 function ferirBicho(b, dano, d) {
   const E = ESPECIES[b.tipo];
+  if ((d[0] || d[1]) && (E.l || 1.3) >= 1.6 && marca('cacadorOnca')) dano = Math.round(dano * (1 + 0.1 * marca('cacadorOnca')));   // Caçador de Onças: bicho grande
   if ((d[0] || d[1]) && vesteSoma('curaGolpe')) jogador.vida = Math.min(100, jogador.vida + vesteSoma('curaGolpe'));   // Dente do Rei: cada golpe cura
   b.vida -= dano; flutuar('-' + dano, b.x, 1.3, b.z, '#ffe08a', 0.9);
   b.malha.material.color.set('#ffb0a0'); setTimeout(() => b.malha.material.color.set(b.corBase), 120);
@@ -3515,10 +3564,11 @@ function ferirBicho(b, dano, d) {
     b.vivo = false; b.barra.visible = false; b.tex.offset.x = 3 / 4; ganharXP(E.xp, { oficio: 'luta', nivelAcao: E.nv });
     if (E.pega) {   // bicho pequeno: vai direto para a bolsa
       for (const [k, n] of Object.entries(E.pega)) dar(k, n);
+      if (b.tipo === 'caranguejo') { contarMarca('reiMangue'); if (Math.random() < 0.2 * marca('reiMangue')) dar('caranguejo'); }
       flutuar('+ ' + Object.keys(E.pega).map((k) => NOMES[k].toLowerCase()).join(', '), b.x, 1.2, b.z, '#ffd27a');
       b.malha.visible = false; b.sombra.visible = false; voltarBicho(b, E.volta); return;
     }
-    if (b.tipo === 'onca') cumprir('onca');
+    if (b.tipo === 'onca') { cumprir('onca'); contarMarca('cacadorOnca'); }
     if (b.tipo === 'jacareAcu') {
       cumprir('jacareAcu'); if (b.rot) b.rot.visible = false;
       if (socialAtivo) registrarFeito('jacareAcu').then((r) => {
@@ -3738,6 +3788,7 @@ function abaPausa(aba) {
   if (aba === 'mapa') desenharMapa();
   if (aba === 'habilidades') desenharArvore();
   if (aba === 'config') desenharConfig();
+  if (aba === 'marcas') desenharMarcas();
 }
 for (const b of elPausa.querySelectorAll('.abasPausa button')) b.onclick = () => abaPausa(b.dataset.aba);
 // MAPA da terra: o chão pintado uma vez (2 px por metro), com lotes, nomes dos lugares e você
@@ -3797,7 +3848,7 @@ function salvar() {
   if (saindo) return;   // indo para o mar: quem salva é partirParaMar
   salvoEm = t;
   const j = jogador;
-  salvo.salvarProgresso({ ...(salvo.progresso() || {}), dono: SALVO_JOGADOR?.criado || null, local: 'terra', x: j.x, z: j.z, vida: j.vida, fome: j.fome, sede: j.sede, bolsa, feitos: [...feitos], atalhos: [...atalhos], atributos: { ...atrib }, kit: { ...kit }, raroDia: { ...raroDia }, ativo, jangada: jangada ? { x: jangada.x, z: jangada.z } : null, chegouDoMar: false, xp, oficios: { ...xpOficios }, vestido: { ...vestido }, patacos, estragaT: { ...estragaT }, lugares: [...lugaresVistos], lote: { id: MEU_LOTE, rel: true, degrau, moveis: moveis.map((m) => ({ ...m, i: m.i - LOTE.x0, k: m.k - LOTE.z0 })) }, bolsasMorte: objetos.filter((o) => o.tipo === 'bolsaMorte' && o.ativo).map((o) => ({ x: o.x, z: o.z, itens: o.itens })) });
+  salvo.salvarProgresso({ ...(salvo.progresso() || {}), dono: SALVO_JOGADOR?.criado || null, local: 'terra', x: j.x, z: j.z, vida: j.vida, fome: j.fome, sede: j.sede, bolsa, feitos: [...feitos], atalhos: [...atalhos], atributos: { ...atrib }, kit: { ...kit }, raroDia: { ...raroDia }, marcas: { cont: { ...marcasP.cont }, ativas: [...marcasP.ativas] }, ativo, jangada: jangada ? { x: jangada.x, z: jangada.z } : null, chegouDoMar: false, xp, oficios: { ...xpOficios }, vestido: { ...vestido }, patacos, estragaT: { ...estragaT }, lugares: [...lugaresVistos], lote: { id: MEU_LOTE, rel: true, degrau, moveis: moveis.map((m) => ({ ...m, i: m.i - LOTE.x0, k: m.k - LOTE.z0 })) }, bolsasMorte: objetos.filter((o) => o.tipo === 'bolsaMorte' && o.ativo).map((o) => ({ x: o.x, z: o.z, itens: o.itens })) });
 }
 addEventListener('beforeunload', salvar);
 if (SALVO_JOGADOR?.nome) document.getElementById('quem').textContent = SALVO_JOGADOR.nome.toUpperCase() + ' · NÁUFRAGO';
@@ -3822,6 +3873,7 @@ if (prog && prog.dono === (SALVO_JOGADOR?.criado || null)) {
   if (prog.lote) degrau = prog.lote.degrau || 0;
   Object.assign(atrib, prog.atributos || {});
   Object.assign(kit, prog.kit || {}); Object.assign(raroDia, prog.raroDia || {});
+  if (prog.marcas) { Object.assign(marcasP.cont, prog.marcas.cont || {}); marcasP.ativas = (prog.marcas.ativas || []).filter((id) => MARCAS[id]).slice(0, ESPACOS_MARCA); }
   if (bolsa.machado) { kit.machado = Math.max(kitNv('machado'), 1); delete bolsa.machado; for (let i = 0; i < 9; i++) if (atalhos[i] === 'machado') atalhos[i] = null; desenharBolsa(); }   // o machado antigo vai para o kit
 }
 degrau = Math.max(1, degrau);   // todo pirata nasce com um barraco no lote (DESIGN 7a)
