@@ -7,9 +7,10 @@ import { GLTFLoader } from '../lib/loaders/GLTFLoader.js';
 import { mergeVertices } from '../lib/utils/BufferGeometryUtils.js';
 
 export const NIVEIS = {
-  1: { nome: 'Nível 1', cor: '#a87b4f', fundo: '#efe0c2' },
-  2: { nome: 'Nível 2', cor: '#5f8fb0', fundo: '#dbe8ef' },
-  3: { nome: 'Nível 3', cor: '#c9a227', fundo: '#f5ebc4' },
+  // cores bem diferentes entre si para ler o nível de relance: madeira, azul do mar e ouro
+  1: { nome: 'Nível 1', cor: '#8c6a48', fundo: '#e6d5b8' },
+  2: { nome: 'Nível 2', cor: '#2f7fc1', fundo: '#cbe2f5' },
+  3: { nome: 'Nível 3', cor: '#d49a12', fundo: '#f8e29a' },
 };
 
 export const ITENS = {

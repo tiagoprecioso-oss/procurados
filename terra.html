@@ -92,6 +92,12 @@
   #vinheta.veneno { box-shadow: inset 0 0 150px 40px rgba(70, 150, 20, .45); }
   .slot { width: 54px; height: 54px; border: 2px solid; border-radius: 6px; position: relative; display: grid; place-items: center; cursor: default; }
   .slot img { width: 46px; height: 46px; pointer-events: none; }
+  /* NÍVEL DO ITEM (18/11): moldura colorida mais forte, selo com o número e ⚔ nas armas */
+  .slot[data-nv], #oficina button .ic, #ficha .grande { border-width: 3px !important; background-image: radial-gradient(circle at 50% 40%, rgba(255,255,255,.55), rgba(255,255,255,0) 70%) !important; }
+  .slot[data-nv="3"], #oficina button .ic[data-nv="3"], #ficha .grande[data-nv="3"] { box-shadow: 0 0 7px 1px rgba(232,176,30,.75); }
+  .slot .selo-nv { position: absolute; left: -6px; bottom: -6px; min-width: 15px; height: 15px; padding: 0 3px; box-sizing: border-box; border-radius: 8px; background: var(--nv); color: #fff; border: 1.5px solid #fff8e6; font: bold 10px/12px Georgia, serif; text-align: center; pointer-events: none; box-shadow: 0 1px 2px rgba(0,0,0,.45); white-space: nowrap; z-index: 1; }
+  .slot .selo-nv.arma { padding: 0 4px 0 3px; font-size: 10px; }
+  #ficha .acoes button.largar { border-color: #a8221a; color: #a8221a; } #ficha .acoes button.largar:hover:not(:disabled) { background: #a8221a; color: #fff; }
   .slot .nome { font-size: 10px; text-align: center; line-height: 1.1; padding: 2px; }
   .slot b { position: absolute; right: 3px; bottom: 1px; font-size: 13px; text-shadow: 0 0 3px #fff, 0 0 3px #fff; }
   .slot kbd { position: absolute; top: -8px; left: -7px; background: #5e3a1e; color: #f4e8cd; border-radius: 3px; font-size: 10px; padding: 0 4px; }
@@ -1125,11 +1131,14 @@ RECEITAS.forEach((r) => {
   b.addEventListener('mouseenter', () => mostrarFicha(r.id, b)); b.addEventListener('mouseleave', esconderFicha);
 });
 const icone = (id, tam) => ICONES[id] ? `<img src="${ICONES[id]}" alt="" width="${tam}" height="${tam}">` : '';
-const molduraNivel = (id) => { const n = NIVEIS[ITENS[id]?.nivel || 1]; return `border-color:${n.cor};background:${n.fundo};--nv:${n.cor}`; };
+const molduraNivel = (id) => { const n = NIVEIS[ITENS[id]?.nivel || 1]; return `border-color:${n.cor};background-color:${n.fundo};--nv:${n.cor}`; };
+const nvDe = (id) => ITENS[id]?.nivel || 1;
+// selo no canto do item: o número do nível; nas armas, uma espadinha junto
+const seloNivel = (id) => `<span class="selo-nv${ehArma(id) ? ' arma' : ''}" title="${NIVEIS[nvDe(id)].nome}">${ehArma(id) ? '⚔' : ''}${nvDe(id)}</span>`;
 function conteudoBotao(r) {
   const ingr = Object.entries(r.pede).map(([k, n]) => `<span class="${ter(k, n) ? '' : 'falta'}" data-item="${k}">${icone(k, 18) || NOMES[k]}${bolsa[k] || 0}/${n}</span>`).join('');
   const trava = typeof xpPronto !== 'undefined' && xpPronto && nivel() < nivelPedido(r.id) ? `<span class="travaNv">pede Nv ${nivelPedido(r.id)}</span>` : '';
-  return `<span class="ic" style="${molduraNivel(r.id)}">${icone(r.id, 36)}</span><b>${r.nome}</b><span class="ingr">${ingr}</span>${trava}`;
+  return `<span class="ic" data-nv="${nvDe(r.id)}" style="${molduraNivel(r.id)}">${icone(r.id, 36)}</span><b>${r.nome}</b><span class="ingr">${ingr}</span>${trava}`;
 }
 const pertoDeFogo = () => fogueiras.some((f) => f.ativo !== false && Math.hypot(f.x - jogador.x, f.z - jogador.z) < 3.8) || objetos.some((o) => o.ativo && (o.tipo === 'fogao' || o.tipo === 'forja') && Math.hypot(o.x - jogador.x, o.z - jogador.z) < 4.2);
 const pertoDeForja = () => objetos.some((o) => o.ativo && o.tipo === 'forja' && Math.hypot(o.x - jogador.x, o.z - jogador.z) < 4.4);
@@ -1255,8 +1264,8 @@ function desenharBolsa() {
   const grade = document.getElementById('gradeBolsa'); grade.innerHTML = '';
   ordemBolsa.forEach((k, i) => {
     const g = document.createElement('div'); g.className = 'slot' + (USAVEIS[k] ? ' usa' : '') + (Object.values(vestido).includes(k) ? ' vestido' : ''); g.style.cssText = molduraNivel(k);
-    g.innerHTML = `${icone(k, 46) || `<span class="nome">${NOMES[k]}</span>`}<b>${bolsa[k]}</b>`;
-    g.dataset.item = k;
+    g.innerHTML = `${icone(k, 46) || `<span class="nome">${NOMES[k]}</span>`}<b>${bolsa[k]}</b>${seloNivel(k)}`;
+    g.dataset.item = k; g.dataset.nv = nvDe(k);
     g.addEventListener('click', () => { mostrarFicha(k, g, true); destacarCombina(k); });
     arrastar(g, { id: k, de: null });
     g.addEventListener('dragover', (ev) => { ev.preventDefault(); g.classList.add('alvo'); });
@@ -1270,8 +1279,8 @@ function desenharBolsa() {
     elVestes.innerHTML = '';
     for (const [lugar, rotulo] of Object.entries(LUGARES_VESTE)) {
       const id = vestido[lugar] && ter(vestido[lugar]) ? vestido[lugar] : null, d = document.createElement('div');
-      d.className = 'slot veste' + (id ? '' : ' livre'); if (id) d.style.cssText = molduraNivel(id);
-      d.innerHTML = id ? icone(id, 40) || `<span class="nome">${NOMES[id]}</span>` : `<span class="nome">${rotulo}</span>`;
+      d.className = 'slot veste' + (id ? '' : ' livre'); if (id) { d.style.cssText = molduraNivel(id); d.dataset.nv = nvDe(id); }
+      d.innerHTML = id ? (icone(id, 40) || `<span class="nome">${NOMES[id]}</span>`) + seloNivel(id) : `<span class="nome">${rotulo}</span>`;
       d.title = id ? '' : rotulo + ': clique numa veste da bolsa e escolha "Vestir"';
       if (id) { d.addEventListener('click', () => vestir(id)); d.dataset.item = id; }
       elVestes.appendChild(d);
@@ -1285,8 +1294,8 @@ function desenharBolsa() {
   atalhos.forEach((k, i) => {
     const d = document.createElement('div'), tem = k && bolsa[k];
     d.className = 'slot' + (k ? '' : ' livre') + (i === ativo ? ' ativo' : '') + (k && !tem ? ' fantasma' : '') + (k && USAVEIS[k] ? ' usa' : '');
-    if (k) d.style.cssText = molduraNivel(k);
-    d.innerHTML = `<kbd>${i + 1}</kbd>` + (k ? `${icone(k, 46) || `<span class="nome">${NOMES[k]}</span>`}<b>${bolsa[k] || 0}</b>` : '');
+    if (k) { d.style.cssText = molduraNivel(k); d.dataset.nv = nvDe(k); }
+    d.innerHTML = `<kbd>${i + 1}</kbd>` + (k ? `${icone(k, 46) || `<span class="nome">${NOMES[k]}</span>`}<b>${bolsa[k] || 0}</b>${seloNivel(k)}` : '');
     if (k) { d.dataset.item = k; arrastar(d, { id: k, de: i }); }
     d.title = k ? '' : 'arraste um item da bolsa (Tab) para cá';
     d.addEventListener('click', () => { if (d._segurou) { d._segurou = false; return; } selecionarAtalho(i); });
@@ -1339,7 +1348,7 @@ function mostrarFicha(id, perto, fixa = false) {
   if (fixa) fichaFixa = id; else if (fichaFixa) return;
   const n = NIVEIS[it.nivel], usos = usosDe(id, RECEITAS), cozinha = COZINHA.filter((c) => c.de === id), vemDe = RECEITAS.find((r) => r.id === id);
   const linhaReceita = (r) => `<div class="receita">${Object.entries(r.pede).map(([k, q]) => `${icone(k, 22)}<small>×${q}</small>`).join(' ')}<span class="seta">→</span>${icone(r.id, 22)}<b>${r.nome}</b></div>`;
-  elFicha.innerHTML = `<div class="topo"><div class="grande" style="${molduraNivel(id)}">${icone(id, 66)}</div>
+  elFicha.innerHTML = `<div class="topo"><div class="grande" data-nv="${nvDe(id)}" style="${molduraNivel(id)}">${icone(id, 66)}</div>
       <div><h3>${it.nome}</h3><span class="nivel" style="background:${n.cor}">${n.nome}</span><span class="tipo">${it.tipo}</span>${bolsa[id] ? `<div style="font-size:11px;margin-top:3px">na bolsa: <b>${bolsa[id]}</b></div>` : ''}</div></div>
     ${fixa ? acoesDaFicha(id) : ''}
     <p>${it.desc}</p>
@@ -1375,6 +1384,7 @@ function acoesDaFicha(id) {
   }
   if (ATALHAVEL(id) && bolsa[id] && !atalhos.includes(id)) b.push('<button data-acao="barra">Pôr na barra</button>');
   else if (atalhos.includes(id)) b.push('<button data-acao="tirarBarra">Tirar da barra</button>');
+  if (bolsa[id]) { b.push('<button class="largar" data-acao="largar" data-qt="1">Largar 1 no chão</button>'); if (bolsa[id] > 1) b.push(`<button class="largar" data-acao="largar" data-qt="${bolsa[id]}">Largar todos (${bolsa[id]})</button>`); }
   return `<button class="fechar" data-acao="fechar" aria-label="Fechar">✕</button>${b.length ? `<div class="acoes">${b.join('')}</div>` : ''}`;
 }
 elFicha.addEventListener('click', (e) => {
@@ -1384,6 +1394,7 @@ elFicha.addEventListener('click', (e) => {
   if (bt.dataset.acao === 'vestir') vestir(id);
   if (bt.dataset.acao === 'combinar') combinar(id, bt.dataset.outro);
   if (bt.dataset.acao === 'barra') { const j = atalhos.indexOf(null); if (j >= 0) { atalhos[j] = id; desenharBolsa(); } else avisar('A barra está cheia: tire um item dela antes.'); }
+  if (bt.dataset.acao === 'largar') largar(id, +bt.dataset.qt || 1);
   if (bt.dataset.acao === 'tirarBarra') { const j = atalhos.indexOf(id); if (j >= 0) { atalhos[j] = null; armaAtual = armaDoAtivo(); desenharBolsa(); } }
   esconderFicha();
 });
@@ -2638,7 +2649,7 @@ function textoDe(o) {
     case 'fogueira': return textoCozinhar('esquentar-se');
     case 'pesqueiro': return pesca?.o === o ? (pesca.fisgou ? 'PUXAR!' : 'puxar a linha') : ter('vara') ? 'pescar' : 'pescar (precisa de vara de pesca)';
     case 'carcaca': return temLamina() ? 'esfolar ' + ESPECIES[o.bicho.tipo].nome.toLowerCase() : 'esfolar (precisa de algo afiado)';
-    case 'bolsaMorte': return 'recuperar sua bolsa';
+    case 'bolsaMorte': return o.largado ? 'pegar o que você largou' : 'recuperar sua bolsa';
     case 'jangada': return 'embarcar e sair para o mar';
     case 'lote': return 'ver seu lote';
     case 'barraco': case 'cama': return 'dormir';
@@ -3439,14 +3450,26 @@ function acordar() {
   avisar((degrau >= 1 ? 'Você acordou no seu ' + DEGRAUS[Math.min(degrau, 2)].nome.toLowerCase() : 'Você acordou na praia') + '. Sua bolsa ficou onde você caiu.', 4); salvar();
 }
 const G_SACO = new THREE.SphereGeometry(0.32, 7, 5).scale(1, 0.75, 1), G_NO = new THREE.ConeGeometry(0.12, 0.22, 5);
-function criarBolsaMorte(x, z, itens) {
+function criarBolsaMorte(x, z, itens, largado = false) {
   const o = novoObjeto('bolsaMorte', x, z, (g, c) => { const s = peca(g, G_SACO, '#8a5a2b', c); s.position.y = 0.24; const n = peca(g, G_NO, '#6e4a2c', c); n.position.y = 0.55; });
-  o.itens = itens; o.mao = []; o.ken = [];
+  o.itens = itens; o.largado = largado; o.mao = []; o.ken = [];
   return o;
+}
+// LARGAR (18/11): tira itens da bolsa e deixa num saquinho no chão, à sua frente. Dá para pegar de volta com E
+// (ou tocando) e ele fica salvo. Largar perto de um saquinho que você já largou junta tudo no mesmo.
+function largar(id, n = 1) {
+  n = Math.min(n, bolsa[id] || 0); if (!n) return;
+  const j = jogador, x = j.x + Math.cos(j.a) * 0.9, z = j.z - Math.sin(j.a) * 0.9;
+  const perto = objetos.find((o) => o.tipo === 'bolsaMorte' && o.ativo && o.largado && Math.hypot(o.x - x, o.z - z) < 1.4);
+  if (perto) perto.itens[id] = (perto.itens[id] || 0) + n;
+  else criarBolsaMorte(x, z, { [id]: n }, true);
+  tirar(id, n);
+  if (!bolsa[id]) { for (const l of Object.keys(vestido)) if (vestido[l] === id) vestido[l] = null; armaAtual = armaDoAtivo(); }
+  flutuar('largou ' + (n > 1 ? n + ' ' : '') + NOMES[id].toLowerCase(), j.x, 2.2, j.z, '#e8d7a8'); desenharBolsa(); salvar();
 }
 function recuperarBolsa(o) {
   for (const [k, n] of Object.entries(o.itens)) bolsa[k] = (bolsa[k] || 0) + n;
-  desenharBolsa(); o.ativo = false; o.grupo.visible = false; flutuar('bolsa recuperada', o.x, 1.2, o.z, '#ffd27a'); salvar();
+  desenharBolsa(); o.ativo = false; o.grupo.visible = false; flutuar(o.largado ? 'pegou de volta' : 'bolsa recuperada', o.x, 1.2, o.z, '#ffd27a'); salvar();
 }
 
 // ---------- cachorro-do-mato: bicho 2D da mata (folha com andar 1, andar 2, bote e caído)
@@ -3864,7 +3887,7 @@ function salvar() {
   if (saindo) return;   // indo para o mar: quem salva é partirParaMar
   salvoEm = t;
   const j = jogador;
-  salvo.salvarProgresso({ ...(salvo.progresso() || {}), dono: SALVO_JOGADOR?.criado || null, local: 'terra', x: j.x, z: j.z, vida: j.vida, fome: j.fome, sede: j.sede, bolsa, feitos: [...feitos], atalhos: [...atalhos], atributos: { ...atrib }, kit: { ...kit }, raroDia: { ...raroDia }, marcas: { cont: { ...marcasP.cont }, ativas: [...marcasP.ativas] }, ativo, jangada: jangada ? { x: jangada.x, z: jangada.z } : null, chegouDoMar: false, xp, oficios: { ...xpOficios }, vestido: { ...vestido }, patacos, estragaT: { ...estragaT }, lugares: [...lugaresVistos], lote: { id: MEU_LOTE, rel: true, degrau, moveis: moveis.map((m) => ({ ...m, i: m.i - LOTE.x0, k: m.k - LOTE.z0 })) }, bolsasMorte: objetos.filter((o) => o.tipo === 'bolsaMorte' && o.ativo).map((o) => ({ x: o.x, z: o.z, itens: o.itens })) });
+  salvo.salvarProgresso({ ...(salvo.progresso() || {}), dono: SALVO_JOGADOR?.criado || null, local: 'terra', x: j.x, z: j.z, vida: j.vida, fome: j.fome, sede: j.sede, bolsa, feitos: [...feitos], atalhos: [...atalhos], atributos: { ...atrib }, kit: { ...kit }, raroDia: { ...raroDia }, marcas: { cont: { ...marcasP.cont }, ativas: [...marcasP.ativas] }, ativo, jangada: jangada ? { x: jangada.x, z: jangada.z } : null, chegouDoMar: false, xp, oficios: { ...xpOficios }, vestido: { ...vestido }, patacos, estragaT: { ...estragaT }, lugares: [...lugaresVistos], lote: { id: MEU_LOTE, rel: true, degrau, moveis: moveis.map((m) => ({ ...m, i: m.i - LOTE.x0, k: m.k - LOTE.z0 })) }, bolsasMorte: objetos.filter((o) => o.tipo === 'bolsaMorte' && o.ativo).map((o) => ({ x: o.x, z: o.z, itens: o.itens, largado: !!o.largado })) });
 }
 addEventListener('beforeunload', salvar);
 if (SALVO_JOGADOR?.nome) document.getElementById('quem').textContent = SALVO_JOGADOR.nome.toUpperCase() + ' · NÁUFRAGO';
@@ -3882,7 +3905,7 @@ if (prog && prog.dono === (SALVO_JOGADOR?.criado || null)) {
   if (prog.atalhos) prog.atalhos.forEach((v, i) => (atalhos[i] = v)); else for (const k of Object.keys(bolsa)) if (ATALHAVEL(k) && !atalhos.includes(k)) { const j = atalhos.indexOf(null); if (j >= 0) atalhos[j] = k; }
   ativo = prog.ativo || 0; desenharBolsa();
   for (const id of prog.feitos || []) cumprir(id);
-  for (const b of prog.bolsasMorte || []) criarBolsaMorte(b.x, b.z, b.itens);
+  for (const b of prog.bolsasMorte || []) criarBolsaMorte(b.x, b.z, b.itens, !!b.largado);
   if (prog.local === 'mar' || prog.chegouDoMar) {   // voltou do mar: desce da jangada no ponto de atracar da praia
     criarJangada(costaX(Z_ATRACA) - 1.6, Z_ATRACA); Object.assign(jogador, { x: costaX(Z_ATRACA) + 0.9, z: Z_ATRACA, a: 0 });
   } else if (prog.jangada) criarJangada(prog.jangada.x, prog.jangada.z);
