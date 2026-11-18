@@ -14,7 +14,7 @@
 <link rel="icon" href="icones/icone-192.png">
 <link rel="stylesheet" href="fontes/fontes.css">
 <style>
-  html, body { margin: 0; height: 100%; overflow: hidden; background: #1f86ad; font-family: var(--fonte-texto); font-size: 15px; color: #2b1d0e; }
+  html, body { margin: 0; height: 100%; height: 100dvh; overflow: hidden; background: #1f86ad; font-family: var(--fonte-texto); font-size: 15px; color: #2b1d0e; }
   #tela { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
   .painel { position: fixed; background: rgba(244, 232, 205, .92); border: 2px solid #5e3a1e; border-radius: 6px; padding: 10px 14px; box-shadow: 0 2px 10px rgba(0,0,0,.25); }
   /* objetivo: ícone do que fazer + uma linha, sem caixa */
@@ -37,7 +37,7 @@
   #mochila h3 { margin: 0 0 8px; font-size: 12px; letter-spacing: .14em; opacity: .75; }
   #gradeBolsa { display: grid; grid-template-columns: repeat(5, 54px); gap: 9px; align-content: start; }
   #gradeBolsa .vazio { width: 54px; height: 54px; border: 2px dashed rgba(94,58,30,.3); border-radius: 6px; }
-  #oficina { font-size: 13px; overflow-y: auto; max-height: 70vh; padding-right: 4px; }
+  #oficina { font-size: 13px; overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; max-height: 70vh; padding-right: 4px; }
   #oficina button { display: grid; grid-template-columns: 40px 1fr; gap: 2px 8px; align-items: center; width: 100%; margin: 5px 0; padding: 5px 7px; text-align: left; font: inherit; background: #fbf4e2; border: 1.5px solid #5e3a1e; border-radius: 4px; cursor: pointer; color: #2b1d0e; }
   #oficina button:disabled { opacity: .5; cursor: default; }
   #oficina > button.pode { border-color: #5f8a3a; box-shadow: 0 0 0 1px #5f8a3a inset; }
@@ -200,21 +200,46 @@
   #pausa button { display: block; width: 100%; margin: 8px 0; padding: 9px; font: 18px var(--fonte-texto); background: #fbf4e2; color: #2b1d0e; border: 2px solid #5e3a1e; border-radius: 5px; cursor: pointer; }
   #pausa button:hover { background: #5e3a1e; color: #f4e8cd; }
   #pausa p { font-size: 12px; opacity: .7; margin: 10px 0 0; }
-  /* celular: barra de atalhos menor e sem números; painéis cabem na tela deitada */
-  html.toque #bolsa { bottom: 8px; gap: 4px; padding: 6px; }
-  html.toque #bolsa .slot { width: 40px; height: 40px; } html.toque #bolsa .slot img { width: 36px; height: 36px; } html.toque #bolsa kbd { display: none; }
-  html.toque #bolsa .slot b { font-size: 13px; }
-  html.toque #ajuda { display: none !important; }   /* a ajuda de teclas é do computador; no celular os botões já dizem o que fazem */
+  /* celular: barra de atalhos compacta (sem colidir com joystick nem botões), safe-area do iPhone e janelas confortáveis */
+  html.toque #bolsa { bottom: max(6px, var(--sa-bottom, env(safe-area-inset-bottom, 0px))); gap: 3px; padding: 5px 6px; }
+  html.toque #bolsa .slot { width: clamp(32px, 4.4vw, 40px); height: clamp(32px, 4.4vw, 40px); }
+  html.toque #bolsa .slot img { width: 88%; height: 88%; } html.toque #bolsa kbd { display: none; }
+  html.toque #bolsa .slot b { font-size: 11px; }
+  html.toque #ajuda { display: none !important; }
   html.toque #objetivo > small, html.toque #objetivo .rotulo { display: none; }
-  html.toque .tela .caixa, html.toque #mochila .caixa { max-height: 94vh; padding: 10px 14px 14px; }
-  html.toque #dica { top: auto !important; bottom: 62px; }
-  html.toque #estado { left: 10px; top: 8px; bottom: auto; flex-direction: row; gap: 4px; }
-  html.toque .sinal { width: 36px; height: 36px; }
-  html.toque #objetivo { top: 50px; left: 8px; right: auto; max-width: 46vw; }
+  html.toque .tela .caixa, html.toque #mochila .caixa, html.toque #pausa .caixa {
+    max-height: calc(100dvh - 14px - var(--sa-top, env(safe-area-inset-top, 0px)) - var(--sa-bottom, env(safe-area-inset-bottom, 0px)));
+    width: min(740px, calc(100vw - 16px - var(--sa-left, env(safe-area-inset-left, 0px)) - var(--sa-right, env(safe-area-inset-right, 0px))));
+    padding: 10px 12px 12px; -webkit-overflow-scrolling: touch; touch-action: pan-y;
+  }
+  html.toque #mochila header { margin-bottom: 6px; padding-bottom: 5px; }
+  html.toque #mochila header h2 { font-size: 22px !important; }
+  html.toque #mochila header span, html.toque .tela header span { display: none; }
+  html.toque #mochila .colunas { grid-template-columns: minmax(195px, 43%) 1fr; gap: 12px; flex: 1; overflow: hidden; }
+  html.toque #mochila .colunas > section:first-child { overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; padding-right: 4px; }
+  html.toque #gradeBolsa { grid-template-columns: repeat(auto-fill, 44px); gap: 6px; }
+  html.toque #gradeBolsa .slot, html.toque #gradeBolsa .vazio { width: 44px; height: 44px; }
+  html.toque #gradeBolsa .slot img { width: 38px; height: 38px; }
+  html.toque #oficina { max-height: none; height: 100%; }
+  html.toque #ficha.fixa { left: 50% !important; top: 50% !important; transform: translate(-50%, -50%); width: min(420px, 88vw); max-height: calc(100dvh - 20px); z-index: 25; -webkit-overflow-scrolling: touch; touch-action: pan-y; box-shadow: 0 12px 36px rgba(0,0,0,.65); }
+  html.toque #ficha .acoes button { padding: 10px 12px; font-size: 15px; }
+  html.toque #objetivos.aberto { left: 50%; right: auto; top: 50%; transform: translate(-50%, -50%); width: min(360px, 88vw); max-height: calc(100dvh - 24px); overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; z-index: 15; }
+  html.toque #dica { top: auto !important; bottom: calc(max(6px, var(--sa-bottom, env(safe-area-inset-bottom, 0px))) + 54px); font-size: 14px !important; padding: 4px 12px; }
+  html.toque #estado { left: max(10px, var(--sa-left, env(safe-area-inset-left, 0px))); top: max(8px, var(--sa-top, env(safe-area-inset-top, 0px))); bottom: auto; flex-direction: row; gap: 3px; }
+  html.toque .sinal { width: 32px; height: 32px; }
+  html.toque #objetivo { top: calc(max(8px, var(--sa-top, env(safe-area-inset-top, 0px))) + 44px); left: max(8px, var(--sa-left, env(safe-area-inset-left, 0px))); right: auto; max-width: 44vw; }
   html.toque #objetivo small { display: none; }
-  html.toque #objetivo img { width: 30px; height: 30px; } html.toque #objetivo span { font-size: 13px; }
-  html.toque #online { top: 74px; right: 10px; }
-  html.toque #ajuda { font-size: 13px; max-width: 70vw; }
+  html.toque #objetivo img { width: 28px; height: 28px; } html.toque #objetivo span { font-size: 12.5px; }
+  html.toque #online { top: calc(max(8px, var(--sa-top, env(safe-area-inset-top, 0px))) + 56px); right: max(10px, var(--sa-right, env(safe-area-inset-right, 0px))); font-size: 11.5px; }
+  html.toque #nivel { top: max(8px, var(--sa-top, env(safe-area-inset-top, 0px))); left: calc(max(10px, var(--sa-left, env(safe-area-inset-left, 0px))) + 148px); }
+  html.toque #relogio { left: calc(max(10px, var(--sa-left, env(safe-area-inset-left, 0px))) + 148px); top: calc(max(8px, var(--sa-top, env(safe-area-inset-top, 0px))) + 42px); width: auto; }
+  .linhaFeira { display: flex; align-items: center; gap: 8px; padding: 6px 8px; margin: 5px 0; background: #fbf4e2; border: 1.5px solid #5e3a1e; border-radius: 6px; }
+  .linhaFeira .infoF { flex: 1; min-width: 0; }
+  .linhaFeira .infoF b { display: block; font-size: 15px; } .linhaFeira .infoF small { display: block; font-size: 12px; opacity: .78; }
+  .linhaFeira .btsF { display: flex; gap: 5px; flex: none; }
+  .linhaFeira .btsF button { padding: 6px 10px; font: 13px var(--fonte-texto); background: #f1e2bf; color: #2b1d0e; border: 1.5px solid #5e3a1e; border-radius: 5px; cursor: pointer; }
+  .linhaFeira .btsF button.tudo { background: #5e3a1e; color: #f4e8cd; }
+  .linhaFeira .btsF button:disabled { opacity: .45; cursor: default; }
   /* telas do lote e do baú */
   .tela { position: fixed; inset: 0; z-index: 8; display: none; place-items: center; background: rgba(20, 30, 40, .45); }
   .tela.aberta { display: grid; }
@@ -262,7 +287,6 @@
   #nivel .num { font-size: 11px; opacity: 0; transition: opacity .3s; } #nivel:hover .num { opacity: .9; }
   #nivel.novo { transform: scale(1.18); }
   #relogio { position: fixed; left: 16px; top: 66px; z-index: 4; width: 52px; text-align: center; font-size: 12px; color: #fff3d6; text-shadow: 0 1px 3px #000; pointer-events: auto; }
-  html.toque #relogio { left: 172px; top: 46px; width: auto; }
   #subiu { position: fixed; left: 50%; top: 26%; transform: translate(-50%, -50%); z-index: 8; pointer-events: none; text-align: center; color: #fff3d6; text-shadow: 0 2px 6px #000, 0 0 18px rgba(0,0,0,.7); opacity: 0; }
   #subiu small { display: block; font-size: 15px; letter-spacing: .25em; text-transform: uppercase; color: #9fd8ff; }
   #subiu b { display: block; font: 64px var(--fonte-titulo, Georgia, serif); font-weight: normal; color: #ffe7a3; }
@@ -272,7 +296,7 @@
   #objetivos .oficios { margin-top: 10px; border-top: 1px solid rgba(58,31,10,.35); padding-top: 6px; } #objetivos .oficios h3 { margin: 0 0 2px; font-size: 13px; letter-spacing: .05em; } #objetivos .oficios p { margin: 0; }
   #objetivos .oficios .mini { display: inline-block; width: 70px; height: 5px; border-radius: 3px; background: rgba(58,31,10,.25); vertical-align: middle; overflow: hidden; } #objetivos .oficios .mini i { display: block; height: 100%; background: #4f7f9c; }
   .travaNv { display: block; font-size: 11px; color: #8c1b1b; font-weight: bold; }
-  html.toque #nivel { top: 8px; left: 172px; } html.toque #nivel .selo { width: 36px; height: 36px; } html.toque #nivel .barra { width: 80px; }
+  html.toque #nivel .selo { width: 34px; height: 34px; } html.toque #nivel .barra { width: 72px; }
   .flutua { position: fixed; left: 0; top: 0; font-weight: bold; font-size: 14px; color: #fff; text-shadow: 0 1px 3px #000, 0 0 2px #000; pointer-events: none; white-space: nowrap; }
 </style>
 <script type="importmap">{ "imports": { "three": "./lib/three.module.min.js" } }</script>
@@ -346,7 +370,7 @@ import { criarVeu, hora, escuro, textoHora } from './js/noite.js';
 import { criarFabrica, QUADRO, DIRECOES } from './js/fabrica.js';
 import { ITENS, NIVEIS, COZINHA, COMBINACOES, usosDe, criarIcones, LUGARES_VESTE, ESTRAGA, precoDe } from './js/itens.js';
 import { temRede, enviar, lista, quantos, limpar } from './js/rede.js';
-import { criarControles, ehToque, telaCheia, joy } from './js/toque.js';
+import { criarControles, ehToque, telaCheia, joy, mira, observarTela, medidasTela } from './js/toque.js';
 import { criarAvisos } from './js/avisos.js';
 import { socialAtivo, registrar, pidSalvo, buscar, meuSocial, pedirAmizade, responderAmizade, criarGuilda, convidarGuilda, responderGuilda, sairGuilda, cargoGuilda, proporAlianca, responderAlianca, tagsPiratas, listarPontos, reivindicarPonto, minhaCarteira, venderNaFeira, gastarPatacos, meuPonto, pagarManutencao, recolherCofre, informarNivel, transferir, bancoGuilda, extratoGuilda, ofertarPonto, responderOferta, cancelarOferta, minhasOfertas, encomendasHoje, entregarEncomenda, mural } from './js/social.js';
 const avisos = criarAvisos();   // central de avisos: ícone pequeno; nada de caixa por cima da tela
@@ -432,9 +456,10 @@ function tipoChao(x, z) {
 
 // ---------- cena e câmera fixa
 const tela = document.getElementById('tela');
-const renderer = new THREE.WebGLRenderer({ canvas: tela, antialias: true, preserveDrawingBuffer: /[?&]gravar/.test(location.search) });
-// no celular a tela tem muitos pixels por ponto: sem isso a imagem fica borrada e os itens se confundem
-const limitePixel = (q) => Math.min(devicePixelRatio, (PIXEL[q] || 1) * (matchMedia('(pointer: coarse)').matches ? 1.6 : 1));
+const renderer = new THREE.WebGLRenderer({ canvas: tela, antialias: true, powerPreference: 'high-performance', preserveDrawingBuffer: /[?&]gravar/.test(location.search) });
+// no celular equilibra nitidez (Retina) com fluidez e menos aquecimento (baixa 0,9 · média 1,25 · alta 1,75)
+const PIXEL_TOQUE = { baixa: 0.9, media: 1.25, alta: 1.75 };
+const limitePixel = (q) => Math.min(devicePixelRatio, ehToque ? (PIXEL_TOQUE[q] || 1.25) : (PIXEL[q] || 1));
 renderer.setPixelRatio(limitePixel(OPCOES.qualidade));
 const cena = new THREE.Scene();
 cena.background = new THREE.Color('#1f86ad');
@@ -447,14 +472,16 @@ var escuroAgora = escuro();
 const corSolDia = new THREE.Color('#fff4dd'), corSolTarde = new THREE.Color('#ffb070'), corSolNoite = new THREE.Color('#9fb4ff');
 const OFF = new THREE.Vector3(20, 20 * 0.816, 20);           // ângulo 2:1, o clássico dos jogos isométricos
 const ZOOM_MAX = 2.8, ZOOM_MIN = 0.6;
-let zoom = OPCOES.zoom || (matchMedia('(pointer: coarse)').matches ? 2.0 : 1);   // no celular a câmera fica mais perto: os itens no chão ficam legíveis
+let zoom = OPCOES.zoom || (ehToque ? 1.55 : 1);              // no celular: bom equilíbrio entre ver bichos vindo e legibilidade
+let telaW = innerWidth, telaH = innerHeight;
 const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 200);
 function ajustar() {
-  renderer.setSize(innerWidth, innerHeight, false);
-  const meia = 9.5 / zoom, a = innerWidth / innerHeight;
+  const m = medidasTela(); telaW = m.w; telaH = m.h;
+  renderer.setSize(telaW, telaH, false);
+  const meia = 9.5 / zoom, a = telaW / Math.max(1, telaH);
   Object.assign(camera, { left: -meia * a, right: meia * a, top: meia, bottom: -meia }); camera.updateProjectionMatrix();
 }
-addEventListener('resize', ajustar); ajustar();
+observarTela(ajustar); ajustar();
 addEventListener('wheel', (e) => {
   if (e.ctrlKey) { e.preventDefault(); zoom = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, zoom * (e.deltaY > 0 ? 0.9 : 1.1))); ajustar(); return; }
   if (typeof telaAberta !== 'undefined' && (telaAberta || pausado)) return;
@@ -548,7 +575,8 @@ function geoContorno(g) {
   }
   return casco.get(g);
 }
-const lambert = (cor) => new THREE.MeshLambertMaterial({ color: cor, flatShading: true });
+const lambertCache = new Map();
+const lambert = (cor) => { const k = String(cor); if (!lambertCache.has(k)) lambertCache.set(k, new THREE.MeshLambertMaterial({ color: cor, flatShading: true })); return lambertCache.get(k); };
 // peça: geometria + cor + contorno; o contorno do objeto todo compartilha um material (para acender ao mirar)
 function peca(grupo, g, cor, contorno) {
   const m = new THREE.Mesh(g, lambert(cor)); grupo.add(m);
@@ -596,10 +624,14 @@ const G = {
 };
 const objetos = [];         // tudo o que dá para interagir
 const obstaculos = [];      // { x, z, r } que bloqueiam a passagem
+const COQUEIROS = [], PESQUEIROS = [], ARVORES_CAINDO = [];
 function novoObjeto(tipo, x, z, montar, extra = {}) {
   const grupo = new THREE.Group(), contorno = matContorno();
   montar(grupo, contorno); grupo.position.set(x, 0, z); cena.add(grupo);
-  const o = { tipo, x, z, grupo, contorno, ativo: true, ...extra }; objetos.push(o); return o;
+  const o = { tipo, x, z, grupo, contorno, ativo: true, ...extra }; objetos.push(o);
+  if (tipo === 'coqueiro') COQUEIROS.push(o);
+  if (tipo === 'pesqueiro') PESQUEIROS.push(o);
+  return o;
 }
 const noChao = (tipo) => (x, z, rot = rnd() * 6.3) => novoObjeto(tipo, x, z, (g, c) => {
   if (tipo === 'pedra') { const m = peca(g, G.pedra, '#8f887c', c); m.position.y = 0.08; }
@@ -1206,8 +1238,14 @@ function desenharBolsa() {
     d.innerHTML = `<kbd>${i + 1}</kbd>` + (k ? `${icone(k, 46) || `<span class="nome">${NOMES[k]}</span>`}<b>${bolsa[k] || 0}</b>` : '');
     if (k) { d.dataset.item = k; arrastar(d, { id: k, de: i }); }
     d.title = k ? '' : 'arraste um item da bolsa (Tab) para cá';
-    d.addEventListener('click', () => selecionarAtalho(i));
+    d.addEventListener('click', () => { if (d._segurou) { d._segurou = false; return; } selecionarAtalho(i); });
     d.addEventListener('contextmenu', (ev) => { ev.preventDefault(); atalhos[i] = null; armaAtual = armaDoAtivo(); desenharBolsa(); });
+    if (ehToque && k) {   // toque longo na barra tira o item (substitui o botão direito do PC)
+      let segT = 0;
+      d.addEventListener('pointerdown', () => { d._segurou = false; segT = setTimeout(() => { d._segurou = true; atalhos[i] = null; armaAtual = armaDoAtivo(); desenharBolsa(); avisar('Tirou da barra.', 1.6); }, 520); });
+      const canc = () => clearTimeout(segT);
+      d.addEventListener('pointerup', canc); d.addEventListener('pointercancel', canc); d.addEventListener('pointermove', canc);
+    }
     d.addEventListener('dragover', (ev) => { ev.preventDefault(); d.classList.add('alvo'); });
     d.addEventListener('dragleave', () => d.classList.remove('alvo'));
     d.addEventListener('drop', (ev) => {
@@ -1284,6 +1322,7 @@ function acoesDaFicha(id) {
     b.push(`<button data-acao="combinar" data-outro="${outro}" ${pode ? '' : 'disabled'}>Combinar com ${NOMES[outro].toLowerCase()} → ${NOMES[c.vira].toLowerCase()}</button>`);
   }
   if (ATALHAVEL(id) && bolsa[id] && !atalhos.includes(id)) b.push('<button data-acao="barra">Pôr na barra</button>');
+  else if (atalhos.includes(id)) b.push('<button data-acao="tirarBarra">Tirar da barra</button>');
   return `<button class="fechar" data-acao="fechar" aria-label="Fechar">✕</button>${b.length ? `<div class="acoes">${b.join('')}</div>` : ''}`;
 }
 elFicha.addEventListener('click', (e) => {
@@ -1293,6 +1332,7 @@ elFicha.addEventListener('click', (e) => {
   if (bt.dataset.acao === 'vestir') vestir(id);
   if (bt.dataset.acao === 'combinar') combinar(id, bt.dataset.outro);
   if (bt.dataset.acao === 'barra') { const j = atalhos.indexOf(null); if (j >= 0) { atalhos[j] = id; desenharBolsa(); } else avisar('A barra está cheia: tire um item dela antes.'); }
+  if (bt.dataset.acao === 'tirarBarra') { const j = atalhos.indexOf(id); if (j >= 0) { atalhos[j] = null; armaAtual = armaDoAtivo(); desenharBolsa(); } }
   esconderFicha();
 });
 criarIcones().then((ic) => { ICONES = ic; desenharBolsa(); atualizarObjetivo(); }).catch((e) => console.error('ícones não carregaram', e));
@@ -2018,21 +2058,26 @@ function desenharFeira() {
   const itens = Object.keys(bolsa).filter((k) => precoDe(k) > 0 && !Object.values(vestido).includes(k));
   const l = elFeira.querySelector('.listaFeira');
   l.innerHTML = itens.length ? '' : '<p>Nada que a feira compre na bolsa. Traga peixe, couro, caça, ervas e comida feita.</p>';
+  const vender = async (k, q, linha) => {
+    if (!ter(k, q)) return;
+    const bts = linha.querySelectorAll('button'); bts.forEach((x) => (x.disabled = true));
+    const ganho = precoDe(k) * q;
+    if (carteiraOnline) {
+      try { const r = await venderNaFeira(k, q, precoDe(k));
+        if (!r?.ok) { avisos.novo('feira', 'Feira', r?.erro === 'teto-do-dia' ? `<p>A feira já comprou muito de você hoje. Ainda dá para vender ${r.resta} patacos até a meia-noite.</p>` : '<p>A feira não comprou agora. Tente de novo.</p>', { abrir: true }); bts.forEach((x) => (x.disabled = false)); return; }
+        tirar(k, q); patacos = r.saldo;
+      } catch { avisar('Sem conexão com a feira agora.'); bts.forEach((x) => (x.disabled = false)); return; }
+    } else { tirar(k, q); patacos += ganho; }
+    flutuar(`+${ganho} patacos`, jogador.x, 2.6, jogador.z, '#ffd76a'); desenharFeira(); salvar();
+  };
   for (const k of itens) {
-    const b = document.createElement('button'); b.className = 'venda'; b.dataset.item = k;
-    b.innerHTML = `${icone(k, 34)}<span><b>${NOMES[k]}</b><small>${bolsa[k]} na bolsa · ${precoDe(k)} pataco${precoDe(k) > 1 ? 's' : ''} cada</small></span>`;
-    b.onclick = async (e) => {
-      const q = e.shiftKey ? bolsa[k] : 1; if (!ter(k, q) || b.disabled) return; b.disabled = true;
-      const ganho = precoDe(k) * q;
-      if (carteiraOnline) {
-        try { const r = await venderNaFeira(k, q, precoDe(k));
-          if (!r?.ok) { avisos.novo('feira', 'Feira', r?.erro === 'teto-do-dia' ? `<p>A feira já comprou muito de você hoje. Ainda dá para vender ${r.resta} patacos até a meia-noite.</p>` : '<p>A feira não comprou agora. Tente de novo.</p>', { abrir: true }); b.disabled = false; return; }
-          tirar(k, q); patacos = r.saldo;
-        } catch { avisar('Sem conexão com a feira agora.'); b.disabled = false; return; }
-      } else { tirar(k, q); patacos += ganho; }
-      flutuar(`+${ganho} patacos`, jogador.x, 2.6, jogador.z, '#ffd76a'); desenharFeira(); salvar();
-    };
-    l.appendChild(b);
+    const qtd = bolsa[k], p = precoDe(k);
+    const d = document.createElement('div'); d.className = 'linhaFeira'; d.dataset.item = k;
+    d.innerHTML = `${icone(k, 34)}<div class="infoF"><b>${NOMES[k]}</b><small>${qtd} na bolsa · ${p} pataco${p > 1 ? 's' : ''} cada</small></div>
+      <div class="btsF"><button type="button" class="um">Vender 1</button>${qtd > 1 ? `<button type="button" class="tudo">Tudo (×${qtd})</button>` : ''}</div>`;
+    d.querySelector('.um').onclick = (e) => vender(k, e.shiftKey ? bolsa[k] : 1, d);
+    d.querySelector('.tudo')?.addEventListener('click', () => vender(k, bolsa[k], d));
+    l.appendChild(d);
   }
 }
 // PONTOS DA CIDADE: lugares históricos que só podem ter UM dono. O primeiro que cumprir os requisitos fica com ele.
@@ -2446,7 +2491,7 @@ function interagir(o) {
     if (!kitServe(o)) return avisar(`Precisa de machado nível ${o.nv || 1} no kit. Faça na oficina.`);
     o.golpes++; flutuar('toc!', o.x, 1.6, o.z, '#ffe9b0', 0.8);
     o.grupo.rotation.z = 0.06; setTimeout(() => (o.grupo.rotation.z = 0), 90);
-    if (o.golpes >= golpesArvore() + (o.nv === 2 ? 1 : 0)) { o.caindo = 0; const dx = o.x - jogador.x, dz = o.z - jogador.z; o.eixo = new THREE.Vector3(dz, 0, -dx).normalize(); }
+    if (o.golpes >= golpesArvore() + (o.nv === 2 ? 1 : 0)) { o.caindo = 0; const dx = o.x - jogador.x, dz = o.z - jogador.z; o.eixo = new THREE.Vector3(dz, 0, -dx).normalize(); ARVORES_CAINDO.push(o); }
   } else if (tipo === 'cipo') {
     if (!temLamina()) return avisar('Precisa de algo afiado para cortar o cipó (faca ou pedra lascada).');
     dar('cipo'); flutuar('+1 cipó', o.x, 1, o.z); ganharXP(2, { oficio: 'coleta', nivelAcao: 1 }); bonusColeta('cipo', o.x, o.z); cumprir('cipo'); o.cortes--; if (o.cortes <= 0) sumir(o, 50);
@@ -2539,7 +2584,7 @@ function pescar(o) {
 }
 function pararPesca() { if (boia) cena.remove(boia); boia = null; pesca = null; }
 function atualizarPesca(dt) {
-  for (const o of objetos) if (o.tipo === 'pesqueiro' && o.ativo) o.grupo.ondas.forEach((m, k) => { const f = (t * 0.5 + o.fase + k * 0.5) % 1; m.scale.setScalar(0.6 + f * 1.4); m.material.opacity = 0.6 * (1 - f); });
+  for (const o of PESQUEIROS) if (o.ativo && o.grupo.visible) o.grupo.ondas.forEach((m, k) => { const f = (t * 0.5 + o.fase + k * 0.5) % 1; m.scale.setScalar(0.6 + f * 1.4); m.material.opacity = 0.6 * (1 - f); });
   if (!pesca) return;
   const j = jogador, o = pesca.o;
   if (j.anda || Math.hypot(o.x - j.x, o.z - j.z) > 4.5) { flutuar('recolheu a linha', j.x, 2.2, j.z, '#e8fbff'); pararPesca(); return; }
@@ -2552,8 +2597,41 @@ function atualizarPesca(dt) {
 let alvo = null;
 function maisPerto() {
   let melhor = null, dm = 1.9;
-  for (const o of objetos) { if (!o.ativo || !textoDe(o)) continue; const d = Math.hypot(o.x - jogador.x, o.z - jogador.z) - (o.tipo === 'coqueiro' || o.tipo === 'arvore' ? 0.3 : o.tipo === 'barraco' ? 1.1 : o.tipo === 'cama' ? 0.5 : o.tipo === 'pesqueiro' ? 1.8 : 0); if (d < dm) { dm = d; melhor = o; } }
+  const jx = jogador.x, jz = jogador.z;
+  for (const o of objetos) {
+    if (!o.ativo) continue;
+    const dx = o.x - jx, dz = o.z - jz;
+    if (dx > 4 || dx < -4 || dz > 4 || dz < -4) continue;
+    const d = Math.hypot(dx, dz) - (o.tipo === 'coqueiro' || o.tipo === 'arvore' ? 0.3 : o.tipo === 'barraco' ? 1.1 : o.tipo === 'cama' ? 0.5 : o.tipo === 'pesqueiro' ? 1.8 : 0);
+    if (d < dm && textoDe(o)) { dm = d; melhor = o; }
+  }
   return melhor;
+}
+function verboCurto(o) {
+  if (!o) return 'usar';
+  switch (o.tipo) {
+    case 'pedra': case 'concha': case 'galho': case 'flecha': return 'pegar';
+    case 'coqueiro': case 'sururu': return 'catar';
+    case 'arvore': case 'cipo': case 'cana': return 'cortar';
+    case 'jazida': return 'quebrar';
+    case 'caixote': case 'bau': return 'abrir';
+    case 'monte': return 'cavar';
+    case 'aroeira': return 'colher';
+    case 'feira': return 'feira';
+    case 'mural': return 'mural';
+    case 'quadroEnc': return 'pedidos';
+    case 'ponto': return 'placa';
+    case 'bica': return 'beber';
+    case 'fogueira': case 'fogao': return 'cozinhar';
+    case 'pesqueiro': return pesca?.o === o ? (pesca.fisgou ? 'PUXAR!' : 'puxar') : 'pescar';
+    case 'carcaca': return 'esfolar';
+    case 'bolsaMorte': return 'bolsa';
+    case 'jangada': return 'velejar';
+    case 'lote': return 'lote';
+    case 'barraco': case 'cama': return 'dormir';
+    case 'fojo': return 'armar';
+    default: return 'usar';
+  }
 }
 
 // =====================================================================
@@ -2599,13 +2677,25 @@ const andavel = (x, z) => x > XMIN + 0.3 && x < XMAX - 0.3 && z > ZMIN + 0.3 && 
 // =====================================================================
 // LAÇO
 // =====================================================================
-const relogio = new THREE.Clock(), v3 = new THREE.Vector3();
+const relogio = new THREE.Clock(), v3 = new THREE.Vector3(), vAlvo = new THREE.Vector3();
 const SINAIS = { vida: document.getElementById('sVida'), fome: document.getElementById('sFome'), sede: document.getElementById('sSede'), folego: document.getElementById('sFolego') }, elVinheta = document.getElementById('vinheta'), elFps = document.getElementById('fps');
-let t = 0, quadros = 0, fpsDesde = 0;
+let t = 0, quadros = 0, fpsDesde = 0, ultVisT = -1, ultVisX = 1e9, ultVisZ = 1e9;
+function atualizarVisibilidade() {
+  const jx = jogador.x, jz = jogador.z, raio = Math.max(24, 24 / zoom + 14);
+  for (const o of objetos) {
+    if (o.ativo === false && o.tipo !== 'toco') continue;
+    const perto = Math.abs(o.x - jx) < raio && Math.abs(o.z - jz) < raio;
+    if (o.grupo.visible !== perto) o.grupo.visible = perto;
+  }
+  for (const r of rochas) {
+    const p = r.grupo.position, perto = Math.abs(p.x - jx) < raio && Math.abs(p.z - jz) < raio;
+    if (r.grupo.visible !== perto) r.grupo.visible = perto;
+  }
+}
 function quadro() {
   requestAnimationFrame(quadro);
   const dt0 = Math.min(relogio.getDelta(), 0.05);
-  if (pausado || telaAberta) return;   // com a bolsa aberta o mundo espera
+  if (document.hidden || pausado || telaAberta) return;   // em segundo plano ou com a bolsa aberta o mundo espera (economiza bateria no celular)
   const dt = dt0; t += dt;
   const j = jogador;
   if (t - salvoEm > 5) salvar();
@@ -2631,7 +2721,7 @@ function quadro() {
   let mx = CIMA.x * cima + DIR.x * dir, mz = CIMA.y * cima + DIR.y * dir;
   // andar em qualquer direção: joystick analógico (celular) ou botão direito do mouse (segurar segue o mouse; clicar anda até o ponto)
   let correrLivre = false;
-  if (joy.ativo) { destino = null; mx = CIMA.x * joy.y + DIR.x * joy.x; mz = CIMA.y * joy.y + DIR.y * joy.x; correrLivre = Math.hypot(joy.x, joy.y) > 0.92; }   // o joystick também aperta W A S D (para o mar), mas aqui vale a direção livre
+  if (joy.ativo) { destino = null; mx = CIMA.x * joy.y + DIR.x * joy.x; mz = CIMA.y * joy.y + DIR.y * joy.x; correrLivre = joy.correndo; }   // direção analógica livre no celular
   else if (cima || dir) destino = null;
   else if (andandoMouse || destino) {
     const a = andandoMouse ? pontoMira : destino, dx = a.x - j.x, dz = a.z - j.z;
@@ -2661,19 +2751,23 @@ function quadro() {
     atualizarOutros(dt);
   }
 
-  // coqueiros recarregam, árvores caem
-  for (const o of objetos) {
-    if (o.tipo === 'coqueiro' && o.cocos < 3) { o.recarga -= dt; if (o.recarga <= 0) { o.grupo.cocos[o.cocos].visible = true; o.cocos++; o.recarga = 20; } }
-    if (o.tipo === 'arvore' && o.caindo >= 0) {
-      o.caindo += dt; const k = Math.min(1, o.caindo / 0.9);
-      o.grupo.corpo.setRotationFromAxisAngle(o.eixo, k * k * Math.PI / 2);
-      if (o.caindo > 1.5) {
-        o.caindo = -2; o.grupo.remove(o.grupo.corpo); o.mao = [peca(o.grupo, G.toco, '#6e4a2c', o.contorno)]; o.ken = [];
-        if (KEN.pronto) o.ken.push(modeloKenney(o, 'toco')); aplicarModo(o);
-        o.tipo = 'toco'; o.ativo = false; o.obs.r = 0.25; dar('tronco', o.nv === 2 ? 3 : 2); dar('galho'); if (Math.random() < (nivelDe('lenhador') - 1) * 0.06) { dar('tronco'); flutuar('+1 tronco (lenhador)', o.x, 1.8, o.z, '#9fd8ff'); } flutuar('+' + (o.nv === 2 ? 3 : 2) + ' troncos  +1 galho', o.x, 1.2, o.z, '#ffd27a'); ganharXP(5, { oficio: 'lenhador', nivelAcao: 1 }); cumprir('arvore');
-      }
+  // coqueiros recarregam, árvores caem (listas curtas em vez de varrer centenas de objetos por quadro)
+  for (const o of COQUEIROS) {
+    if (o.cocos < 3) { o.recarga -= dt; if (o.recarga <= 0) { o.grupo.cocos[o.cocos].visible = true; o.cocos++; o.recarga = 20; } }
+  }
+  for (let i = ARVORES_CAINDO.length - 1; i >= 0; i--) {
+    const o = ARVORES_CAINDO[i];
+    o.caindo += dt; const k = Math.min(1, o.caindo / 0.9);
+    o.grupo.corpo.setRotationFromAxisAngle(o.eixo, k * k * Math.PI / 2);
+    if (o.caindo > 1.5) {
+      ARVORES_CAINDO.splice(i, 1);
+      o.caindo = -2; o.grupo.remove(o.grupo.corpo); o.mao = [peca(o.grupo, G.toco, '#6e4a2c', o.contorno)]; o.ken = [];
+      if (KEN.pronto) o.ken.push(modeloKenney(o, 'toco')); aplicarModo(o);
+      o.tipo = 'toco'; o.ativo = false; o.obs.r = 0.25; dar('tronco', o.nv === 2 ? 3 : 2); dar('galho'); if (Math.random() < (nivelDe('lenhador') - 1) * 0.06) { dar('tronco'); flutuar('+1 tronco (lenhador)', o.x, 1.8, o.z, '#9fd8ff'); } flutuar('+' + (o.nv === 2 ? 3 : 2) + ' troncos  +1 galho', o.x, 1.2, o.z, '#ffd27a'); ganharXP(5, { oficio: 'lenhador', nivelAcao: 1 }); cumprir('arvore');
     }
   }
+  // esconde objetos muito fora da câmera (economiza GPU e reduz aquecimento no celular)
+  if (t - ultVisT > 0.14 || Math.abs(j.x - ultVisX) > 1.2 || Math.abs(j.z - ultVisZ) > 1.2) { ultVisT = t; ultVisX = j.x; ultVisZ = j.z; atualizarVisibilidade(); }
 
   // mira: o objeto mais perto acende o contorno
   const novo = maisPerto();
@@ -2681,13 +2775,18 @@ function quadro() {
     const pinta = (o, cor) => { o.contorno.uniforms.uCor.value.set(cor); if (o.contornoK) o.contornoK.uniforms.uCor.value.set(cor); };
     if (alvo) pinta(alvo, TRACO); alvo = novo; if (alvo) pinta(alvo, '#ffd23f');
   }
-  TQ.mostrar('mobiliar', naCasaDentro(j.x, j.z) && !posicionar); for (const n of ['girar', 'por', 'cancelar']) TQ.mostrar(n, !!posicionar); TQ.apagar('usar', !alvo);
-  const txt = posicionar ? '<b>clique</b> põe · <b>R</b> gira · <b>Esc</b> cancela' : alvo ? '<b>E</b> ' + textoDe(alvo) + (alvo.movel ? ' · <b>X</b> desmontar' : '') : naCasaDentro(j.x, j.z) ? '<b>B</b> mobiliar a casa' : '';
+  TQ.mostrar('mobiliar', naCasaDentro(j.x, j.z) && !posicionar);
+  TQ.mostrar('desmontar', !!alvo?.movel && !posicionar);
+  for (const n of ['girar', 'por', 'cancelar']) TQ.mostrar(n, !!posicionar);
+  TQ.apagar('usar', !alvo); TQ.destacar('usar', !!alvo); TQ.texto('usar', verboCurto(alvo));
+  TQ.apagar('esquiva', j.folego < 30 || !!j.esquiva);
+  TQ.apagar('atacar', recargaAtaque > 0.05);
+  const txt = posicionar ? (ehToque ? 'arraste para posicionar · toque em ✓ para pôr' : '<b>clique</b> põe · <b>R</b> gira · <b>Esc</b> cancela') : alvo ? (ehToque ? textoDe(alvo) : '<b>E</b> ' + textoDe(alvo) + (alvo.movel ? ' · <b>X</b> desmontar' : '')) : naCasaDentro(j.x, j.z) ? (ehToque ? 'toque em B para mobiliar' : '<b>B</b> mobiliar a casa') : '';
   if (elDica.innerHTML !== txt) { elDica.innerHTML = txt; elDica.style.display = txt ? 'block' : 'none'; }
 
   // câmera segue o náufrago (sempre no mesmo ângulo)
-  const alvoCam = new THREE.Vector3(j.x, 0, j.z);
-  camera.position.lerp(v3.copy(alvoCam).add(OFF), Math.min(1, dt * 6));
+  vAlvo.set(j.x, 0, j.z);
+  camera.position.lerp(v3.copy(vAlvo).add(OFF), Math.min(1, dt * 6));
   camera.lookAt(camera.position.x - OFF.x, camera.position.y - OFF.y, camera.position.z - OFF.z);
   matMar.uniforms.uT.value = t;
   // jangada balança na água; véu de transição entre terra e mar
@@ -2704,13 +2803,13 @@ function quadro() {
     sol.intensity = 2.2 * (1 - 0.6 * e); ceu.intensity = 1.6 * (1 - 0.5 * e);
     sol.color.copy(corSolDia).lerp(h >= 12 ? corSolTarde : corSolNoite, Math.min(1, e * 1.6)).lerp(corSolNoite, e * e);
     atualizarTocha(dt, e);
-    const pxm = innerHeight / (camera.top - camera.bottom), luzes = [];
-    const tela2 = (x, y, z) => { v3.set(x, y, z).project(camera); return [(v3.x * 0.5 + 0.5) * innerWidth, (-v3.y * 0.5 + 0.5) * innerHeight]; };
+    const pxm = telaH / (camera.top - camera.bottom), luzes = [];
+    const tela2 = (x, y, z) => { v3.set(x, y, z).project(camera); return [(v3.x * 0.5 + 0.5) * telaW, (-v3.y * 0.5 + 0.5) * telaH]; };
     if (e > 0.01) {
       // cada luz é um disco no chão (y = 0) projetado pela câmera: a elipse segue a perspectiva do chão.
       // Um halo redondo pequeno na altura da chama (ou do corpo) deixa o próprio objeto visível.
       const noChao = (x0, z0, raio, forca, fogo) => {
-        const [x, y] = tela2(x0, 0, z0); if (x < -500 || y < -500 || x > innerWidth + 500 || y > innerHeight + 500) return;
+        const [x, y] = tela2(x0, 0, z0); if (x < -500 || y < -500 || x > telaW + 500 || y > telaH + 500) return;
         const [, y2] = tela2(x0 + CIMA.x * raio, 0, z0 + CIMA.y * raio);
         luzes.push({ x, y, r: raio * pxm, ry: Math.max(4, Math.abs(y2 - y)), forca, fogo });
       };
@@ -2734,7 +2833,7 @@ function quadro() {
   for (let i = flutuantes.length - 1; i >= 0; i--) {
     const f = flutuantes[i]; f.t += dt;
     v3.set(f.x, f.y + f.t * 0.6, f.z).project(camera);
-    f.el.style.transform = `translate(-50%,-50%) translate(${(v3.x * 0.5 + 0.5) * innerWidth}px,${(-v3.y * 0.5 + 0.5) * innerHeight}px)`;
+    f.el.style.transform = `translate(-50%,-50%) translate(${(v3.x * 0.5 + 0.5) * telaW}px,${(-v3.y * 0.5 + 0.5) * telaH}px)`;
     f.el.style.opacity = Math.min(1, (f.seg - f.t) / 0.4);
     if (f.t > f.seg) { f.el.remove(); flutuantes.splice(i, 1); }
   }
@@ -2763,6 +2862,7 @@ const CATALOGO = {   // tipo: [arquivos para sortear, medida em metros, qual med
 };
 const KEN = { pronto: false, ligado: true, cenas: {} };
 const caixa = new THREE.Box3(), tam = new THREE.Vector3(), centro = new THREE.Vector3();
+const kenMatCache = new Map();
 function modeloKenney(o, tipo) {
   const [lista, medida, qual] = CATALOGO[tipo];
   const arq = lista[Math.floor(rnd() * lista.length)], base = KEN.cenas[arq].clone(true);
@@ -2783,7 +2883,9 @@ function modeloKenney(o, tipo) {
       if (/leaf|grass|green|plant/i.test(velho.name) && hsl.h > 0.3 && hsl.h < 0.56) cor.setHSL(0.29 + (hsl.l - 0.4) * 0.05, 0.45, Math.min(0.4, hsl.l * 0.78));
       else if (hsl.l > 0.75) cor.set('#8a6a44');
     }
-    m.material = new THREE.MeshLambertMaterial({ map: velho.map || null, color: cor, flatShading: true, side: THREE.DoubleSide });
+    const ck = (velho.map ? velho.map.uuid : '') + '|' + cor.getHexString();
+    if (!kenMatCache.has(ck)) kenMatCache.set(ck, new THREE.MeshLambertMaterial({ map: velho.map || null, color: cor, flatShading: true, side: THREE.DoubleSide }));
+    m.material = kenMatCache.get(ck);
     const casca = geoContorno(m.geometry);
     m.add(new THREE.Mesh(casca, casca.userData.invertido ? o.contornoKInv : o.contornoK));
   }
@@ -2891,7 +2993,24 @@ const FORMAS = { frente: { alc: 1.55, abre: 80 }, arco: { alc: 1.9, abre: 150 },
 const golpeDe = (forma, x, z, ang) => ({ x, z, ang, ...FORMAS[forma] });
 // mira: o ponto do chão embaixo do mouse; as casas do próximo golpe aparecem clarinhas
 const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(0, -0.3), planoChao = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), pontoMira = new THREE.Vector3();
-tela.addEventListener('pointermove', (e) => ndc.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1));
+tela.addEventListener('pointermove', (e) => ndc.set(e.clientX / Math.max(1, telaW) * 2 - 1, -(e.clientY / Math.max(1, telaH)) * 2 + 1));
+// anel de alvo travado no celular: mostra qual bicho vai levar o golpe ou a flecha ao tocar em ⚔
+const anelAlvo = new THREE.Mesh(new THREE.RingGeometry(0.45, 0.62, 24).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#ffd23f', transparent: true, opacity: 0.75, depthWrite: false, side: THREE.DoubleSide }));
+anelAlvo.visible = false; cena.add(anelAlvo);
+function bichoAlvo() {
+  const j = jogador, maxD = ARMAS[armaAtual].tiro ? 11.5 : 4.2;
+  const fx = Math.cos(j.a), fz = -Math.sin(j.a);
+  let melhor = null, best = 1e9;
+  for (const b of bichos) {
+    if (!b.vivo || !b.malha.visible) continue;
+    const dx = b.x - j.x, dz = b.z - j.z, d = Math.hypot(dx, dz);
+    if (d > maxD) continue;
+    const dot = (dx * fx + dz * fz) / Math.max(0.01, d);
+    const nota = d * (1.25 - 0.35 * dot);   // favorece quem já está à frente sem ignorar bicho colado atrás
+    if (nota < best) { best = nota; melhor = b; }
+  }
+  return melhor;
+}
 // botão direito: segurar anda seguindo o mouse; soltar (ou só clicar) anda até o ponto
 let destino = null, andandoMouse = false, destinoTravado = 0;
 tela.addEventListener('pointerdown', (e) => { if (e.button === 2 && !ehToque) { andandoMouse = true; destino = null; } });
@@ -2906,32 +3025,46 @@ tela.addEventListener('pointerdown', (e) => {
   if (posicionar) colocarMovel(); else atacar();
 });
 // PINÇA (celular): dois dedos na tela aproximam e afastam a câmera. Um toque curto no chão mira e ataca ali.
+// No modo mobiliar (posicionar), arrastar o dedo posiciona o fantasma do móvel na grade.
 {
-  const dedos = new Map(); let pinca = null, pinchou = false, inicio = 0;
+  const dedos = new Map(); let pinca = null, pinchou = false, inicio = 0, moveu = false, p0 = null;
   const dist = () => { const [a, b] = [...dedos.values()]; return Math.hypot(a.x - b.x, a.y - b.y); };
   tela.addEventListener('pointerdown', (e) => {
     if (e.pointerType !== 'touch') return;
     dedos.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    if (dedos.size === 1) { pinchou = false; inicio = performance.now(); }
+    if (dedos.size === 1) { pinchou = false; moveu = false; inicio = performance.now(); p0 = { x: e.clientX, y: e.clientY }; }
     if (dedos.size === 2) { pinca = { d: dist(), z: zoom }; pinchou = true; }
+    if (posicionar && dedos.size === 1) { ndc.set(e.clientX / Math.max(1, telaW) * 2 - 1, -(e.clientY / Math.max(1, telaH)) * 2 + 1); }
   });
   tela.addEventListener('pointermove', (e) => {
     if (!dedos.has(e.pointerId)) return;
     dedos.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (dedos.size === 1 && p0 && Math.hypot(e.clientX - p0.x, e.clientY - p0.y) > 18) moveu = true;
+    if (posicionar && dedos.size === 1) { ndc.set(e.clientX / Math.max(1, telaW) * 2 - 1, -(e.clientY / Math.max(1, telaH)) * 2 + 1); }
     if (pinca && dedos.size >= 2 && pinca.d > 10) { zoom = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, pinca.z * dist() / pinca.d)); ajustar(); }
   });
   const solta = (e) => {
     if (!dedos.has(e.pointerId)) return;
     dedos.delete(e.pointerId);
-    if (dedos.size < 2 && pinca) { pinca = null; salvo.salvarOpcoes({ ...salvo.opcoes(), zoom }); }
-    if (dedos.size === 0 && !pinchou && e.type === 'pointerup' && performance.now() - inicio < 450 && !telaAberta && !pausado) {
-      ndc.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); ray.setFromCamera(ndc, camera); ray.ray.intersectPlane(planoChao, pontoMira);
+    if (dedos.size < 2 && pinca) { pinca = null; salvo.salvarOpcoes({ ...salvo.opcoes(), zoom, zoomEscolhido: true }); }
+    if (dedos.size === 0 && !pinchou && !moveu && e.type === 'pointerup' && performance.now() - inicio < 420 && !telaAberta && !pausado) {
+      ndc.set(e.clientX / Math.max(1, telaW) * 2 - 1, -(e.clientY / Math.max(1, telaH)) * 2 + 1); ray.setFromCamera(ndc, camera); ray.ray.intersectPlane(planoChao, pontoMira);
       if (!posicionar) atacar();
     }
   };
   tela.addEventListener('pointerup', solta); tela.addEventListener('pointercancel', solta);
 }
-function atacarFrente() { const j = jogador; pontoMira.set(j.x + Math.cos(j.a) * 2, 0, j.z - Math.sin(j.a) * 2); atacar(); }
+function atacarDirecao(mx, my) {
+  const j = jogador, wx = CIMA.x * my + DIR.x * mx, wz = CIMA.y * my + DIR.y * mx;
+  if (Math.hypot(wx, wz) > 0.05) pontoMira.set(j.x + wx * 4, 0, j.z + wz * 4);
+  atacar();
+}
+function atacarFrente() {
+  const j = jogador, b = ehToque ? bichoAlvo() : null;
+  if (b) pontoMira.set(b.x, 0, b.z);
+  else pontoMira.set(j.x + Math.cos(j.a) * 2, 0, j.z - Math.sin(j.a) * 2);
+  atacar();
+}
 function atacar() {
   const j = jogador;
   if (recargaAtaque > 0 || pausado || saindo || j.caido) return;
@@ -3038,8 +3171,13 @@ function atualizarFojos(dt) {
 function esquivar() {
   const j = jogador; if (j.caido || j.esquiva || j.folego < 30) return;
   j.folego -= 30;
-  const cima = (teclas.has('w') ? 1 : 0) - (teclas.has('s') ? 1 : 0), dir = (teclas.has('d') ? 1 : 0) - (teclas.has('a') ? 1 : 0);
-  let dx = CIMA.x * cima + DIR.x * dir, dz = CIMA.y * cima + DIR.y * dir; const l = Math.hypot(dx, dz);
+  let dx = 0, dz = 0;
+  if (joy.ativo) { dx = CIMA.x * joy.y + DIR.x * joy.x; dz = CIMA.y * joy.y + DIR.y * joy.x; }
+  else {
+    const cima = (teclas.has('w') ? 1 : 0) - (teclas.has('s') ? 1 : 0), dir = (teclas.has('d') ? 1 : 0) - (teclas.has('a') ? 1 : 0);
+    dx = CIMA.x * cima + DIR.x * dir; dz = CIMA.y * cima + DIR.y * dir;
+  }
+  const l = Math.hypot(dx, dz);
   if (l) { dx /= l; dz /= l; } else { dx = Math.cos(j.a); dz = -Math.sin(j.a); }
   j.esquiva = { t: 0, dx, dz };
 }
@@ -3262,11 +3400,25 @@ function combate(dt) {
   elVinheta.classList.toggle('veneno', j.veneno > 0 && !j.caido);
   for (const b of bichos) atualizarBicho(b, dt);
   atualizarFlechas(dt); atualizarFojos(dt);
-  // prévia do golpe na direção do mouse
-  if (ehToque && !posicionar) pontoMira.set(j.x + Math.cos(j.a) * 2, 0, j.z - Math.sin(j.a) * 2);   // no toque, o golpe vai para a frente
-  else { ray.setFromCamera(ndc, camera); ray.ray.intersectPlane(planoChao, pontoMira); }
+  // prévia do golpe: no celular acompanha o arraste no botão ⚔ (mira manual), ou trava no bicho mais perto, ou vai para a frente
+  let bTravado = null;
+  if (ehToque && !posicionar) {
+    if (mira.ativo) {
+      const wx = CIMA.x * mira.y + DIR.x * mira.x, wz = CIMA.y * mira.y + DIR.y * mira.x;
+      pontoMira.set(j.x + wx * 4, 0, j.z + wz * 4);
+    } else {
+      bTravado = bichoAlvo();
+      if (bTravado) pontoMira.set(bTravado.x, 0, bTravado.z);
+      else pontoMira.set(j.x + Math.cos(j.a) * 2, 0, j.z - Math.sin(j.a) * 2);
+    }
+  } else { ray.setFromCamera(ndc, camera); ray.ray.intersectPlane(planoChao, pontoMira); }
+  if (ehToque && bTravado && !mira.ativo && !posicionar && !j.caido) {
+    anelAlvo.visible = true; anelAlvo.position.set(bTravado.x, 0.04, bTravado.z);
+    const s = 0.8 + (ESPECIES[bTravado.tipo].l || 1.2) * 0.45; anelAlvo.scale.setScalar(s * (1 + Math.sin(t * 7) * 0.06));
+  } else anelAlvo.visible = false;
   const arma = ARMAS[armaAtual], F = FORMAS[arma.forma];
-  previa.geometry = setorGeo(F.alc, F.abre); previa.visible = !j.caido && !posicionar;
+  previa.geometry = setorGeo(F.alc, F.abre); previa.visible = !j.caido && !posicionar && (!ehToque || mira.ativo || !!bTravado || arma.tiro);
+  previa.material.opacity = mira.ativo ? 0.34 : 0.16;
   previa.position.set(j.x, 0.03, j.z); previa.rotation.y = -Math.atan2(pontoMira.z - j.z, pontoMira.x - j.x);
 }
 
@@ -3316,7 +3468,7 @@ function atualizarOutros(dt) {
     { const rel = relacaoCom(e.pid, e.tag), tag = e.tag ? '[' + e.tag + '] ' : '', txt = tag + e.nome;
       if (o.rotulo.textContent !== txt) o.rotulo.textContent = txt;
       const cor = rel === 'guilda' ? '#ffd76a' : rel === 'aliado' ? '#9fc8ff' : rel === 'amigo' ? '#9fe07a' : ''; if (o.rotulo.style.color !== cor) o.rotulo.style.color = cor; }
-    o.rotulo.style.transform = `translate(-50%,-50%) translate(${(pOutro.x * 0.5 + 0.5) * innerWidth}px,${(-pOutro.y * 0.5 + 0.5) * innerHeight}px)`;
+    o.rotulo.style.transform = `translate(-50%,-50%) translate(${(pOutro.x * 0.5 + 0.5) * telaW}px,${(-pOutro.y * 0.5 + 0.5) * telaH}px)`;
   }
   for (const [peer, o] of OUTROS) if (!vistos.has(peer)) { removerOutro(o); OUTROS.delete(peer); }
   const n = quantos(); elOnline.style.display = 'block';
@@ -3384,7 +3536,7 @@ function desenharConfig() {
   q.value = o.qualidade || 'media'; zz.value = zoom; aj.checked = !elAjuda.classList.contains('some'); qp.checked = !!o.mostrarQps; kn.value = KEN.ligado ? '1' : '0';
   const guarda = (mudou) => salvo.salvarOpcoes({ ...salvo.opcoes(), ...mudou });
   q.onchange = () => { guarda({ qualidade: q.value, qualidadeEscolhida: true }); renderer.setPixelRatio(limitePixel(q.value)); ajustar(); };
-  zz.oninput = () => { zoom = +zz.value; ajustar(); guarda({ zoom }); };
+  zz.oninput = () => { zoom = +zz.value; ajustar(); guarda({ zoom, zoomEscolhido: true }); };
   aj.onchange = () => elAjuda.classList.toggle('some', !aj.checked);
   qp.onchange = () => { elFps.style.display = qp.checked ? '' : 'none'; guarda({ mostrarQps: qp.checked }); };
   kn.onchange = () => { if ((kn.value === '1') !== KEN.ligado && KEN.pronto) { KEN.ligado = kn.value === '1'; aplicarTudo(); } };
@@ -3442,25 +3594,31 @@ desenharReceitas();
 let chegada = 0;
 try { if (sessionStorage.getItem('cap.transicao')) { sessionStorage.removeItem('cap.transicao'); chegada = 1; elVeu.style.opacity = 1; } } catch {}
 
-// controles de toque (celular e tablet): os botões apertam as mesmas teclas do computador
+// controles de toque (celular e tablet): arco ergonômico à direita, joystick flutuante à esquerda
 const TQ = criarControles({
   joystick: true,
+  arco: true,
   acoes: [
-    { nome: 'esquiva', rotulo: '↷', legenda: 'esquiva', key: ' ' }, { nome: 'usar', rotulo: 'E', legenda: 'usar', key: 'e', classe: 'grande' },
-    { nome: 'arma', rotulo: 'Q', legenda: 'arma', key: 'q', classe: 'peq' }, { nome: 'atacar', rotulo: '⚔', legenda: 'atacar', f: atacarFrente, classe: 'grande' },
+    { nome: 'esquiva', rotulo: '↷', legenda: 'esquiva', key: ' ' },
+    { nome: 'usar', rotulo: 'E', legenda: 'usar', key: 'e', classe: 'grande' },
+    { nome: 'arma', rotulo: 'Q', legenda: 'arma', key: 'q', classe: 'peq' },
+    { nome: 'atacar', rotulo: '⚔', legenda: 'atacar', f: atacarFrente, onSoltarMira: atacarDirecao, miraArraste: true, classe: 'ataque' },
   ],
   topo: [
     { nome: 'bolsa', rotulo: '◈', legenda: 'bolsa', key: 'tab' }, { nome: 'grupo', rotulo: '⚑', legenda: 'grupo', key: 'g' }, { nome: 'diario', rotulo: '✎', legenda: 'diário', key: 'j' },
     { nome: 'pausa', rotulo: '≡', legenda: 'pausa', key: 'escape' }, { nome: 'cheia', rotulo: '⛶', legenda: 'tela', f: telaCheia },
   ],
   meio: [
-    { nome: 'mobiliar', rotulo: 'B', legenda: 'mobiliar', key: 'b' }, { nome: 'girar', rotulo: '↻', legenda: 'girar', key: 'r' },
-    { nome: 'por', rotulo: '✓', legenda: 'pôr', f: () => colocarMovel() }, { nome: 'cancelar', rotulo: '✕', legenda: 'cancelar', key: 'escape' },
+    { nome: 'mobiliar', rotulo: 'B', legenda: 'mobiliar', key: 'b' },
+    { nome: 'desmontar', rotulo: '✕', legenda: 'desmontar', key: 'x' },
+    { nome: 'girar', rotulo: '↻', legenda: 'girar', key: 'r' },
+    { nome: 'por', rotulo: '✓', legenda: 'pôr', f: () => colocarMovel() },
+    { nome: 'cancelar', rotulo: '✕', legenda: 'cancelar', key: 'escape' },
   ],
 });
 if (TQ.ativo) {
-  elAjuda.innerHTML = '<b>joystick</b> anda (até a borda corre) · <b>E</b> pega e usa · <b>⚔</b> ataca para a frente, ou toque no chão para atacar ali · <b>↷</b> esquiva<br><b>◈</b> bolsa e oficina · <b>✎</b> diário · toque num atalho da barra para escolher · dentro de casa, <b>B</b> mobilia';
-  setTimeout(() => avisos.novo('controles', 'Controles', elAjuda.innerHTML + '<br><b>dois dedos</b> na tela aproximam e afastam a câmera', { fechado: true }), 60);
+  elAjuda.innerHTML = '<b>joystick flutuante</b> anda (borda dourada corre) · <b>E</b> pega e usa · <b>⚔</b> toque para auto-mirar ou arraste para mirar (arco/golpe) · <b>↷</b> esquiva<br><b>◈</b> bolsa e oficina · <b>segurar na barra</b> tira o item · <b>dois dedos</b> dão zoom · dentro de casa, <b>B</b> mobilia';
+  setTimeout(() => avisos.novo('controles', 'Controles', elAjuda.innerHTML, { fechado: true }), 60);
 }
 camera.position.set(jogador.x, 0, jogador.z).add(OFF);
 quadro();

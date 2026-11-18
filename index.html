@@ -1,4 +1,48 @@
 <!doctype html>
-<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Procurados</title><style>html,body{margin:0;height:100%;background:#1f2a33}</style></head>
-<body><script>location.replace('menu.html');</script></body></html>
+<html lang="pt-BR"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Procurados</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#2b1d0e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Procurados">
+<link rel="apple-touch-icon" href="icones/icone-180.png">
+<link rel="icon" href="icones/icone-192.png">
+<style>
+  html,body{margin:0;padding:0;width:100%;height:100%;height:100dvh;overflow:hidden;background:#1f2a33;overscroll-behavior:none}
+  #jogo{position:fixed;inset:0;width:100%;height:100%;border:0;display:block;background:#1f2a33}
+  #sa{position:fixed;top:0;left:0;width:0;height:0;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
+</style>
+</head>
+<body>
+<div id="sa"></div>
+<iframe id="jogo" src="menu.html" title="Procurados" allow="fullscreen; autoplay" allowfullscreen></iframe>
+<script>
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+    addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+  }
+  window.__instalarPrompt = null;
+  addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); window.__instalarPrompt = e; try { jogo.contentWindow?.dispatchEvent(new Event('cap-instalar-pronto')); } catch {} });
+  const jogo = document.getElementById('jogo'), sa = document.getElementById('sa');
+  if (location.search) jogo.src = 'menu.html' + location.search;
+  function passarSafeArea() {
+    try {
+      const d = jogo.contentDocument?.documentElement; if (!d) return;
+      const cs = getComputedStyle(sa);
+      d.style.setProperty('--sa-top', cs.paddingTop || '0px');
+      d.style.setProperty('--sa-right', cs.paddingRight || '0px');
+      d.style.setProperty('--sa-bottom', cs.paddingBottom || '0px');
+      d.style.setProperty('--sa-left', cs.paddingLeft || '0px');
+    } catch {}
+  }
+  const reagir = () => { passarSafeArea(); setTimeout(passarSafeArea, 180); setTimeout(passarSafeArea, 420); };
+  jogo.addEventListener('load', reagir);
+  addEventListener('resize', reagir);
+  addEventListener('orientationchange', reagir);
+  window.visualViewport?.addEventListener('resize', reagir);
+  reagir();
+</script>
+</body></html>

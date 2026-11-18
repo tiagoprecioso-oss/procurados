@@ -14,7 +14,7 @@ export function criarAvisos() {
   @keyframes avisoPulsa { 50% { transform: scale(1.14); box-shadow: 0 0 0 5px rgba(255, 200, 60, .35); } }
   #avisosPainel { position: fixed; inset: 0; z-index: 30; display: none; place-items: center; background: rgba(15, 10, 5, .55); }
   #avisosPainel.aberto { display: grid; }
-  #avisosPainel .caixa { position: relative; width: min(560px, 94vw); max-height: 82vh; overflow: auto; background: #f4e8cd; color: #2b1d0e; border: 3px solid #5e3a1e; border-radius: 10px; padding: 14px 16px 16px; font: 15px/1.5 var(--fonte-texto, Georgia, serif); }
+  #avisosPainel .caixa { position: relative; width: min(560px, 94vw); max-height: calc(100dvh - 24px); overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; background: #f4e8cd; color: #2b1d0e; border: 3px solid #5e3a1e; border-radius: 10px; padding: 14px 16px 16px; font: 15px/1.5 var(--fonte-texto, Georgia, serif); }
   #avisosPainel h2 { margin: 0 40px 8px 0; font: 26px var(--fonte-titulo, Georgia, serif); font-weight: normal; }
   #avisosPainel .fecharAv { position: absolute; right: 8px; top: 8px; width: 40px; height: 40px; border-radius: 50%; border: 2px solid #f4e8cd; background: #5e3a1e; color: #f4e8cd; font: bold 20px sans-serif; cursor: pointer; }
   #avisosPainel .item { border-top: 1px solid rgba(94, 58, 30, .3); padding: 8px 2px; }
@@ -23,7 +23,7 @@ export function criarAvisos() {
   #avisosPainel .item .corpo { margin-top: 4px; font-size: 14px; }
   #avisosPainel .item.fechado .corpo { display: none; }
   #avisosPainel .vazio { opacity: .7; }
-  html.toque #avisosBt { left: 10px; top: 100px; width: 34px; height: 34px; }`;
+  html.toque #avisosBt { left: max(10px, var(--sa-left, env(safe-area-inset-left, 0px))); top: calc(max(8px, var(--sa-top, env(safe-area-inset-top, 0px))) + 88px); width: 36px; height: 36px; }`;
   document.head.appendChild(estilo);
   const bt = document.createElement('button'); bt.id = 'avisosBt'; bt.setAttribute('aria-label', 'Avisos');
   bt.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h11a2 2 0 0 1 2 2v13a3 3 0 0 1-3 3H7"/><path d="M6 3a2 2 0 0 0-2 2v2h4V5a2 2 0 0 0-2-2z"/><path d="M8 7v11a3 3 0 0 1-3 3"/><path d="M11 8h5M11 12h5M11 16h3"/></svg><span class="qt"></span>';

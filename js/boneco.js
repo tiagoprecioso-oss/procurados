@@ -79,7 +79,8 @@ export const salvo = {
   progresso: () => ler('progresso'), salvarProgresso: (v) => gravar('progresso', v),
   opcoes: () => {
     const o = { ...OPCOES_PADRAO, ...(ler('opcoes') || {}) };
-    if (TOQUE && !o.v2) { if (!o.qualidadeEscolhida) o.qualidade = 'media'; if (!o.zoom || o.zoom < 1.8) delete o.zoom; o.v2 = true; gravar('opcoes', o); }   // 18/11: celular mais nítido e câmera mais perto
+    if (TOQUE && !o.v2) { if (!o.qualidadeEscolhida) o.qualidade = 'media'; if (!o.zoom || o.zoom < 1.8) delete o.zoom; o.v2 = true; gravar('opcoes', o); }
+    if (TOQUE && !o.v3) { if (!o.zoomEscolhido) delete o.zoom; o.v3 = true; gravar('opcoes', o); }   // zoom padrão 1,55 no celular (mais campo de visão)
     return o;
   }, salvarOpcoes: (v) => gravar('opcoes', v),
   apagarTudo: () => { gravar('jogador', null); gravar('progresso', null); },

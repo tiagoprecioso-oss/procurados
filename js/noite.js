@@ -37,7 +37,7 @@ export function criarVeu(z = 5) {
   let ultimo = '';
   function desenhar(luzes = [], h = hora()) {
     const { e, crepusculo } = corVeu(h);
-    const L = Math.round(innerWidth / 2), A = Math.round(innerHeight / 2);   // meia resolução: o véu é borrado mesmo
+    const L = Math.round((window.visualViewport?.width || innerWidth) / 2), A = Math.round((window.visualViewport?.height || innerHeight) / 2);   // meia resolução: o véu é borrado mesmo
     if (cv.width !== L || cv.height !== A) { cv.width = L; cv.height = A; }
     const chave = e.toFixed(3) + crepusculo.toFixed(3) + luzes.map((l) => `${l.x | 0},${l.y | 0},${l.r | 0},${(l.ry || l.r) | 0},${(l.forca || 1).toFixed(2)}`).join(';');
     if (chave === ultimo) return; ultimo = chave;
