@@ -69,3 +69,6 @@ export const mural = (cidade) => rpc('mural', { p_cidade: cidade });
 // feitos lendários: o primeiro da cidade a derrubar cada chefe (ferramentas/supabase-feitos.sql)
 export const registrarFeito = async (feito) => { await registrar(); return rpc('registrar_feito', { p_codigo: cod(), p_feito: feito }); };
 export const feitosCidade = (cidade) => rpc('feitos_cidade', { p_cidade: cidade });
+// cerco à Fortaleza (DESIGN 7b-2): a vida do chefe mora no servidor
+export const cercoEstado = async () => { await registrar(); return rpc('cerco_estado', { p_codigo: cod() }); };
+export const golpearChefe = (dano) => rpc('golpear_chefe', { p_codigo: cod(), p_dano: Math.floor(dano) });
