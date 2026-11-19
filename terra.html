@@ -50,10 +50,10 @@
   #gradeBolsa .slot.combina { box-shadow: 0 0 0 3px #5f8a3a; }
   #oficina button .ic { grid-row: span 2; width: 40px; height: 40px; border-radius: 5px; border: 2px solid; display: grid; place-items: center; }
   #oficina button .ic img { width: 36px; height: 36px; }
-  #oficina .ingr { display: flex; flex-wrap: wrap; gap: 4px; font-size: 11px; }
+  #oficina .ingr { display: flex; flex-wrap: wrap; gap: 5px; font-size: 13px; font-weight: 600; }
   #oficina .ingr span { display: inline-flex; align-items: center; gap: 1px; padding: 0 3px 0 0; border-radius: 3px; background: rgba(94,58,30,.1); }
   #oficina .ingr span.falta { color: #a8221a; background: rgba(192,40,28,.12); }
-  #oficina .ingr img { width: 18px; height: 18px; }
+  #oficina .ingr img { width: 30px; height: 30px; }
   #bolsa { bottom: 14px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; padding: 9px 8px 7px; z-index: 8; }
   #bolsa .slot.livre { border: 2px dashed rgba(94,58,30,.35); background: rgba(255,255,255,.25); }
   #bolsa .slot { transition: transform .12s, box-shadow .12s; cursor: pointer; }
@@ -108,7 +108,7 @@
   #ficha h4 { margin: 10px 0 4px; font-size: 11px; letter-spacing: .1em; opacity: .75; }
   #ficha ul { margin: 0; padding-left: 16px; }
   #ficha .receita { display: flex; align-items: center; gap: 4px; margin: 3px 0; }
-  #ficha .receita img { width: 22px; height: 22px; }
+  #ficha .receita img { width: 32px; height: 32px; }
   #ficha .receita .seta { opacity: .6; margin: 0 2px; }
   #dica { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); font-size: 15px; display: none; pointer-events: none; padding: 6px 16px; border-radius: 20px;
     background: rgba(15,10,5,.5); color: #fff3d6; text-shadow: 0 1px 2px #000; }
@@ -186,7 +186,7 @@
   #ferreiroPausa h3 { display: flex; align-items: center; gap: 8px; margin: 0; font: 22px var(--fonte-titulo); } #ferreiroPausa .nv { color: #c9a227; }
   #ferreiroPausa .pips { display: flex; gap: 6px; margin: 6px 0; } #ferreiroPausa .pips i { width: 26px; height: 8px; border-radius: 4px; background: rgba(94,58,30,.2); }
   #ferreiroPausa .pips i.on { background: #c9a227; } #ferreiroPausa .pips i.marca { outline: 2px solid rgba(94,58,30,.35); }
-  #ferreiroPausa .custo { display: flex; flex-wrap: wrap; gap: 6px; font-size: 12px; margin: 4px 0; } #ferreiroPausa .custo span { display: inline-flex; align-items: center; gap: 2px; }
+  #ferreiroPausa .custo { display: flex; flex-wrap: wrap; gap: 8px; font-size: 14px; margin: 4px 0; } #ferreiroPausa .custo span { display: inline-flex; align-items: center; gap: 2px; }
   #ferreiroPausa .custo .falta { color: #8a2a1a; } #ferreiroPausa .custo .tem { color: #3f6a2a; }
   #ferreiroPausa .bt { display: inline-block !important; width: auto !important; padding: 5px 14px !important; font-size: 15px !important; margin: 4px 0 !important; }
   #ferreiroPausa .infs { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
@@ -1144,7 +1144,7 @@ RECEITAS.forEach((r) => {
 const icone = (id, tam) => ICONES[id] ? `<img src="${ICONES[id]}" alt="" width="${tam}" height="${tam}">` : '';
 const molduraNivel = (id) => { const n = NIVEIS[ITENS[id]?.nivel || 1]; return `border-color:${n.cor};background:${n.fundo};--nv:${n.cor}`; };
 function conteudoBotao(r) {
-  const ingr = Object.entries(r.pede).map(([k, n]) => `<span class="${ter(k, n) ? '' : 'falta'}" data-item="${k}">${icone(k, 18) || NOMES[k]}${bolsa[k] || 0}/${n}</span>`).join('');
+  const ingr = Object.entries(r.pede).map(([k, n]) => `<span class="${ter(k, n) ? '' : 'falta'}" data-item="${k}">${icone(k, 30) || NOMES[k]}${bolsa[k] || 0}/${n}</span>`).join('');
   const trava = typeof xpPronto !== 'undefined' && xpPronto && nivel() < nivelPedido(r.id) ? `<span class="travaNv">pede Nv ${nivelPedido(r.id)}</span>` : '';
   return `<span class="ic" style="${molduraNivel(r.id)}">${icone(r.id, 36)}</span><b>${r.nome}</b><span class="ingr">${ingr}</span>${trava}`;
 }
@@ -1355,7 +1355,7 @@ function mostrarFicha(id, perto, fixa = false) {
   const it = ITENS[id]; if (!it) return;
   if (fixa) fichaFixa = id; else if (fichaFixa) return;
   const n = NIVEIS[it.nivel], usos = usosDe(id, RECEITAS), cozinha = COZINHA.filter((c) => c.de === id), vemDe = RECEITAS.find((r) => r.id === id);
-  const linhaReceita = (r) => `<div class="receita">${Object.entries(r.pede).map(([k, q]) => `${icone(k, 22)}<small>×${q}</small>`).join(' ')}<span class="seta">→</span>${icone(r.id, 22)}<b>${r.nome}</b></div>`;
+  const linhaReceita = (r) => `<div class="receita">${Object.entries(r.pede).map(([k, q]) => `${icone(k, 32)}<small>×${q}</small>`).join(' ')}<span class="seta">→</span>${icone(r.id, 32)}<b>${r.nome}</b></div>`;
   elFicha.innerHTML = `<div class="topo"><div class="grande" style="${molduraNivel(id)}">${icone(id, 66)}</div>
       <div><h3>${it.nome}</h3><span class="nivel" style="background:${n.cor}">${n.nome}</span><span class="tipo">${it.tipo}</span>${bolsa[id] ? `<div style="font-size:11px;margin-top:3px">na bolsa: <b>${bolsa[id]}</b></div>` : ''}</div></div>
     ${fixa ? acoesDaFicha(id) : ''}
@@ -1363,7 +1363,7 @@ function mostrarFicha(id, perto, fixa = false) {
     ${it.efeito ? `<div class="efeito">${it.efeito}</div>` : ''}
     ${ESTRAGA[id] ? `<div class="efeito" style="background:#e9e2b8">Estraga: 1 a cada ${ESTRAGA[id]} min na bolsa${bolsa[id] ? ` · a próxima em uns ${tempoEstraga(id)} min` : ''} (o baú conserva)</div>` : ''}
     ${it.serve ? `<h4>PARA QUE SERVE</h4><ul>${it.serve.map((x) => `<li>${x}</li>`).join('')}</ul>` : ''}
-    ${usos.length || cozinha.length ? `<h4>DÁ PARA FAZER</h4>${usos.map(linhaReceita).join('')}${cozinha.map((c) => `<div class="receita">${icone(c.de, 22)}<span class="seta">→ fogueira →</span>${icone(c.vira, 22)}<b>${NOMES[c.vira]}</b></div>`).join('')}` : ''}
+    ${usos.length || cozinha.length ? `<h4>DÁ PARA FAZER</h4>${usos.map(linhaReceita).join('')}${cozinha.map((c) => `<div class="receita">${icone(c.de, 32)}<span class="seta">→ fogueira →</span>${icone(c.vira, 32)}<b>${NOMES[c.vira]}</b></div>`).join('')}` : ''}
     ${vemDe ? `<h4>COMO FAZER</h4>${linhaReceita(vemDe)}` : ''}
     ${conjuntoDe(id) ? (() => { const k = conjuntoDe(id), C = CONJUNTOS[k], n = pecasDoConjunto(k); return `<h4>CONJUNTO: ${C.nome.toUpperCase()} (${Math.min(n, 3)}/3)</h4><div class="efeito" style="background:${n >= 3 ? '#d8ecc4' : '#ece4cf'}">3 peças: ${C.bonus}</div><div style="font-size:11px">Peças: ${C.pecas.map((p) => (Object.values(vestido).includes(p) || (p === 'sabreRei' && armaNaMao() === p) ? '✓ ' : '') + NOMES[p]).join(' · ')}</div>`; })() : ''}
     <h4>ONDE ACHAR</h4><div>${it.onde}</div>`;
@@ -1398,7 +1398,7 @@ const INFUSOES = {
 const bonusArma = (id) => 1 + 0.1 * melhoria(id) + (infusoes[id] === 'real' ? 0.2 : 0);
 const pertoDoFerreiro = () => objetos.some((o) => o.ativo && (o.tipo === 'forja' || o.tipo === 'bancada') && Math.hypot(o.x - jogador.x, o.z - jogador.z) < 4.4);
 const temCusto = (c) => Object.entries(c).every(([k, q]) => ter(k, q));
-const textoCusto = (c) => Object.entries(c).map(([k, q]) => `<span class="${ter(k, q) ? 'tem' : 'falta'}">${icone(k, 18)}${bolsa[k] || 0}/${q} ${NOMES[k].toLowerCase()}</span>`).join(' ');
+const textoCusto = (c) => Object.entries(c).map(([k, q]) => `<span class="${ter(k, q) ? 'tem' : 'falta'}">${icone(k, 30)}${bolsa[k] || 0}/${q} ${NOMES[k].toLowerCase()}</span>`).join(' ');
 function melhorarArma(id) {
   const n = melhoria(id); if (n >= NIVEL_MAX_ARMA) return avisar('Esta arma já está no máximo.');
   if (!pertoDoFerreiro()) return avisar('Melhorar arma só perto de uma forja ou bancada.');
@@ -2230,7 +2230,7 @@ let lugarAtual = '';
 // ---------- telas do lote, da mobília e do baú (o mundo espera, como na bolsa)
 const elLote = document.getElementById('painelLote'), elBau = document.getElementById('painelBau'), elMoveis = document.getElementById('painelMoveis');
 elLote.querySelector('.sub').textContent = 'Na beira de ' + CIDADE.nome + ' · ' + CIDADE.regiao + '. Cada degrau melhora o lote e soma para a cidade.';
-const listaPede = (pede) => `<div class="pede">${Object.entries(pede).map(([k, n]) => `<span class="${ter(k, n) ? '' : 'falta'}" data-item="${k}">${icone(k, 24) || NOMES[k]}${bolsa[k] || 0}/${n}</span>`).join('')}</div>`;
+const listaPede = (pede) => `<div class="pede">${Object.entries(pede).map(([k, n]) => `<span class="${ter(k, n) ? '' : 'falta'}" data-item="${k}">${icone(k, 32) || NOMES[k]}${bolsa[k] || 0}/${n}</span>`).join('')}</div>`;
 const temTudo = (pede) => Object.entries(pede).every(([k, n]) => ter(k, n));
 const podeDegrau = (d) => temTudo(d.pede) && nivel() >= (d.nivel || 1) && patacos >= (d.patacos || 0);
 function desenharLote() {
