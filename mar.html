@@ -44,6 +44,8 @@
   #mapa canvas { display: block; border-radius: 2px; filter: sepia(.35) saturate(.85); }
   #aviso { top: 120px; left: 50%; transform: translateX(-50%); font-size: 17px; opacity: 0; transition: opacity .3s; background: rgba(15,10,5,.55) !important; border: none !important;
     color: #fff3d6; text-shadow: 0 1px 2px #000; border-radius: 20px; padding: 7px 18px; }
+  #xpMar { position: fixed; top: 168px; left: 50%; transform: translateX(-50%); z-index: 6; pointer-events: none; opacity: 0; transition: opacity .4s;
+    font: 600 15px Palatino, 'Palatino Linotype', serif; color: #9fe07a; text-shadow: 0 1px 2px #000, 0 0 6px rgba(0,0,0,.6); }
   #rotulos { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
   .rot { position: absolute; left: 0; top: 0; white-space: nowrap; font-size: 15px; padding: 1px 10px; border-radius: 12px; background: rgba(15,10,5,.42); color: #fff3d6;
     text-shadow: 0 1px 2px #000; will-change: transform; }
@@ -612,8 +614,9 @@ function quadro() {
   elAgulha.style.transform = `rotate(${90 - estado.rumo * 180 / Math.PI}deg)`;   // 0° = norte, sentido horário
   if (t > avisoAte) elAviso.style.opacity = 0;
   desenharMini();
+  if (typeof atualizarAchadosMar === 'function' && achadosMar) atualizarAchadosMar();
   const dPraia = Math.hypot(estado.x - PRAIA.xAgua, estado.z - PRAIA.z), perto = dPraia < 45 && Math.abs(estado.vel) < 3;
-  const dica = partida ? '' : perto ? '<b>E</b> desembarcar na sua praia' : dPraia < 120 ? 'sua praia fica logo ali' : '';
+  const dica = partida ? '' : achadoPerto ? `<b>E</b> ${achadoPerto.id === 'naufragio' ? 'mergulhar no naufrágio' : 'puxar o baú para a jangada'}` : perto ? '<b>E</b> desembarcar na sua praia' : dPraia < 120 ? 'sua praia fica logo ali' : '';
   if (elDica.innerHTML !== dica) { elDica.innerHTML = dica; elDica.style.display = dica ? 'block' : 'none'; }
   podeDesembarcar = perto;
   if (chegada > 0) { chegada = Math.max(0, chegada - dt / 1.6); elVeu.style.opacity = Math.min(1, chegada * 1.4); }
@@ -663,6 +666,7 @@ function salvarMar() {
 addEventListener('beforeunload', salvarMar);
 addEventListener('keydown', (e) => {
   if (e.key.toLowerCase() !== 'e' || e.repeat || partida) return;
+  if (achadoPerto) { pegarAchadoMar(achadoPerto); return; }
   if (!podeDesembarcar) { if (Math.max(...[0, 1, 2, 3].map((q) => amostra(S, estado.x + Math.cos(q * 1.57) * 15, estado.z + Math.sin(q * 1.57) * 15))) > 0) avisar('Esta terra ainda não foi mapeada: por enquanto, só a sua praia.', t); return; }
   salvo.salvarProgresso({ ...(salvo.progresso() || {}), local: 'terra', mar: null, chegouDoMar: true });
   try { sessionStorage.setItem('cap.transicao', 'mar-terra'); } catch {}
@@ -683,8 +687,75 @@ const TQ = criarControles({
   ],
 });
 if (TQ.ativo) { elAjudaMar.innerHTML = '<b>◀ ▶</b> leme · <b>▲ ▼</b> içar e baixar a vela · <b>E</b> perto da sua praia: desembarcar · <b>arraste</b> no mar para girar a câmera'; elAjudaMar.style.pointerEvents = 'auto'; elAjudaMar.addEventListener('click', () => elAjudaMar.classList.add('some')); }
+
+// =====================================================================
+// XP E ACHADOS NO MAR (19/11). O XP é o mesmo da terra (progresso.xp): velejar rende 1 XP a cada 80 m,
+// descobrir um lugar da baía rende 25 (uma vez cada, progresso.lugaresMar) e os achados rendem 60.
+// ACHADOS: dobrões de prata no mar (DESIGN 9f), contados junto com os da terra (progresso.dobroes).
+// =====================================================================
+const elXpMar = document.createElement('div'); elXpMar.id = 'xpMar'; document.body.appendChild(elXpMar);
+let xpMarAte = 0, xpAcumulado = 0, xpDist = 0, ultX = estado.x, ultZ = estado.z;
+function ganharXPMar(n, motivo) {
+  const p = salvo.progresso() || {};
+  salvo.salvarProgresso({ ...p, xp: (typeof p.xp === 'number' ? p.xp : 0) + n });
+  xpAcumulado += n; elXpMar.textContent = `+${xpAcumulado} XP${motivo ? ' · ' + motivo : ''}`; elXpMar.style.opacity = 1; xpMarAte = t + 2.5;
+}
+const vistosMar = new Set(PROG.lugaresMar || []);
+function descobrirLugar(nome) {
+  if (vistosMar.has(nome)) return; vistosMar.add(nome);
+  const p = salvo.progresso() || {}; salvo.salvarProgresso({ ...p, lugaresMar: [...vistosMar] });
+  ganharXPMar(25, 'descobriu ' + nome);
+}
+// [id, nome, x, z, o que diz ao achar]; o ponto anda até achar água funda (a jangada precisa chegar)
+const ACHADOS_MAR = [
+  ['naufragio', 'Naufrágio das Cagarras', -440, 1290, 'Você mergulhou no casco afundado e achou um dobrão de prata preso nas tábuas.'],
+  ['paqueta', 'Baú boiando em Paquetá', 405, -700, 'Um baú velho boiava na enseada. Dentro, um dobrão de prata embrulhado em pano.'],
+];
+function aguaFunda(x, z) {
+  for (let r = 0; r < 160; r += 6) for (let a = 0; a < 6.28; a += 0.5) { const px = x + Math.cos(a) * r, pz = z + Math.sin(a) * r; if (amostra(S, px, pz) < -8) return [px, pz]; }
+  return [x, z];
+}
+const achadosMar = ACHADOS_MAR.map(([id, nome, x0, z0, fala]) => {
+  const [x, z] = aguaFunda(x0, z0), g = new THREE.Group();
+  const madeira = new THREE.MeshLambertMaterial({ color: '#5e3a1e', flatShading: true });
+  if (id === 'naufragio') {   // casco adernado saindo da água e o mastro quebrado
+    const casco = new THREE.Mesh(new THREE.BoxGeometry(9, 2.2, 3.2), madeira); casco.position.y = -0.4; casco.rotation.set(0.35, 0.6, 0.25); g.add(casco);
+    const mastro = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.22, 7, 6), madeira); mastro.position.set(1, 2.4, 0.4); mastro.rotation.z = 0.5; g.add(mastro);
+  } else {
+    const bau = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.9, 1.0), madeira); bau.position.y = 0.2; bau.rotation.y = 0.4; g.add(bau);
+    const tampa = new THREE.Mesh(new THREE.BoxGeometry(1.45, 0.25, 1.05), new THREE.MeshLambertMaterial({ color: '#8a5a2b', flatShading: true })); tampa.position.y = 0.75; tampa.rotation.y = 0.4; g.add(tampa);
+  }
+  const brilho = new THREE.Mesh(new THREE.RingGeometry(3.5, 4.4, 28).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#f4fbff', transparent: true, opacity: 0.5, depthWrite: false }));
+  brilho.position.y = 0.4; g.add(brilho);
+  g.position.set(x, 0, z); cena.add(g);
+  const achado = ((PROG.dobroes || {}).achados || []).includes(id);
+  if (achado) brilho.visible = false;
+  return { id, nome, x, z, fala, g, brilho, achado, el: rotulo(nome) };
+});
+let achadoPerto = null;
+function atualizarAchadosMar() {
+  // XP por distância velejada
+  xpDist += Math.hypot(estado.x - ultX, estado.z - ultZ); ultX = estado.x; ultZ = estado.z;
+  if (xpDist >= 80) { const n = Math.floor(xpDist / 80); xpDist -= n * 80; ganharXPMar(n, 'velejando'); }
+  if (t > xpMarAte && elXpMar.style.opacity !== '0') { elXpMar.style.opacity = 0; xpAcumulado = 0; }
+  const [nome] = ondeEstou(); if (LUGARES.some((l) => l[0] === nome)) descobrirLugar(nome);
+  achadoPerto = null;
+  for (const a of achadosMar) {
+    a.g.position.y = alturaOnda(a.x, a.z, t) * 0.6; a.brilho.scale.setScalar(1 + 0.12 * Math.sin(t * 3)); a.brilho.material.opacity = a.achado ? 0 : 0.3 + 0.2 * Math.sin(t * 3);
+    fixar(a.el, a.x, 9, a.z, 260);
+    if (!a.achado && Math.hypot(estado.x - a.x, estado.z - a.z) < 22 && Math.abs(estado.vel) < 3) achadoPerto = a;
+  }
+}
+function pegarAchadoMar(a) {
+  a.achado = true; a.brilho.visible = false;
+  const p = salvo.progresso() || {}, d = { tem: 0, achados: [], compras: {}, bauDia: '', chefe: false, ...(p.dobroes || {}) };
+  d.achados = [...(d.achados || []), a.id]; d.tem = (d.tem || 0) + 1;
+  salvo.salvarProgresso({ ...p, dobroes: d });
+  avisar(a.fala + ' (Dobrão de Prata: troque em Esc › Dobrões, na terra.)', t + 3);
+  ganharXPMar(60, a.nome);
+}
 quadro();
-window.__jogo = { estado, cam, npcs, amostra, S, A, PRAIA, get podeDesembarcar() { return podeDesembarcar; } };   // para testes no console
+window.__jogo = { estado, cam, npcs, amostra, S, A, PRAIA, achadosMar, get achadoPerto() { return achadoPerto; }, pegarAchadoMar, get podeDesembarcar() { return podeDesembarcar; } };   // para testes no console
 </script>
 </body>
 </html>
