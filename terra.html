@@ -1364,6 +1364,29 @@ function destacarCombina(id) {   // ao escolher um item, os que combinam com ele
 }
 function esconderFicha() { if (typeof destacarCombina === 'function') destacarCombina(null); elFicha.style.display = 'none'; elFicha.classList.remove('fixa'); fichaFixa = null; }
 // botões da ficha fixa: usar ou consumir, combinar com o que dá, pôr na barra
+// ---------- MELHORIA DE ARMAS (18/11): +1 a +3 na forja
+const melhorias = {};
+const melhoria = (id) => melhorias[id] || 0;
+const CUSTO_MELHORIA = [null, { barraFerro: 1, carvao: 2 }, { barraFerro: 2, garraOnca: 2 }, { barraFerro: 3, escamaRei: 1 }];
+const EFEITO_ARMA = (id) => ['machado', 'borduna', 'machadoLuta'].includes(id) ? 'atordoa' : ['lanca', 'arco', 'besta'].includes(id) ? 'veneno' : 'sangra';
+const NOME_EFEITO = { sangra: 'sangramento (o bicho perde vida por 4 s)', atordoa: 'atordoar (o bicho fica parado 1,2 s)', veneno: 'veneno (o bicho perde vida por 5 s)' };
+function melhorarArma(id) {
+  const n = melhoria(id); if (n >= 3) return avisar('Esta arma já está no máximo (+3).');
+  if (!pertoDeForja()) return avisar('Melhorar arma só perto de uma forja.');
+  const c = CUSTO_MELHORIA[n + 1]; if (!Object.entries(c).every(([k, q]) => ter(k, q))) return avisar('Falta: ' + Object.entries(c).filter(([k, q]) => !ter(k, q)).map(([k, q]) => q + ' ' + NOMES[k].toLowerCase()).join(', '));
+  for (const [k, q] of Object.entries(c)) tirar(k, q);
+  melhorias[id] = n + 1;
+  flutuar(`${NOMES[id]} +${n + 1}!`, jogador.x, 2.4, jogador.z, '#ffd27a', 2.2);
+  if (n + 1 === 3) { elSubiu.innerHTML = `<small>Arma no máximo</small><b>${NOMES[id]} +3</b><span>Ganhou ${NOME_EFEITO[EFEITO_ARMA(id)]}.</span>`; elSubiu.classList.remove('mostra'); void elSubiu.offsetWidth; elSubiu.classList.add('mostra'); }
+  salvar(); mostrarFicha(id, document.getElementById('bolsa'), true);
+}
+// o efeito do +3 no bicho atingido
+function efeitoArma(b, id) {
+  if (melhoria(id) < 3 || !b.vivo) return;
+  const e = EFEITO_ARMA(id);
+  if (e === 'atordoa') b.preso = Math.max(b.preso || 0, 1.2);
+  else { b.dot = { t: e === 'veneno' ? 5 : 4, dps: e === 'veneno' ? 2 : 3, acc: 0, cor: e === 'veneno' ? '#9fe07a' : '#ff6b5a' }; }
+}
 function acoesDaFicha(id) {
   const it = ITENS[id], b = [];
   if (USAVEIS[id] && bolsa[id]) b.push(`<button data-acao="usar">${/Comida/.test(it.tipo) ? 'Consumir' : 'Usar'}</button>`);
@@ -1372,6 +1395,10 @@ function acoesDaFicha(id) {
     if (c.a !== id && c.b !== id) continue;
     const outro = c.a === id ? c.b : c.a, pode = ter(id, outro === id ? 2 : 1) && ter(outro, outro === id ? 2 : 1);
     b.push(`<button data-acao="combinar" data-outro="${outro}" ${pode ? '' : 'disabled'}>Combinar com ${NOMES[outro].toLowerCase()} → ${NOMES[c.vira].toLowerCase()}</button>`);
+  }
+  if (ARMAS[id] && id !== 'maos' && bolsa[id]) {   // melhoria na forja
+    const n = melhoria(id);
+    b.push(n >= 3 ? `<button disabled>${NOMES[id]} +3 (máximo)</button>` : `<button data-acao="melhorar" ${pertoDeForja() ? '' : 'disabled'} title="+15% de dano${n === 2 ? ' e ' + NOME_EFEITO[EFEITO_ARMA(id)] : ''}">Melhorar para +${n + 1} (${Object.entries(CUSTO_MELHORIA[n + 1]).map(([k, q]) => q + ' ' + NOMES[k].toLowerCase()).join(', ')})${pertoDeForja() ? '' : ' · perto da forja'}</button>`);
   }
   if (ATALHAVEL(id) && bolsa[id] && !atalhos.includes(id)) b.push('<button data-acao="barra">Pôr na barra</button>');
   else if (atalhos.includes(id)) b.push('<button data-acao="tirarBarra">Tirar da barra</button>');
@@ -1382,6 +1409,7 @@ elFicha.addEventListener('click', (e) => {
   if (bt.dataset.acao === 'fechar') return esconderFicha();
   if (bt.dataset.acao === 'usar' && USAVEIS[id]) USAVEIS[id]();
   if (bt.dataset.acao === 'vestir') vestir(id);
+  if (bt.dataset.acao === 'melhorar') return melhorarArma(id);
   if (bt.dataset.acao === 'combinar') combinar(id, bt.dataset.outro);
   if (bt.dataset.acao === 'barra') { const j = atalhos.indexOf(null); if (j >= 0) { atalhos[j] = id; desenharBolsa(); } else avisar('A barra está cheia: tire um item dela antes.'); }
   if (bt.dataset.acao === 'tirarBarra') { const j = atalhos.indexOf(id); if (j >= 0) { atalhos[j] = null; armaAtual = armaDoAtivo(); desenharBolsa(); } }
@@ -2965,7 +2993,7 @@ function quadro() {
   // mira: o objeto mais perto acende o contorno
   const novo = maisPerto();
   if (novo !== alvo) {
-    const pinta = (o, cor) => { o.contorno.uniforms.uCor.value.set(cor); if (o.contornoK) o.contornoK.uniforms.uCor.value.set(cor); };
+    const pinta = (o, cor) => { o.contorno?.uniforms?.uCor.value.set(cor); o.contornoK?.uniforms?.uCor.value.set(cor); };   // objeto sem contorno (ex.: forja do estúdio) não quebra o laço
     if (alvo) pinta(alvo, TRACO); alvo = novo; if (alvo) pinta(alvo, '#ffd23f');
   }
   TQ.mostrar('mobiliar', naCasaDentro(j.x, j.z) && !posicionar);
@@ -3271,12 +3299,12 @@ function atacar() {
     const mun = arma.municao || 'flecha';
     if (!ter(mun)) { avisar(mun === 'virote' ? 'Sem virotes. Faça na forja (barra de ferro e galhos).' : 'Sem flechas. Faça na oficina (galho e pedra lascada).'); return; }
     tirar(mun); j.a = -ang; recargaAtaque = arma.recarga * (1 - 0.04 * atr('rapido')); j.acao = { nome: 'Interact', t: 0, dur: 0.4 };
-    atirar(ang, Math.round(arma.dano * (1 + vesteSoma('dano')) * (1 + 0.03 * (nivelDe('luta') - 1)) * (1 + 0.05 * atr('forca')) * (buff('forte') ? 1.15 : 1)), { mun, alc: arma.alc || 11, vel: mun === 'virote' ? 23 : 18 }); return;
+    atirar(ang, Math.round(arma.dano * (1 + vesteSoma('dano')) * (1 + 0.03 * (nivelDe('luta') - 1)) * (1 + 0.05 * atr('forca')) * (buff('forte') ? 1.15 : 1) * (1 + 0.15 * melhoria(armaAtual))), { mun, alc: arma.alc || 11, vel: mun === 'virote' ? 23 : 18 }); return;
   }
   j.a = -ang; recargaAtaque = arma.recarga * (1 - 0.04 * atr('rapido'));
   j.acao = { nome: '1H_Melee_Attack_Chop', t: 0, dur: Math.max(0.45, arma.prep + 0.25) };
   marcar(golpeDe(arma.forma, j.x, j.z, ang), arma.prep, '#ffd23f', (g) => {
-    for (const b of bichos) if (b.vivo && b.malha.visible && noGolpe(g, b.x, b.z, 0.25 + (ESPECIES[b.tipo].l || 1.3) * 0.25)) ferirBicho(b, Math.round(arma.dano * (1 + vesteSoma('dano')) * (1 + 0.03 * (nivelDe('luta') - 1)) * (1 + 0.05 * atr('forca')) * (buff('forte') ? 1.15 : 1)), d);
+    for (const b of bichos) if (b.vivo && b.malha.visible && noGolpe(g, b.x, b.z, 0.25 + (ESPECIES[b.tipo].l || 1.3) * 0.25)) ferirBicho(b, Math.round(arma.dano * (1 + vesteSoma('dano')) * (1 + 0.03 * (nivelDe('luta') - 1)) * (1 + 0.05 * atr('forca')) * (buff('forte') ? 1.15 : 1) * (1 + 0.15 * melhoria(armaAtual))), d) || efeitoArma(b, armaAtual);
   }, () => jogador);
 }
 addEventListener('keydown', (e) => {
@@ -3310,7 +3338,7 @@ function malhaVirote() {
 }
 function atirar(ang, dano, { mun = 'flecha', alc = 11, vel = 18 } = {}) {
   const j = jogador, g = mun === 'virote' ? malhaVirote() : malhaFlecha(); g.position.set(j.x, 0.9, j.z); g.rotation.y = -ang; cena.add(g);
-  FLECHAS.push({ g, x: j.x, z: j.z, dx: Math.cos(ang), dz: Math.sin(ang), voou: 0, dano, mun, alc, vel });
+  FLECHAS.push({ g, x: j.x, z: j.z, dx: Math.cos(ang), dz: Math.sin(ang), voou: 0, dano, mun, alc, vel, arma: armaAtual });
 }
 function cairFlecha(f, bateu) {
   cena.remove(f.g);
@@ -3325,7 +3353,7 @@ function atualizarFlechas(dt) {
     f.x += f.dx * passo; f.z += f.dz * passo; f.voou += passo;
     f.g.position.set(f.x, 0.9 - Math.max(0, f.voou - alc * 0.64) * 0.12, f.z);
     const alvo = bichos.find((b) => b.vivo && b.malha.visible && Math.hypot(b.x - f.x, b.z - f.z) < 0.25 + (ESPECIES[b.tipo].l || 1.3) * 0.3);
-    if (alvo) { contarMarca('olhoGaviao'); ferirBicho(alvo, Math.round(f.dano * (1 + 0.1 * marca('olhoGaviao'))), [f.dx, f.dz]); FLECHAS.splice(k, 1); cairFlecha(f, true); continue; }
+    if (alvo) { efeitoArma(alvo, f.arma); contarMarca('olhoGaviao'); ferirBicho(alvo, Math.round(f.dano * (1 + 0.1 * marca('olhoGaviao'))), [f.dx, f.dz]); FLECHAS.splice(k, 1); cairFlecha(f, true); continue; }
     const parede = obstaculos.some((o) => (!o.o || o.o.ativo) && Math.hypot(o.x - f.x, o.z - f.z) < o.r) || bateCaixa(f.x, f.z);
     if (parede || f.voou > alc || !seco(f.x, f.z) || prof(f.x, f.z) > 0) { FLECHAS.splice(k, 1); if (prof(f.x, f.z) > 0 || !seco(f.x, f.z)) cena.remove(f.g); else cairFlecha(f, parede); }
   }
@@ -3400,6 +3428,11 @@ function atualizarFojos(dt) {
     if (b) dispararFojo(o, b);
   }
   for (const b of bichos) if (b.preso > 0) b.preso -= dt;
+  for (const b of bichos) if (b.dot && b.vivo) {   // sangramento / veneno do +3: tira vida a cada segundo
+    b.dot.t -= dt; b.dot.acc += dt * b.dot.dps;
+    if (b.dot.acc >= 2) { const n = Math.floor(b.dot.acc); b.dot.acc -= n; ferirBicho(b, n, [0, 0]); }
+    if (b.dot.t <= 0) b.dot = null;
+  } else if (b.dot) b.dot = null;
 }
 function esquivar() {
   const j = jogador; if (j.caido || j.esquiva || j.folego < 30) return;
@@ -3706,7 +3739,7 @@ function combate(dt) {
   const correndo = j.anda && (teclas.has('shift') || joy.correndo);
   j.folego = Math.max(0, Math.min(100, j.folego + (correndo ? -18 * (1 - 0.08 * atr('folego')) : j.esquiva ? 0 : 22 * (buff('descansado') ? 1.5 : 1) * (conjunto('ferro') ? 1.2 : 1)) * dt));
   armaAtual = armaDoAtivo();   // a arma é o que está no espaço ativo da barra
-  if (elArma.textContent !== ARMAS[armaAtual].nome) elArma.textContent = ARMAS[armaAtual].nome;
+  { const nm = ARMAS[armaAtual].nome + (melhoria(armaAtual) ? ' +' + melhoria(armaAtual) : ''); if (elArma.textContent !== nm) elArma.textContent = nm; }
   atualizarMarcas(dt);
   if (j.veneno > 0 && !j.caido) { j.veneno -= dt; j.vida -= 1.1 * dt; if (j.vida <= 0) { j.vida = 0; cair(); } }
   elVinheta.classList.toggle('veneno', j.veneno > 0 && !j.caido);
@@ -3864,7 +3897,7 @@ function salvar() {
   if (saindo) return;   // indo para o mar: quem salva é partirParaMar
   salvoEm = t;
   const j = jogador;
-  salvo.salvarProgresso({ ...(salvo.progresso() || {}), dono: SALVO_JOGADOR?.criado || null, local: 'terra', x: j.x, z: j.z, vida: j.vida, fome: j.fome, sede: j.sede, bolsa, feitos: [...feitos], atalhos: [...atalhos], atributos: { ...atrib }, kit: { ...kit }, raroDia: { ...raroDia }, marcas: { cont: { ...marcasP.cont }, ativas: [...marcasP.ativas] }, ativo, jangada: jangada ? { x: jangada.x, z: jangada.z } : null, chegouDoMar: false, xp, oficios: { ...xpOficios }, vestido: { ...vestido }, patacos, estragaT: { ...estragaT }, lugares: [...lugaresVistos], lote: { id: MEU_LOTE, rel: true, degrau, moveis: moveis.map((m) => ({ ...m, i: m.i - LOTE.x0, k: m.k - LOTE.z0 })) }, bolsasMorte: objetos.filter((o) => o.tipo === 'bolsaMorte' && o.ativo).map((o) => ({ x: o.x, z: o.z, itens: o.itens })) });
+  salvo.salvarProgresso({ ...(salvo.progresso() || {}), dono: SALVO_JOGADOR?.criado || null, local: 'terra', x: j.x, z: j.z, vida: j.vida, fome: j.fome, sede: j.sede, bolsa, feitos: [...feitos], atalhos: [...atalhos], atributos: { ...atrib }, kit: { ...kit }, raroDia: { ...raroDia }, melhorias: { ...melhorias }, marcas: { cont: { ...marcasP.cont }, ativas: [...marcasP.ativas] }, ativo, jangada: jangada ? { x: jangada.x, z: jangada.z } : null, chegouDoMar: false, xp, oficios: { ...xpOficios }, vestido: { ...vestido }, patacos, estragaT: { ...estragaT }, lugares: [...lugaresVistos], lote: { id: MEU_LOTE, rel: true, degrau, moveis: moveis.map((m) => ({ ...m, i: m.i - LOTE.x0, k: m.k - LOTE.z0 })) }, bolsasMorte: objetos.filter((o) => o.tipo === 'bolsaMorte' && o.ativo).map((o) => ({ x: o.x, z: o.z, itens: o.itens })) });
 }
 addEventListener('beforeunload', salvar);
 if (SALVO_JOGADOR?.nome) document.getElementById('quem').textContent = SALVO_JOGADOR.nome.toUpperCase() + ' · NÁUFRAGO';
@@ -3888,7 +3921,7 @@ if (prog && prog.dono === (SALVO_JOGADOR?.criado || null)) {
   } else if (prog.jangada) criarJangada(prog.jangada.x, prog.jangada.z);
   if (prog.lote) degrau = prog.lote.degrau || 0;
   Object.assign(atrib, prog.atributos || {});
-  Object.assign(kit, prog.kit || {}); Object.assign(raroDia, prog.raroDia || {});
+  Object.assign(kit, prog.kit || {}); Object.assign(raroDia, prog.raroDia || {}); Object.assign(melhorias, prog.melhorias || {});
   if (prog.marcas) { Object.assign(marcasP.cont, prog.marcas.cont || {}); marcasP.ativas = (prog.marcas.ativas || []).filter((id) => MARCAS[id]).slice(0, ESPACOS_MARCA); }
   if (bolsa.machado) { kit.machado = Math.max(kitNv('machado'), 1); delete bolsa.machado; for (let i = 0; i < 9; i++) if (atalhos[i] === 'machado') atalhos[i] = null; desenharBolsa(); }   // o machado antigo vai para o kit
 }
