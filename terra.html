@@ -178,6 +178,21 @@
   #marcasPausa .marca small { display: block; font-size: 12px; } #marcasPausa .fase { font-size: 11px; padding: 1px 7px; border-radius: 8px; color: #fff; background: #8a7f6a; }
   #marcasPausa .fase.f1 { background: #a8743a; } #marcasPausa .fase.f2 { background: #8a97a5; } #marcasPausa .fase.f3 { background: #c9a227; }
   #marcasPausa .barraM { height: 6px; background: rgba(94,58,30,.15); border-radius: 3px; margin: 4px 0 2px; } #marcasPausa .barraM i { display: block; height: 100%; background: #c9a227; border-radius: 3px; }
+  #ferreiroPausa { text-align: left; } #ferreiroPausa .aviso { text-align: center; font-size: 14px; margin: 0 0 8px; }
+  #ferreiroPausa .ferr { display: grid; grid-template-columns: 210px 1fr; gap: 12px; }
+  #ferreiroPausa .lista { display: flex; flex-direction: column; gap: 6px; max-height: 52vh; overflow: auto; }
+  #ferreiroPausa .arma { display: flex !important; align-items: center; gap: 6px; text-align: left; padding: 4px 8px !important; font-size: 14px !important; width: 100% !important; margin: 0 !important; }
+  #ferreiroPausa .arma.on { background: #5e3a1e !important; color: #f4e8cd !important; } #ferreiroPausa .arma small { opacity: .8; }
+  #ferreiroPausa h3 { display: flex; align-items: center; gap: 8px; margin: 0; font: 22px var(--fonte-titulo); } #ferreiroPausa .nv { color: #c9a227; }
+  #ferreiroPausa .pips { display: flex; gap: 6px; margin: 6px 0; } #ferreiroPausa .pips i { width: 26px; height: 8px; border-radius: 4px; background: rgba(94,58,30,.2); }
+  #ferreiroPausa .pips i.on { background: #c9a227; } #ferreiroPausa .pips i.marca { outline: 2px solid rgba(94,58,30,.35); }
+  #ferreiroPausa .custo { display: flex; flex-wrap: wrap; gap: 6px; font-size: 12px; margin: 4px 0; } #ferreiroPausa .custo span { display: inline-flex; align-items: center; gap: 2px; }
+  #ferreiroPausa .custo .falta { color: #8a2a1a; } #ferreiroPausa .custo .tem { color: #3f6a2a; }
+  #ferreiroPausa .bt { display: inline-block !important; width: auto !important; padding: 5px 14px !important; font-size: 15px !important; margin: 4px 0 !important; }
+  #ferreiroPausa .infs { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+  #ferreiroPausa .inf { border: 2px solid; border-radius: 8px; padding: 6px 8px; background: #fbf4e2; } #ferreiroPausa .inf.on { box-shadow: 0 0 0 3px rgba(201,162,39,.4); }
+  #ferreiroPausa .inf small { display: block; font-size: 11px; } #ferreiroPausa .dica { font-size: 12px; opacity: .75; }
+  html.toque #ferreiroPausa .ferr { grid-template-columns: 1fr; } html.toque #ferreiroPausa .lista { flex-direction: row; overflow-x: auto; max-height: none; }
   #pausa .abasPausa { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin: 0 0 10px; }
   #pausa .abasPausa button, #pausa .rodapePausa button { display: inline-block; width: auto; margin: 0; padding: 6px 14px; font-size: 16px; }
   #pausa .abasPausa button.on { background: #5e3a1e; color: #f4e8cd; }
@@ -357,10 +372,11 @@
 <div id="pausa"><div class="caixa pergaminho">
   <h1>Pausa</h1>
   <nav class="abasPausa">
-    <button data-aba="mapa">Mapa</button><button data-aba="habilidades">Habilidades</button><button data-aba="bolsa">Bolsa</button><button data-aba="diario">Diário</button><button data-aba="marcas">Marcas</button><button data-aba="config">Configurações</button>
+    <button data-aba="mapa">Mapa</button><button data-aba="habilidades">Habilidades</button><button data-aba="bolsa">Bolsa</button><button data-aba="diario">Diário</button><button data-aba="ferreiro">Ferreiro</button><button data-aba="marcas">Marcas</button><button data-aba="config">Configurações</button>
   </nav>
   <section data-aba="mapa"><canvas id="mapaTerra"></canvas><p class="legenda">● você · <span style="color:#e2b53e">■</span> seu lote · <span style="color:#8a5a2b">■</span> lotes com dono · M abre o mapa</p></section>
   <section data-aba="habilidades"><p id="pontosArvore"></p><div id="arvore"></div></section>
+  <section data-aba="ferreiro" id="ferreiroPausa"></section>
   <section data-aba="marcas" id="marcasPausa"></section>
   <section data-aba="config" id="configPausa"></section>
   <div class="rodapePausa"><button id="pContinuar">Continuar</button><button id="pMenu">Salvar e voltar ao menu</button></div>
@@ -1102,6 +1118,7 @@ const RECEITAS = [
   { id: 'broquel', nome: 'Broquel de ferro', pede: { barraFerro: 2, tabua: 2, couro: 1 }, obs: 'na forja · escudo · 15% menos dano', forja: true },
   { id: 'mantoOnca', nome: 'Manto de onça', pede: { peleOnca: 2, couro: 2, cipo: 2 }, obs: 'corpo · 42% defesa e +10% velocidade' },
   { id: 'elmoOnca', nome: 'Elmo de onça', pede: { peleOnca: 1, garraOnca: 2, couro: 1 }, obs: 'cabeça · 15% defesa · conjunto Predador da Mata' },
+  { id: 'pedraAmolar', nome: 'Pedras de amolar', pede: { pedra: 3, carvao: 1 }, obs: 'na forja · faz 2 · para o ferreiro', varios: true, qtd: 2, forja: true },
   { id: 'colarOnca', nome: 'Colar de garras de onça', pede: { garraOnca: 4, cipo: 1 }, obs: 'amuleto · +30% de dano' },
   { id: 'sabreRei', nome: 'Espada do Rei da Lagoa', pede: { escamaRei: 1, barraFerro: 4, denteJacare: 2 }, obs: 'na forja · Nv 8 · dano 42 · lendária', forja: true },
   { id: 'coroaRei', nome: 'Coroa de Escamas', pede: { moldeCoroa: 1, escamaRei: 2, barraFerro: 2 }, obs: 'na forja · Nv 8 · cabeça: 18% defesa e sem veneno', forja: true },
@@ -1364,28 +1381,69 @@ function destacarCombina(id) {   // ao escolher um item, os que combinam com ele
 }
 function esconderFicha() { if (typeof destacarCombina === 'function') destacarCombina(null); elFicha.style.display = 'none'; elFicha.classList.remove('fixa'); fichaFixa = null; }
 // botões da ficha fixa: usar ou consumir, combinar com o que dá, pôr na barra
-// ---------- MELHORIA DE ARMAS (18/11): +1 a +3 na forja
-const melhorias = {};
+// ---------- FERREIRO (19/11, como a estação de forja do Grounded 2): aba "Ferreiro" no menu de pausa (e E na bancada).
+// Níveis +1 a +5: cada um custa pedras de amolar (1, 2, 3, 4, 5, como as whetstones do Grounded) e ferro, e dá +10% de dano.
+// A partir do +3 a arma aceita uma INFUSÃO (os "sabores" do Grounded), que dá o efeito; trocar de infusão custa de novo.
+const melhorias = {}, infusoes = {};
 const melhoria = (id) => melhorias[id] || 0;
-const CUSTO_MELHORIA = [null, { barraFerro: 1, carvao: 2 }, { barraFerro: 2, garraOnca: 2 }, { barraFerro: 3, escamaRei: 1 }];
-const EFEITO_ARMA = (id) => ['machado', 'borduna', 'machadoLuta'].includes(id) ? 'atordoa' : ['lanca', 'arco', 'besta'].includes(id) ? 'veneno' : 'sangra';
-const NOME_EFEITO = { sangra: 'sangramento (o bicho perde vida por 4 s)', atordoa: 'atordoar (o bicho fica parado 1,2 s)', veneno: 'veneno (o bicho perde vida por 5 s)' };
+const NIVEL_MAX_ARMA = 5;
+const CUSTO_MELHORIA = [null, { pedraAmolar: 1 }, { pedraAmolar: 2, barraFerro: 1 }, { pedraAmolar: 3, barraFerro: 1 }, { pedraAmolar: 4, barraFerro: 2 }, { pedraAmolar: 5, barraFerro: 2, escamaRei: 1 }];
+const INFUSOES = {
+  brasa: { nome: 'Brasa', cor: '#e0702a', desc: 'queima: o bicho perde 4 de vida por segundo durante 3 s', custo: { carvao: 4, banha: 2 } },
+  peconha: { nome: 'Peçonha', cor: '#7fb069', desc: 'veneno: o bicho perde 2 de vida por segundo durante 6 s', custo: { peleCobra: 2 } },
+  garra: { nome: 'Garra', cor: '#c0503a', desc: 'sangramento: o bicho perde 3 de vida por segundo durante 4 s', custo: { garraOnca: 2 } },
+  pancada: { nome: 'Pancada', cor: '#8a97a5', desc: 'atordoa: o bicho fica parado 1,2 s', custo: { osso: 4, barraFerro: 1 } },
+  real: { nome: 'Real', cor: '#d9b23c', desc: '+20% de dano puro, sem efeito (o caminho "forte" do Grounded)', custo: { escamaRei: 1 } },
+};
+const bonusArma = (id) => 1 + 0.1 * melhoria(id) + (infusoes[id] === 'real' ? 0.2 : 0);
+const pertoDoFerreiro = () => objetos.some((o) => o.ativo && (o.tipo === 'forja' || o.tipo === 'bancada') && Math.hypot(o.x - jogador.x, o.z - jogador.z) < 4.4);
+const temCusto = (c) => Object.entries(c).every(([k, q]) => ter(k, q));
+const textoCusto = (c) => Object.entries(c).map(([k, q]) => `<span class="${ter(k, q) ? 'tem' : 'falta'}">${icone(k, 18)}${bolsa[k] || 0}/${q} ${NOMES[k].toLowerCase()}</span>`).join(' ');
 function melhorarArma(id) {
-  const n = melhoria(id); if (n >= 3) return avisar('Esta arma já está no máximo (+3).');
-  if (!pertoDeForja()) return avisar('Melhorar arma só perto de uma forja.');
-  const c = CUSTO_MELHORIA[n + 1]; if (!Object.entries(c).every(([k, q]) => ter(k, q))) return avisar('Falta: ' + Object.entries(c).filter(([k, q]) => !ter(k, q)).map(([k, q]) => q + ' ' + NOMES[k].toLowerCase()).join(', '));
+  const n = melhoria(id); if (n >= NIVEL_MAX_ARMA) return avisar('Esta arma já está no máximo.');
+  if (!pertoDoFerreiro()) return avisar('Melhorar arma só perto de uma forja ou bancada.');
+  const c = CUSTO_MELHORIA[n + 1]; if (!temCusto(c)) return avisar('Faltam materiais.');
   for (const [k, q] of Object.entries(c)) tirar(k, q);
-  melhorias[id] = n + 1;
-  flutuar(`${NOMES[id]} +${n + 1}!`, jogador.x, 2.4, jogador.z, '#ffd27a', 2.2);
-  if (n + 1 === 3) { elSubiu.innerHTML = `<small>Arma no máximo</small><b>${NOMES[id]} +3</b><span>Ganhou ${NOME_EFEITO[EFEITO_ARMA(id)]}.</span>`; elSubiu.classList.remove('mostra'); void elSubiu.offsetWidth; elSubiu.classList.add('mostra'); }
-  salvar(); mostrarFicha(id, document.getElementById('bolsa'), true);
+  melhorias[id] = n + 1; flutuar(`${NOMES[id]} +${n + 1}!`, jogador.x, 2.4, jogador.z, '#ffd27a', 2.2);
+  if (n + 1 === 3) anunciar('Ferreiro', NOMES[id] + ' +3', 'Agora ela aceita uma infusão: Brasa, Peçonha, Garra, Pancada ou Real.');
+  if (n + 1 === NIVEL_MAX_ARMA) anunciar('Arma no máximo', NOMES[id] + ' +5', 'Lâmina temperada no ponto. Mais forte que isso, só com a infusão certa.');
+  salvar(); desenharFerreiro();
 }
-// o efeito do +3 no bicho atingido
+function infundirArma(id, inf) {
+  if (melhoria(id) < 3) return avisar('Infusão só a partir do +3.');
+  if (!pertoDoFerreiro()) return avisar('Infusão só perto de uma forja ou bancada.');
+  const I = INFUSOES[inf]; if (!temCusto(I.custo)) return avisar('Faltam materiais.');
+  for (const [k, q] of Object.entries(I.custo)) tirar(k, q);
+  infusoes[id] = inf; anunciar('Infusão', I.nome, NOMES[id] + ': ' + I.desc); salvar(); desenharFerreiro();
+}
+// o efeito da infusão no bicho atingido
 function efeitoArma(b, id) {
-  if (melhoria(id) < 3 || !b.vivo) return;
-  const e = EFEITO_ARMA(id);
-  if (e === 'atordoa') b.preso = Math.max(b.preso || 0, 1.2);
-  else { b.dot = { t: e === 'veneno' ? 5 : 4, dps: e === 'veneno' ? 2 : 3, acc: 0, cor: e === 'veneno' ? '#9fe07a' : '#ff6b5a' }; }
+  const inf = infusoes[id]; if (!inf || !b.vivo || melhoria(id) < 3) return;
+  if (inf === 'pancada') b.preso = Math.max(b.preso || 0, 1.2);
+  else if (inf !== 'real') b.dot = { t: inf === 'peconha' ? 6 : inf === 'brasa' ? 3 : 4, dps: inf === 'peconha' ? 2 : inf === 'brasa' ? 4 : 3, acc: 0 };
+}
+// a aba do ferreiro
+let armaFerreiro = null;
+function desenharFerreiro() {
+  const el = document.getElementById('ferreiroPausa'); if (!el) return;
+  const minhas = Object.keys(ARMAS).filter((id) => id !== 'maos' && bolsa[id]);
+  if (!minhas.length) { el.innerHTML = '<p>Você ainda não tem armas para melhorar. Faça uma na oficina.</p>'; return; }
+  if (!minhas.includes(armaFerreiro)) armaFerreiro = minhas.includes(armaAtual) ? armaAtual : minhas[0];
+  const id = armaFerreiro, n = melhoria(id), A = ARMAS[id], perto = pertoDoFerreiro();
+  const dano = (lv, inf) => Math.round(A.dano * (1 + 0.1 * lv + (inf === 'real' ? 0.2 : 0)));
+  el.innerHTML = `<p class="aviso">${perto ? '⚒ Você está no ferreiro: dá para melhorar.' : '⚒ Chegue perto de uma <b>forja</b> ou <b>bancada</b> para melhorar (aqui você só consulta).'}</p>
+    <div class="ferr"><div class="lista">${minhas.map((m) => `<button class="arma${m === id ? ' on' : ''}" data-a="${m}">${icone(m, 34)}<span>${NOMES[m]}<br><small>+${melhoria(m)}${infusoes[m] ? ' · ' + INFUSOES[infusoes[m]].nome : ''}</small></span></button>`).join('')}</div>
+    <div class="detalhe"><h3>${icone(id, 56)} ${NOMES[id]} <span class="nv">+${n}</span></h3>
+      <div class="pips">${[1, 2, 3, 4, 5].map((k) => `<i class="${k <= n ? 'on' : ''}${k === 3 ? ' marca' : ''}"></i>`).join('')}</div>
+      <p>Dano: <b>${dano(n, infusoes[id])}</b>${n < NIVEL_MAX_ARMA ? ` → <b style="color:#3f6a2a">${dano(n + 1, infusoes[id])}</b> no +${n + 1}` : ' (máximo)'}${infusoes[id] ? ` · infusão <b style="color:${INFUSOES[infusoes[id]].cor}">${INFUSOES[infusoes[id]].nome}</b>` : ''}</p>
+      ${n < NIVEL_MAX_ARMA ? `<div class="custo">${textoCusto(CUSTO_MELHORIA[n + 1])}</div><button class="bt" data-melhorar ${perto && temCusto(CUSTO_MELHORIA[n + 1]) ? '' : 'disabled'}>Melhorar para +${n + 1}</button>` : ''}
+      <h4>INFUSÃO ${n < 3 ? '<small>(libera no +3)</small>' : ''}</h4>
+      <div class="infs">${Object.entries(INFUSOES).map(([k, I]) => `<div class="inf${infusoes[id] === k ? ' on' : ''}" style="border-color:${I.cor}"><b style="color:${I.cor}">${I.nome}</b><small>${I.desc}</small><div class="custo">${textoCusto(I.custo)}</div>
+        <button class="bt" data-inf="${k}" ${n >= 3 && perto && temCusto(I.custo) && infusoes[id] !== k ? '' : 'disabled'}>${infusoes[id] === k ? 'aplicada' : infusoes[id] ? 'trocar' : 'aplicar'}</button></div>`).join('')}</div>
+      <p class="dica">Pedra de amolar: oficina, perto da forja (3 pedras e 1 carvão fazem 2).</p></div></div>`;
+  for (const b of el.querySelectorAll('.arma')) b.onclick = () => { armaFerreiro = b.dataset.a; desenharFerreiro(); };
+  el.querySelector('[data-melhorar]')?.addEventListener('click', () => melhorarArma(id));
+  for (const b of el.querySelectorAll('[data-inf]')) b.onclick = () => infundirArma(id, b.dataset.inf);
 }
 function acoesDaFicha(id) {
   const it = ITENS[id], b = [];
@@ -1396,10 +1454,7 @@ function acoesDaFicha(id) {
     const outro = c.a === id ? c.b : c.a, pode = ter(id, outro === id ? 2 : 1) && ter(outro, outro === id ? 2 : 1);
     b.push(`<button data-acao="combinar" data-outro="${outro}" ${pode ? '' : 'disabled'}>Combinar com ${NOMES[outro].toLowerCase()} → ${NOMES[c.vira].toLowerCase()}</button>`);
   }
-  if (ARMAS[id] && id !== 'maos' && bolsa[id]) {   // melhoria na forja
-    const n = melhoria(id);
-    b.push(n >= 3 ? `<button disabled>${NOMES[id]} +3 (máximo)</button>` : `<button data-acao="melhorar" ${pertoDeForja() ? '' : 'disabled'} title="+15% de dano${n === 2 ? ' e ' + NOME_EFEITO[EFEITO_ARMA(id)] : ''}">Melhorar para +${n + 1} (${Object.entries(CUSTO_MELHORIA[n + 1]).map(([k, q]) => q + ' ' + NOMES[k].toLowerCase()).join(', ')})${pertoDeForja() ? '' : ' · perto da forja'}</button>`);
-  }
+  if (ARMAS[id] && id !== 'maos' && bolsa[id]) b.push(`<button data-acao="ferreiro">Ferreiro (+${melhoria(id)}${infusoes[id] ? ' · ' + INFUSOES[infusoes[id]].nome : ''})</button>`);
   if (ATALHAVEL(id) && bolsa[id] && !atalhos.includes(id)) b.push('<button data-acao="barra">Pôr na barra</button>');
   else if (atalhos.includes(id)) b.push('<button data-acao="tirarBarra">Tirar da barra</button>');
   return `<button class="fechar" data-acao="fechar" aria-label="Fechar">✕</button>${b.length ? `<div class="acoes">${b.join('')}</div>` : ''}`;
@@ -1409,7 +1464,7 @@ elFicha.addEventListener('click', (e) => {
   if (bt.dataset.acao === 'fechar') return esconderFicha();
   if (bt.dataset.acao === 'usar' && USAVEIS[id]) USAVEIS[id]();
   if (bt.dataset.acao === 'vestir') vestir(id);
-  if (bt.dataset.acao === 'melhorar') return melhorarArma(id);
+  if (bt.dataset.acao === 'ferreiro') { esconderFicha(); armaFerreiro = id; if (telaAberta) fecharTela(); return pausar(true, 'ferreiro'); }
   if (bt.dataset.acao === 'combinar') combinar(id, bt.dataset.outro);
   if (bt.dataset.acao === 'barra') { const j = atalhos.indexOf(null); if (j >= 0) { atalhos[j] = id; desenharBolsa(); } else avisar('A barra está cheia: tire um item dela antes.'); }
   if (bt.dataset.acao === 'tirarBarra') { const j = atalhos.indexOf(id); if (j >= 0) { atalhos[j] = null; armaAtual = armaDoAtivo(); desenharBolsa(); } }
@@ -2672,7 +2727,7 @@ function textoDe(o) {
     case 'barraco': case 'cama': return 'dormir';
     case 'fogao': return textoCozinhar('fogão aceso');
     case 'forja': return 'usar a forja (abre oficina)';
-    case 'bancada': return 'usar a bancada (abre oficina)';
+    case 'bancada': return 'abrir o ferreiro (melhorar armas)';
     case 'bau': return 'abrir o baú';
   }
 }
@@ -2730,7 +2785,8 @@ function interagir(o) {
   else if (tipo === 'barraco' || tipo === 'cama') dormir(o);
   else if (tipo === 'bau') { bauAberto = o; desenharBau(); abrirTela(elBau); }
   else if (tipo === 'fogao') cozinhar(o);
-  else if (tipo === 'forja' || tipo === 'bancada') { abaOficina = 'tudo'; desenharReceitas(); abrirTela(elMochila); }
+  else if (tipo === 'bancada') pausar(true, 'ferreiro');
+  else if (tipo === 'forja') { abaOficina = 'tudo'; desenharReceitas(); abrirTela(elMochila); }
 }
 // o que sai de cada recurso com nível (sorteado), quanto XP dá e em quanto tempo volta
 const SAQUE = {
@@ -3299,12 +3355,12 @@ function atacar() {
     const mun = arma.municao || 'flecha';
     if (!ter(mun)) { avisar(mun === 'virote' ? 'Sem virotes. Faça na forja (barra de ferro e galhos).' : 'Sem flechas. Faça na oficina (galho e pedra lascada).'); return; }
     tirar(mun); j.a = -ang; recargaAtaque = arma.recarga * (1 - 0.04 * atr('rapido')); j.acao = { nome: 'Interact', t: 0, dur: 0.4 };
-    atirar(ang, Math.round(arma.dano * (1 + vesteSoma('dano')) * (1 + 0.03 * (nivelDe('luta') - 1)) * (1 + 0.05 * atr('forca')) * (buff('forte') ? 1.15 : 1) * (1 + 0.15 * melhoria(armaAtual))), { mun, alc: arma.alc || 11, vel: mun === 'virote' ? 23 : 18 }); return;
+    atirar(ang, Math.round(arma.dano * (1 + vesteSoma('dano')) * (1 + 0.03 * (nivelDe('luta') - 1)) * (1 + 0.05 * atr('forca')) * (buff('forte') ? 1.15 : 1) * bonusArma(armaAtual)), { mun, alc: arma.alc || 11, vel: mun === 'virote' ? 23 : 18 }); return;
   }
   j.a = -ang; recargaAtaque = arma.recarga * (1 - 0.04 * atr('rapido'));
   j.acao = { nome: '1H_Melee_Attack_Chop', t: 0, dur: Math.max(0.45, arma.prep + 0.25) };
   marcar(golpeDe(arma.forma, j.x, j.z, ang), arma.prep, '#ffd23f', (g) => {
-    for (const b of bichos) if (b.vivo && b.malha.visible && noGolpe(g, b.x, b.z, 0.25 + (ESPECIES[b.tipo].l || 1.3) * 0.25)) ferirBicho(b, Math.round(arma.dano * (1 + vesteSoma('dano')) * (1 + 0.03 * (nivelDe('luta') - 1)) * (1 + 0.05 * atr('forca')) * (buff('forte') ? 1.15 : 1) * (1 + 0.15 * melhoria(armaAtual))), d) || efeitoArma(b, armaAtual);
+    for (const b of bichos) if (b.vivo && b.malha.visible && noGolpe(g, b.x, b.z, 0.25 + (ESPECIES[b.tipo].l || 1.3) * 0.25)) ferirBicho(b, Math.round(arma.dano * (1 + vesteSoma('dano')) * (1 + 0.03 * (nivelDe('luta') - 1)) * (1 + 0.05 * atr('forca')) * (buff('forte') ? 1.15 : 1) * bonusArma(armaAtual)), d) || efeitoArma(b, armaAtual);
   }, () => jogador);
 }
 addEventListener('keydown', (e) => {
@@ -3838,6 +3894,7 @@ function abaPausa(aba) {
   if (aba === 'habilidades') desenharArvore();
   if (aba === 'config') desenharConfig();
   if (aba === 'marcas') desenharMarcas();
+  if (aba === 'ferreiro') desenharFerreiro();
 }
 for (const b of elPausa.querySelectorAll('.abasPausa button')) b.onclick = () => abaPausa(b.dataset.aba);
 // MAPA da terra: o chão pintado uma vez (2 px por metro), com lotes, nomes dos lugares e você
@@ -3897,7 +3954,7 @@ function salvar() {
   if (saindo) return;   // indo para o mar: quem salva é partirParaMar
   salvoEm = t;
   const j = jogador;
-  salvo.salvarProgresso({ ...(salvo.progresso() || {}), dono: SALVO_JOGADOR?.criado || null, local: 'terra', x: j.x, z: j.z, vida: j.vida, fome: j.fome, sede: j.sede, bolsa, feitos: [...feitos], atalhos: [...atalhos], atributos: { ...atrib }, kit: { ...kit }, raroDia: { ...raroDia }, melhorias: { ...melhorias }, marcas: { cont: { ...marcasP.cont }, ativas: [...marcasP.ativas] }, ativo, jangada: jangada ? { x: jangada.x, z: jangada.z } : null, chegouDoMar: false, xp, oficios: { ...xpOficios }, vestido: { ...vestido }, patacos, estragaT: { ...estragaT }, lugares: [...lugaresVistos], lote: { id: MEU_LOTE, rel: true, degrau, moveis: moveis.map((m) => ({ ...m, i: m.i - LOTE.x0, k: m.k - LOTE.z0 })) }, bolsasMorte: objetos.filter((o) => o.tipo === 'bolsaMorte' && o.ativo).map((o) => ({ x: o.x, z: o.z, itens: o.itens })) });
+  salvo.salvarProgresso({ ...(salvo.progresso() || {}), dono: SALVO_JOGADOR?.criado || null, local: 'terra', x: j.x, z: j.z, vida: j.vida, fome: j.fome, sede: j.sede, bolsa, feitos: [...feitos], atalhos: [...atalhos], atributos: { ...atrib }, kit: { ...kit }, raroDia: { ...raroDia }, melhorias: { ...melhorias }, infusoes: { ...infusoes }, marcas: { cont: { ...marcasP.cont }, ativas: [...marcasP.ativas] }, ativo, jangada: jangada ? { x: jangada.x, z: jangada.z } : null, chegouDoMar: false, xp, oficios: { ...xpOficios }, vestido: { ...vestido }, patacos, estragaT: { ...estragaT }, lugares: [...lugaresVistos], lote: { id: MEU_LOTE, rel: true, degrau, moveis: moveis.map((m) => ({ ...m, i: m.i - LOTE.x0, k: m.k - LOTE.z0 })) }, bolsasMorte: objetos.filter((o) => o.tipo === 'bolsaMorte' && o.ativo).map((o) => ({ x: o.x, z: o.z, itens: o.itens })) });
 }
 addEventListener('beforeunload', salvar);
 if (SALVO_JOGADOR?.nome) document.getElementById('quem').textContent = SALVO_JOGADOR.nome.toUpperCase() + ' · NÁUFRAGO';
@@ -3921,7 +3978,7 @@ if (prog && prog.dono === (SALVO_JOGADOR?.criado || null)) {
   } else if (prog.jangada) criarJangada(prog.jangada.x, prog.jangada.z);
   if (prog.lote) degrau = prog.lote.degrau || 0;
   Object.assign(atrib, prog.atributos || {});
-  Object.assign(kit, prog.kit || {}); Object.assign(raroDia, prog.raroDia || {}); Object.assign(melhorias, prog.melhorias || {});
+  Object.assign(kit, prog.kit || {}); Object.assign(raroDia, prog.raroDia || {}); Object.assign(melhorias, prog.melhorias || {}); Object.assign(infusoes, prog.infusoes || {});
   if (prog.marcas) { Object.assign(marcasP.cont, prog.marcas.cont || {}); marcasP.ativas = (prog.marcas.ativas || []).filter((id) => MARCAS[id]).slice(0, ESPACOS_MARCA); }
   if (bolsa.machado) { kit.machado = Math.max(kitNv('machado'), 1); delete bolsa.machado; for (let i = 0; i < 9; i++) if (atalhos[i] === 'machado') atalhos[i] = null; desenharBolsa(); }   // o machado antigo vai para o kit
 }

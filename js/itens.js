@@ -37,6 +37,7 @@ export const ITENS = {
   martelo: { nome: 'Martelo de pedra', nivel: 1, tipo: 'Ferramenta do kit', desc: 'Abre os caixotes que o mar traz para a praia.', onde: 'Oficina (uma vez só)', serve: ['Abrir caixote nível 1'] },
   marteloOsso: { nome: 'Martelo de osso', nivel: 2, tipo: 'Ferramenta do kit', desc: 'Arromba os barris reforçados da vila e do engenho.', onde: 'Oficina (substitui o de pedra)', serve: ['Arrombar barril nível 2'] },
   ferro: { nome: 'Minério de ferro', nivel: 2, tipo: 'Recurso', desc: 'Pedra pesada e avermelhada. Fundida na forja, vira barra de ferro.', onde: 'Rocha com ferro (picareta nível 2), barris e baús', serve: ['Fundir em barra de ferro na forja (com carvão)', 'Reivindicar Cais, Engenho e Fortaleza'] },
+  pedraAmolar: { nome: 'Pedra de amolar', nivel: 2, tipo: 'Recurso', desc: 'Pedra fina, lixada com carvão, para afiar e temperar armas no ferreiro (como as whetstones do Grounded).', onde: 'Oficina, perto da forja (3 pedras e 1 carvão fazem 2)', serve: ['Melhorar armas no ferreiro: +1 pede 1, +2 pede 2… +5 pede 5'] },
   carvao: { nome: 'Carvão vegetal', nivel: 1, tipo: 'Recurso', desc: 'Madeira queimada devagar na brasa. Esquenta a forja o bastante para derreter ferro.', onde: 'Oficina, perto de uma fogueira, fogão ou forja', serve: ['Fundir minério de ferro na forja'] },
   tabua: { nome: 'Tábua serrada', nivel: 2, tipo: 'Recurso', desc: 'Madeira aparelhada para obras firmes e sobrados.', onde: 'Oficina (a partir de tronco)', serve: ['Erguer o Sobrado no lote', 'Montar bancada e móveis reforçados'] },
   barraFerro: { nome: 'Barra de ferro', nivel: 3, tipo: 'Recurso', desc: 'Ferro puro fundido na forja. Abre a era do metal em Niterói.', onde: 'Oficina, perto de uma forja (minério de ferro + carvão)', serve: ['Forjar pregos, armas, armaduras, armadilhas e ferramentas nível 3'] },
@@ -236,6 +237,7 @@ Object.assign(FEITOS, {
 });
 // elmo de onça: o desenho do elmo de ferro, em couro dourado com rosetas
 FEITOS.elmoOnca = () => FEITOS.elmoFerro().map((m) => { m.material = lam('#d99a3a'); return m; }).concat([[-0.4, 0.35, 0.6], [0.3, 0.5, 0.65], [0, 0.65, 0.55], [0.5, 0.2, 0.6], [-0.2, 0.15, 0.78]].map(([x, y, z]) => malha(new THREE.SphereGeometry(0.11, 6, 4), '#2b1d0e', x, y, z)));
+FEITOS.pedraAmolar = () => [malha(new THREE.BoxGeometry(1.7, 0.32, 0.6), '#8f887c', 0, 0, 0, 0, 0.3, 0.1), malha(new THREE.BoxGeometry(1.6, 0.06, 0.5), '#5a554c', 0, 0.19, 0, 0, 0.3, 0.1)];
 // itens que reaproveitam o ícone de outro, só com outra cor (sem modelar nada novo)
 const TINGIR = {
   carneSeca: ['carne', '#8a4a2a'], peixeSeco: ['peixe', '#b08a5a'], podre: ['carne', '#7f8a3e'], pacoca: ['carne', '#c9a06a'], garrafada: ['cantil', '#6fae46'],
